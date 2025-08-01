@@ -1,0 +1,25 @@
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html>
+<head th:fragment="head">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" type="text/css" th:href="${baseUrl + 'css/semantic.min.css'}">
+    <link rel="stylesheet" type="text/css" th:href="${baseUrl + 'css/kafkador.css'}">
+
+</head>
+<body>
+<header th:fragment="header">
+    <!-- Header -->
+</header>
+<footer th:fragment="footer">
+    <!-- Footer -->
+</footer>
+<div th:fragment="scripts">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"
+            integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+            crossorigin="anonymous"></script>
+    <script th:src="${baseUrl + 'js/semantic.min.js'}"></script>
+</div>
+</body>
+</html>
