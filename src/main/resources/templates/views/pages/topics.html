@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="views/fragments/templates :: head"></head>
+<body>
+
+<div th:replace="views/fragments/menu :: menu"></div>
+
+<div class="ui main text container">
+  <h1 class="ui header" >Topics</h1>
+  <div class="ui middle aligned divided list">
+    <div class="item" th:each="topics : ${topics}">
+      <i class="clipboard list icon"></i>
+      <div class="content">
+        <a class="header" href="/node/{id}" th:text="${topics.name}"></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div th:replace="views/fragments/templates :: scripts"></div>
+</body>
+</html>

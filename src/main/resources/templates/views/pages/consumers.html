@@ -2,8 +2,14 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="views/fragments/templates :: head"></head>
 <body>
-<h1>Dashboard</h1>
-</body>
+
+<div th:replace="views/fragments/menu :: menu"></div>
+
+<div class="ui main text container">
+  <h1 class="ui header" >Consumers</h1>
+
+</div>
+
 <div th:replace="views/fragments/templates :: scripts"></div>
 </body>
 </html>
