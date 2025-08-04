@@ -14,5 +14,4 @@ public class ClusterDetails {
     private Collection<Node> nodes;
     private Node controller;
 
-
 }
