@@ -7,6 +7,11 @@
 
 <div class="ui main text container">
   <h1 class="ui header" >Topics</h1>
+
+  <button class="ui primary button" id="createTopicButton">
+    Create Topic
+  </button>
+
   <div class="ui middle aligned divided list">
     <div class="item" th:each="topics : ${topics}">
       <i class="clipboard list icon"></i>
@@ -17,6 +22,31 @@
   </div>
 </div>
 
+
+<div class="ui modal" id="createTopicModal">
+  <div class="header">
+    Create Topic
+  </div>
+  <div class="image content">
+
+  </div>
+  <div class="actions">
+    <div class="ui black deny button">
+      Cancel
+    </div>
+    <div class="ui primary left labeled icon button ml-0">
+      <i class="checkmark icon"></i> submit
+    </div>
+  </div>
+</div>
+
 <div th:replace="views/fragments/templates :: scripts"></div>
+<script>
+$(document).ready(function(){
+  $("#createTopicButton").click(function(){
+    $('#createTopicModal').modal('show');
+  });
+});
+</script>
 </body>
 </html>

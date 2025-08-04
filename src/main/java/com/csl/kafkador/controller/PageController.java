@@ -4,9 +4,11 @@ import com.csl.kafkador.dto.ClusterDetails;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.service.ClusterService;
 import com.csl.kafkador.service.ConnectionService;
+import com.csl.kafkador.service.ConsumersService;
 import com.csl.kafkador.service.TopicService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.TopicListing;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -50,6 +52,17 @@ public class PageController {
         model.addAttribute("topics", topics);
 
         return "views/pages/topics.html";
+    }
+
+
+    @GetMapping("/consumers")
+    public String consumers(Model model, HttpSession session, HttpServletRequest request) throws KafkaAdminApiException {
+
+        ConsumersService consumersService = (ConsumersService) applicationContext.getBean("ConsumersService");
+        Collection<ConsumerGroupListing> consumerGroups = consumersService.getConsumersGroup();
+        model.addAttribute("consumerGroups", consumerGroups);
+
+        return "views/pages/consumers.html";
     }
 
 }

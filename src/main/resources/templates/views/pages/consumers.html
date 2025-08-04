@@ -7,7 +7,15 @@
 
 <div class="ui main text container">
   <h1 class="ui header" >Consumers</h1>
-
+  <h3>Consumer Groups:</h3>
+  <div class="ui middle aligned divided list">
+    <div class="item" th:each="consumerGroup : ${consumerGroups}">
+      <i class="clipboard list icon"></i>
+      <div class="content">
+        <a class="header" href="/node/{id}" th:text="${consumerGroup.groupId}"></a>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div th:replace="views/fragments/templates :: scripts"></div>

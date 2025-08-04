@@ -9,7 +9,7 @@ import java.util.Properties;
 public class KafkadorContext {
 
     public Properties getKafkaAdminApiConfig(){
-        String bootstrapServers = "localhost:9092"; // Replace with your Kafka broker address
+        String bootstrapServers = "192.168.2.139:9092"; // Replace with your Kafka broker address
 
         Properties props = new Properties();
         props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
