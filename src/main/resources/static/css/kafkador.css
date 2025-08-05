@@ -11,3 +11,7 @@
     margin-right: 6px!important;
     width: 24px!important;
 }
+
+.view-element{
+    display:none;
+}
