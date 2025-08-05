@@ -1,4 +1,15 @@
-const baseUrl = 'http://localhost:8080';
+const CONFIG = {
+    baseUrl: window.location.origin || 'http://localhost:8080',
+    apiEndpoints: {
+        connection: '/api/connection',
+        topics: '/api/topic',
+        clusters: '/api/cluster',
+        consumers: '/api/consumer'
+    },
+    defaultHeaders: {
+        'Content-Type': 'application/json'
+    }
+};
 
 function createTopic(){
     alert("Creating Topic");
@@ -6,14 +17,14 @@ function createTopic(){
 
 function createConnection( connection ){
     $.ajax({
-            url: baseUrl + "/api/connection",
+            url: CONFIG.baseUrl + CONFIG.apiEndpoints.connection,
             method: 'POST',
             dataType: 'json',
-            contentType: "application/json",
+            contentType: CONFIG.defaultHeaders['Content-Type'],
             data: JSON.stringify(connection),
             headers: {
-                'SESSION': getCookie("SESSION"),
-                'Content-Type': 'application/json'
+                'SESSION': Utils.getCookie("SESSION"),
+                'Content-Type': CONFIG.defaultHeaders['Content-Type']
             },
             success: function(response) {
                 console.log('Success:', response);
@@ -30,12 +41,12 @@ function createConnection( connection ){
 
 function getConnections(callback){
     $.ajax({
-        url: baseUrl + "/api/connection",
+        url: CONFIG.baseUrl + CONFIG.apiEndpoints.connection,
         method: 'GET',
         dataType: 'json',
         headers: {
-            'SESSION': getCookie("SESSION"),
-            'Content-Type': 'application/json'
+            'SESSION': Utils.getCookie("SESSION"),
+            'Content-Type': CONFIG.defaultHeaders['Content-Type']
         },
         success: function(response) {
             callback(response);
@@ -80,35 +91,16 @@ function callApiDummy(){
         });
 }
 
-function getCookie(name) {
-  const cookies = document.cookie.split(';');
-  for (let i = 0; i < cookies.length; i++) {
-    let cookie = cookies[i].trim();
-    if (cookie.startsWith(name + '=')) {
-      return cookie.substring(name.length + 1);
-    }
-  }
-  return null;
-}
-
 function renderView( container, view, data ){
-    if (isPlainObject(data)) {
+    if (Utils.isPlainObject(data)) {
         $(container).append($(view).html());
-    } else if (isArrayOfPlainObjects(data)) {
+    } else if (Utils.isArrayOfPlainObjects(data)) {
         data.forEach(function(item, index) {
             $(container).append(updatePlaceHolder($(view).html(),item));
         });
     } else {
         console.log("Input is neither a plain object nor an array of plain objects.");
     }
-}
-
-function isPlainObject(value) {
-  return typeof value === 'object' && value !== null && value.constructor === Object;
-}
-
-function isArrayOfPlainObjects(value) {
-  return Array.isArray(value) && value.every(isPlainObject);
 }
 
 function updatePlaceHolder( viewHtml, data ){
@@ -118,3 +110,70 @@ function updatePlaceHolder( viewHtml, data ){
     });
     return processedView;
 }
+
+const Utils = {
+    /**
+     * Get cookie value by name
+     * @param {string} name - Cookie name
+     * @returns {string|null} Cookie value or null if not found
+     */
+    getCookie(name) {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                return decodeURIComponent(cookie.substring(name.length + 1));
+            }
+        }
+        return null;
+    },
+
+    /**
+     * Check if value is a plain object
+     * @param {any} value - Value to check
+     * @returns {boolean} True if plain object
+     */
+    isPlainObject(value) {
+        return typeof value === 'object' && value !== null && value.constructor === Object;
+    },
+
+    /**
+     * Check if value is an array of plain objects
+     * @param {any} value - Value to check
+     * @returns {boolean} True if array of plain objects
+     */
+    isArrayOfPlainObjects(value) {
+        return Array.isArray(value) && value.every(Utils.isPlainObject);
+    },
+
+    /**
+     * Show user-friendly error message
+     * @param {string} message - Error message
+     * @param {string} type - Message type (error, warning, success, info)
+     */
+    showMessage(message, type = 'error') {
+        // You can integrate with your UI framework here
+        console.error(`[${type.toUpperCase()}] ${message}`);
+        
+        // Simple alert fallback - replace with proper UI notification
+        if (type === 'error') {
+            alert(`Error: ${message}`);
+        }
+    },
+
+    /**
+     * Validate required parameters
+     * @param {Object} params - Parameters to validate
+     * @param {string[]} required - Required parameter names
+     * @returns {boolean} True if all required parameters are present
+     */
+    validateParams(params, required) {
+        for (let param of required) {
+            if (!params.hasOwnProperty(param) || params[param] === undefined || params[param] === null) {
+                Utils.showMessage(`Missing required parameter: ${param}`);
+                return false;
+            }
+        }
+        return true;
+    }
+};

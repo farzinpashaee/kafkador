@@ -29,25 +29,25 @@ public class ApiController {
         return clusterService.getClusterDetails();
     }
 
-    @GetMapping("/topics")
+    @GetMapping("/topic")
     public Collection<TopicListing> getTopics() throws KafkaAdminApiException {
         TopicService topicService = (TopicService) applicationContext.getBean("TopicsService");
         return topicService.getTopics();
     }
 
-    @PostMapping("/topics")
+    @PostMapping("/topic")
     public void createTopic(@RequestBody Topic request) throws KafkaAdminApiException {
         TopicService topicService = (TopicService) applicationContext.getBean("TopicsService");
         topicService.createTopic(request);
     }
 
-    @DeleteMapping("/topics/{name}")
+    @DeleteMapping("/topic/{name}")
     public void deleteTopic(@PathVariable String name) throws KafkaAdminApiException {
         TopicService topicService = (TopicService) applicationContext.getBean("TopicsService");
         topicService.deleteTopic(name);
     }
 
-    @GetMapping("/topics/{name}")
+    @GetMapping("/topic/{name}")
     public Topic getTopic(@PathVariable String name) throws KafkaAdminApiException {
         TopicService topicService = (TopicService) applicationContext.getBean("TopicsService");
         return topicService.getTopic(name);
