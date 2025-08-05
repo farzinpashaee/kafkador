@@ -1,10 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="views/fragments/templates :: head"></head>
 <body>
 
+<div class="ui main text container">
+    <h1 class="ui header" >Connect</h1>
+    <h3>Connections:</h3>
+    <div class="ui middle aligned divided list" id="connections">
+<!--        <div class="item">-->
+<!--            <i class="server icon"></i>-->
+<!--            <div class="content">-->
+<!--                <a class="header" href="/node/{id}" th:text="${node.host+':'+node.port}"></a>-->
+<!--            </div>-->
+<!--        </div>-->
+    </div>
+</div>
+
+<div th:replace="views/fragments/templates :: scripts"></div>
+<script>
+$(document).ready(function(){
+    connections = getConnections();
+    connections.forEach(function(connection, index) {
+        alert(connection.name);
+        $("#connections").append('<div class="item"><i class="server icon"></i><div class="content"><div class="header">'+connection.name+'</div><div class="description">'+connection.host+'</div></div></div>');
+    });
+});
+</script>
 </body>
 </html>

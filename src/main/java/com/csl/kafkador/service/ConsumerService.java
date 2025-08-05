@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.Collection;
 
 @Service("ConsumersService")
-public class ConsumersService {
+public class ConsumerService {
 
     @Autowired
     KafkadorContext kafkadorContext;
