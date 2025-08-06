@@ -1,5 +1,6 @@
 package com.csl.kafkador.component;
 
+import com.csl.kafkador.model.Connection;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.springframework.stereotype.Component;
 
@@ -10,14 +11,15 @@ import java.util.Properties;
 @Component
 public class KafkadorContext {
 
-    private Map<String,Object> session = new HashMap();
+    private Map<Attribute,Object> attributeMap = new HashMap();
 
-    public Properties getKafkaAdminApiConfig(){
-        String bootstrapServers = "192.168.2.139:9092"; // Replace with your Kafka broker address
+    public void setAttribute( KafkadorContext.Attribute attribute, Object object ){
+        attributeMap.put(attribute,object);
+    }
 
-        Properties props = new Properties();
-        props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        return  props;
+    public static enum Attribute {
+        CONNECTIONS,
+        ACTIVE_CONNECTION
     }
 
 }

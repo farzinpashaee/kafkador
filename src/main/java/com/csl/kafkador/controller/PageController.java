@@ -1,9 +1,9 @@
 package com.csl.kafkador.controller;
 
 import com.csl.kafkador.dto.ClusterDetails;
+import com.csl.kafkador.dto.RequestContext;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.service.ClusterService;
-import com.csl.kafkador.service.ConnectionService;
 import com.csl.kafkador.service.ConsumerService;
 import com.csl.kafkador.service.TopicService;
 import com.csl.kafkador.util.ViewHelper;
@@ -31,7 +31,7 @@ public class PageController {
         ViewHelper.setPageTitle("Cluster", model);
         // connectionService.checkConnection(session);
         ClusterService clusterService = (ClusterService) applicationContext.getBean("ClusterService");
-        ClusterDetails clusterDetails = clusterService.getClusterDetails();
+        ClusterDetails clusterDetails = clusterService.getClusterDetails(new RequestContext(session) );
         model.addAttribute("clusterDetails", clusterDetails);
 
         return "views/pages/cluster.html";
@@ -49,12 +49,12 @@ public class PageController {
 
 
     @GetMapping("/topics")
-    public String topics(Model model, HttpSession session, HttpServletRequest request) throws KafkaAdminApiException {
+    public String topics(Model model, HttpSession session) throws KafkaAdminApiException {
 
         ViewHelper.setPageTitle("Topics", model);
         // connectionService.checkConnection(session);
         TopicService topicService = (TopicService) applicationContext.getBean("TopicsService");
-        Collection<TopicListing> topics = topicService.getTopics();
+        Collection<TopicListing> topics = topicService.getTopics( new RequestContext(session) );
         model.addAttribute("topics", topics);
 
         return "views/pages/topics.html";
@@ -62,11 +62,10 @@ public class PageController {
 
 
     @GetMapping("/consumers")
-    public String consumers(Model model, HttpSession session, HttpServletRequest request) throws KafkaAdminApiException {
-
+    public String consumers(Model model, HttpSession session) throws KafkaAdminApiException {
         ViewHelper.setPageTitle("Consumers", model);
         ConsumerService consumersService = (ConsumerService) applicationContext.getBean("ConsumersService");
-        Collection<ConsumerGroupListing> consumerGroups = consumersService.getConsumersGroup();
+        Collection<ConsumerGroupListing> consumerGroups = consumersService.getConsumersGroup( new RequestContext(session));
         model.addAttribute("consumerGroups", consumerGroups);
 
         return "views/pages/consumers.html";

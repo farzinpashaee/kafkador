@@ -2,6 +2,7 @@ const CONFIG = {
     baseUrl: window.location.origin || 'http://localhost:8080',
     apiEndpoints: {
         connection: '/api/connection',
+        connect: '/api/connect',
         topics: '/api/topic',
         clusters: '/api/cluster',
         consumers: '/api/consumer'
@@ -61,6 +62,33 @@ function getConnections(callback){
         }
     });
     return connections;
+}
+
+
+function connect(id,callback){
+    $.ajax({
+        url: CONFIG.baseUrl + CONFIG.apiEndpoints.connect,
+        method: 'GET',
+        dataType: 'json',
+        data: {
+            id : id
+        },
+        headers: {
+            'SESSION': Utils.getCookie("SESSION"),
+            'Content-Type': CONFIG.defaultHeaders['Content-Type']
+        },
+        success: function(response) {
+            callback(response);
+            console.log('Success:', response);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', status, error);
+            console.log('Response Text:', xhr.responseText);
+        },
+        complete: function() {
+            console.log('Request complete.');
+        }
+    });
 }
 
 function callApiDummy(){

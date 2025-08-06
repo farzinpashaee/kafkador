@@ -1,5 +1,15 @@
 kafkador:
   url: http://localhost:8080/
+  connectionServiceImplementation: "ConnectionServiceByConfig"
+  connections:
+    - id: 1
+      name: connection-1
+      host: 192.168.2.139
+      port: 9092
+    - id: 2
+      name: connection-2
+      host: 192.168.2.139
+      port: 9095
 
 spring:
   application:
@@ -12,7 +22,7 @@ spring:
     jdbc:
       initialize-schema: always
     timeout:
-      seconds: 900
+      seconds: 365d # TODO: update
   h2:
     console:
       enabled: true

@@ -1,42 +1,21 @@
 package com.csl.kafkador.service;
 
+import com.csl.kafkador.dto.RequestContext;
+import com.csl.kafkador.exception.ConnectionNotFoundException;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
+import com.csl.kafkador.exception.KafkadorException;
 import com.csl.kafkador.model.Connection;
-import com.csl.kafkador.repository.ConnectionRepository;
-import com.csl.kafkador.util.HashHelper;
-import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
-@Service("ConnectionService")
-public class ConnectionService {
+public interface ConnectionService {
 
-    @Autowired
-    ConnectionRepository connectionRepository;
+    Connection connect( RequestContext<String> request ) throws ConnectionNotFoundException;
+    List<Connection> getConnections(RequestContext request);
+    Connection getActiveConnection(RequestContext request) throws ConnectionSessionExpiredException;
+    Properties getActiveConnectionProperties(RequestContext request) throws ConnectionSessionExpiredException;
 
-    public Connection checkConnection(HttpSession session){
-        throw new ConnectionSessionExpiredException("x","/connect");
-    }
-
-    public Connection createConnection( Connection connection, HttpSession httpSession ){
-        List<Connection> connections = httpSession.getAttribute("connections") == null ? new ArrayList<>() : (List<Connection>) httpSession.getAttribute("connections");
-        connection.setId(HashHelper.MD5(connection.getHost()+connection.getName()+new Date()));
-        connections.add(connection);
-        httpSession.setAttribute("connections",connections);
-        return connection;
-    }
-
-    public List<Connection> getConnections(HttpSession httpSession){
-        List<Connection> connections = httpSession.getAttribute("connections") == null ? new ArrayList<>() : (List<Connection>) httpSession.getAttribute("connections");
-        return connections;
-    }
-
-    public List<Connection> getConnections(){
-        return connectionRepository.findAll();
-    }
+    Connection createConnection( RequestContext<Connection> request ) throws KafkadorException;
 
 }
