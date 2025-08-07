@@ -6,12 +6,15 @@ import lombok.experimental.Accessors;
 
 @Data
 @Accessors(chain = true)
-public class RequestContext<T> {
+public class Request<T> {
 
     HttpSession httpSession;
     T body;
 
-    public RequestContext(HttpSession httpSession){
+    public Request(){
+    }
+
+    public Request(HttpSession httpSession){
         this.httpSession = httpSession;
     }
 

@@ -1,8 +1,9 @@
 package com.csl.kafkador.service;
 
 import com.csl.kafkador.component.KafkadorContext;
+import com.csl.kafkador.component.SessionHolder;
 import com.csl.kafkador.config.ApplicationConfig;
-import com.csl.kafkador.dto.RequestContext;
+import com.csl.kafkador.dto.Request;
 import com.csl.kafkador.exception.ConnectionNotFoundException;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkadorException;
@@ -22,12 +23,15 @@ public class ConnectionByConfig implements ConnectionService {
     @Autowired
     ApplicationConfig applicationConfig;
 
+    @Autowired
+    SessionHolder sessionHolder;
+
     @Override
-    public Connection connect(RequestContext<String> request) throws ConnectionNotFoundException {
+    public Connection connect(Request<String> request) throws ConnectionNotFoundException {
         Optional<Connection> optionalConnection = applicationConfig.getConnections().stream()
                 .filter(i -> i.getId().equals(request.getBody()) ).findFirst();
         if( optionalConnection.isPresent() ){
-            request.getHttpSession().setAttribute(KafkadorContext.Attribute.ACTIVE_CONNECTION.toString(),optionalConnection.get());
+            sessionHolder.getSession().setAttribute(KafkadorContext.Attribute.ACTIVE_CONNECTION.toString(),optionalConnection.get());
             return optionalConnection.get();
         } else {
             throw new ConnectionNotFoundException("Connection with given ID not found!");
@@ -35,15 +39,15 @@ public class ConnectionByConfig implements ConnectionService {
     }
 
     @Override
-    public Connection getActiveConnection(RequestContext request) throws ConnectionSessionExpiredException {
-        Connection connection = (Connection) request.getHttpSession().getAttribute(KafkadorContext.Attribute.ACTIVE_CONNECTION.toString());
+    public Connection getActiveConnection() throws ConnectionSessionExpiredException {
+        Connection connection = (Connection) sessionHolder.getSession().getAttribute(KafkadorContext.Attribute.ACTIVE_CONNECTION.toString());
         if( connection == null ) throw new ConnectionSessionExpiredException("No Active connection found!","/connect");
         return connection;
     }
 
     @Override
-    public Properties getActiveConnectionProperties(RequestContext request) throws ConnectionSessionExpiredException {
-        Connection connection = getActiveConnection(request);
+    public Properties getActiveConnectionProperties() throws ConnectionSessionExpiredException {
+        Connection connection = getActiveConnection();
         String bootstrapServers = connection.getHost() + ":" + connection.getPort() ;
         Properties props = new Properties();
         props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -51,12 +55,12 @@ public class ConnectionByConfig implements ConnectionService {
     }
 
     @Override
-    public Connection createConnection(RequestContext<Connection> request) throws KafkadorException {
+    public Connection createConnection(Request<Connection> request) throws KafkadorException {
         throw new KafkadorException("Service implementation is not available");
     }
 
     @Override
-    public List<Connection> getConnections(RequestContext request) {
+    public List<Connection> getConnections() {
         return applicationConfig.getConnections();
     }
 

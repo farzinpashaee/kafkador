@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="views/fragments/templates :: head"></head>
+<body>
+
+<div th:replace="views/fragments/menu :: menu"></div>
+
+<div class="ui main text container">
+  <h1 class="ui header">Sandbox</h1>
+
+  <form class="ui form">
+    <div class="ui selection dropdown">
+      <input type="hidden" name="country">
+      <i class="dropdown icon"></i>
+      <div class="default text">Select Topic</div>
+      <div class="menu">
+        <div class="item" th:each="topic : ${topics}" th:data-value="${topic.name}" th:text="${topic.name}"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Key</label>
+      <input type="text" name="first-name" placeholder="Key">
+    </div>
+    <div class="field">
+        <label>Value</label>
+        <textarea spellcheck="false" aria-label="To enrich screen reader interactions, please activate Accessibility in Grammarly extension settings"></textarea>
+    </div>
+    <button class="ui primary button" >Produce</button>
+  </form>
+
+  <div class="ui divider"></div>
+
+  <form class="ui form">
+    <div class="ui selection dropdown">
+      <input type="hidden" name="country">
+      <i class="dropdown icon"></i>
+      <div class="default text">Select Topic</div>
+      <div class="menu">
+        <div class="item" th:each="topic : ${topics}" th:data-value="${topic.name}" th:text="${topic.name}"></div>
+      </div>
+    </div>
+     <button class="ui primary button" >Consume</button>
+    <div id="consumedEvents">
+
+    </div>
+  </form>
+
+</div>
+
+<div th:replace="views/fragments/templates :: scripts"></div>
+<script>
+$(document).ready(function(){
+  $('.ui.dropdown').dropdown();
+
+    const eventSource = new EventSource("http://localhost:8080/api/consume/new-topic-4");
+
+    eventSource.onmessage = function(event) {
+      const output = document.getElementById("consumedEvents");
+      const newLine = document.createElement("div");
+      newLine.textContent = event.data;
+      output.appendChild(newLine);
+    };
+
+    eventSource.onerror = function(error) {
+      console.error("SSE error:", error);
+    };
+
+});
+</script>
+</body>
+</html>

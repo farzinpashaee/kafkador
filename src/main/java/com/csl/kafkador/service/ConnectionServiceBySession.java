@@ -1,7 +1,8 @@
 package com.csl.kafkador.service;
 
 import com.csl.kafkador.component.KafkadorContext;
-import com.csl.kafkador.dto.RequestContext;
+import com.csl.kafkador.component.SessionHolder;
+import com.csl.kafkador.dto.Request;
 import com.csl.kafkador.exception.ConnectionNotFoundException;
 import com.csl.kafkador.model.Connection;
 import com.csl.kafkador.util.HashHelper;
@@ -17,7 +18,10 @@ public class ConnectionServiceBySession {
     @Autowired
     KafkadorContext kafkadorContext;
 
-    public Connection createConnection( RequestContext<Connection> request ){
+    @Autowired
+    SessionHolder sessionHolder;
+
+    public Connection createConnection( Request<Connection> request ){
         List<Connection> connections = request.getHttpSession().getAttribute(KafkadorContext.Attribute.CONNECTIONS.toString()) == null ?
                 new ArrayList<>() : (List<Connection>) request.getHttpSession().getAttribute(KafkadorContext.Attribute.CONNECTIONS.toString());
         Connection connection = request.getBody();
@@ -27,9 +31,9 @@ public class ConnectionServiceBySession {
         return connection;
     }
 
-    public List<Connection> getConnections(RequestContext request){
-        List<Connection> connections = request.getHttpSession().getAttribute(KafkadorContext.Attribute.CONNECTIONS.toString()) == null ?
-                new ArrayList<>() : (List<Connection>) request.getHttpSession().getAttribute(KafkadorContext.Attribute.CONNECTIONS.toString());
+    public List<Connection> getConnections(){
+        List<Connection> connections = sessionHolder.getSession().getAttribute(KafkadorContext.Attribute.CONNECTIONS.toString()) == null ?
+                new ArrayList<>() : (List<Connection>) sessionHolder.getSession().getAttribute(KafkadorContext.Attribute.CONNECTIONS.toString());
 
         Connection dummy = new Connection(); // TODO: remove dummy
         dummy.setId("XXXXXXXXXXX");
@@ -41,9 +45,9 @@ public class ConnectionServiceBySession {
         return connections;
     }
 
-    public Connection connect( RequestContext<String> request ) throws ConnectionNotFoundException {
-        List<Connection> connections = request.getHttpSession().getAttribute(KafkadorContext.Attribute.CONNECTIONS.toString()) == null ?
-                new ArrayList<>() : (List<Connection>) request.getHttpSession().getAttribute(KafkadorContext.Attribute.CONNECTIONS.toString());
+    public Connection connect( Request<String> request ) throws ConnectionNotFoundException {
+        List<Connection> connections = sessionHolder.getSession().getAttribute(KafkadorContext.Attribute.CONNECTIONS.toString()) == null ?
+                new ArrayList<>() : (List<Connection>) sessionHolder.getSession().getAttribute(KafkadorContext.Attribute.CONNECTIONS.toString());
 
         Optional<Connection> connection = connections.stream().filter(i -> i.getId().equals(request.getBody()) ).findFirst();
         if(connection.isPresent()){
@@ -54,8 +58,8 @@ public class ConnectionServiceBySession {
         }
     }
 
-    public Properties getConnectionProperties( RequestContext requestContext ){
-        Connection connection = (Connection) requestContext.getHttpSession().getAttribute(KafkadorContext.Attribute.ACTIVE_CONNECTION.toString());
+    public Properties getConnectionProperties(){
+        Connection connection = (Connection) sessionHolder.getSession().getAttribute(KafkadorContext.Attribute.ACTIVE_CONNECTION.toString());
         String bootstrapServers = connection.getHost() + ":" + connection.getPort() ; // Replace with your Kafka broker address
         Properties props = new Properties();
         props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);

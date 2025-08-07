@@ -1,9 +1,8 @@
 package com.csl.kafkador.service;
 
-import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.dto.ClusterDetails;
-import com.csl.kafkador.dto.RequestContext;
+import com.csl.kafkador.dto.Request;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import org.apache.kafka.clients.admin.Admin;
@@ -24,13 +23,13 @@ public class ClusterService {
     @Autowired
     ApplicationConfig applicationConfig;
 
-    public ClusterDetails getClusterDetails(RequestContext request) throws KafkaAdminApiException {
+    public ClusterDetails getClusterDetails(Request request) throws KafkaAdminApiException {
 
         ClusterDetails clusterDetails = new ClusterDetails();
         ConnectionService connectionService = (ConnectionService) applicationContext
                 .getBean(applicationConfig.getConnectionServiceImplementation());
 
-        try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties(request))) {
+        try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
             KafkaFuture<String> clusterIdFuture = admin.describeCluster().clusterId();
             KafkaFuture<Collection<Node>> clusterNodesFuture = admin.describeCluster().nodes();
             KafkaFuture<Node> clusterControllerFuture = admin.describeCluster().controller();

@@ -1,7 +1,7 @@
 package com.csl.kafkador.controller;
 
 import com.csl.kafkador.dto.ClusterDetails;
-import com.csl.kafkador.dto.RequestContext;
+import com.csl.kafkador.dto.Request;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.service.ClusterService;
 import com.csl.kafkador.service.ConsumerService;
@@ -31,7 +31,7 @@ public class PageController {
         ViewHelper.setPageTitle("Cluster", model);
         // connectionService.checkConnection(session);
         ClusterService clusterService = (ClusterService) applicationContext.getBean("ClusterService");
-        ClusterDetails clusterDetails = clusterService.getClusterDetails(new RequestContext(session) );
+        ClusterDetails clusterDetails = clusterService.getClusterDetails(new Request(session) );
         model.addAttribute("clusterDetails", clusterDetails);
 
         return "views/pages/cluster.html";
@@ -40,10 +40,7 @@ public class PageController {
 
     @GetMapping("/connect")
     public String connect(Model model, HttpSession session, HttpServletRequest request) {
-
         ViewHelper.setPageTitle("Connect", model);
-
-
         return "views/pages/connect.html";
     }
 
@@ -54,7 +51,7 @@ public class PageController {
         ViewHelper.setPageTitle("Topics", model);
         // connectionService.checkConnection(session);
         TopicService topicService = (TopicService) applicationContext.getBean("TopicsService");
-        Collection<TopicListing> topics = topicService.getTopics( new RequestContext(session) );
+        Collection<TopicListing> topics = topicService.getTopics( new Request(session) );
         model.addAttribute("topics", topics);
 
         return "views/pages/topics.html";
@@ -65,10 +62,21 @@ public class PageController {
     public String consumers(Model model, HttpSession session) throws KafkaAdminApiException {
         ViewHelper.setPageTitle("Consumers", model);
         ConsumerService consumersService = (ConsumerService) applicationContext.getBean("ConsumersService");
-        Collection<ConsumerGroupListing> consumerGroups = consumersService.getConsumersGroup( new RequestContext(session));
+        Collection<ConsumerGroupListing> consumerGroups = consumersService.getConsumersGroup( new Request(session));
         model.addAttribute("consumerGroups", consumerGroups);
 
         return "views/pages/consumers.html";
+    }
+
+
+    @GetMapping("/sandbox")
+    public String sandbox(Model model, HttpSession session) throws KafkaAdminApiException {
+        ViewHelper.setPageTitle("Sandbox", model);
+        TopicService topicService = (TopicService) applicationContext.getBean("TopicsService");
+        Collection<TopicListing> topics = topicService.getTopics( new Request(session) );
+        model.addAttribute("topics", topics);
+
+        return "views/pages/sandbox.html";
     }
 
 }
