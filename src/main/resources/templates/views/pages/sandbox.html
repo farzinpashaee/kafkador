@@ -10,7 +10,7 @@
 
   <form class="ui form">
     <div class="ui selection dropdown">
-      <input type="hidden" name="country">
+      <input type="hidden" name="topic" id="produceTopic">
       <i class="dropdown icon"></i>
       <div class="default text">Select Topic</div>
       <div class="menu">
@@ -19,27 +19,27 @@
     </div>
     <div class="field">
       <label>Key</label>
-      <input type="text" name="first-name" placeholder="Key">
+      <input type="text"  id="key" name="first-name" placeholder="Key">
     </div>
     <div class="field">
         <label>Value</label>
-        <textarea spellcheck="false" aria-label="To enrich screen reader interactions, please activate Accessibility in Grammarly extension settings"></textarea>
+        <textarea id="value" spellcheck="false" aria-label="To enrich screen reader interactions, please activate Accessibility in Grammarly extension settings"></textarea>
     </div>
-    <button class="ui primary button" >Produce</button>
+    <a class="ui primary button" id="produce" >Produce</a>
   </form>
 
   <div class="ui divider"></div>
 
   <form class="ui form">
     <div class="ui selection dropdown">
-      <input type="hidden" name="country">
+      <input type="hidden" name="topic" id="consumeTopic">
       <i class="dropdown icon"></i>
       <div class="default text">Select Topic</div>
       <div class="menu">
         <div class="item" th:each="topic : ${topics}" th:data-value="${topic.name}" th:text="${topic.name}"></div>
       </div>
     </div>
-     <button class="ui primary button" >Consume</button>
+     <a class="ui primary button" id="consume" >Consume</a>
     <div id="consumedEvents">
 
     </div>
@@ -51,19 +51,20 @@
 <script>
 $(document).ready(function(){
   $('.ui.dropdown').dropdown();
-
-    const eventSource = new EventSource("http://localhost:8080/api/consume/new-topic-4");
-
-    eventSource.onmessage = function(event) {
-      const output = document.getElementById("consumedEvents");
-      const newLine = document.createElement("div");
-      newLine.textContent = event.data;
-      output.appendChild(newLine);
-    };
-
-    eventSource.onerror = function(error) {
-      console.error("SSE error:", error);
-    };
+  $('#produce').click(function(){
+    produce( $("#produceTopic").val(), { key: $('#key').val(),value: $('#value').val() }, function(response){
+      alert(response);
+    });
+  });
+  $('#consume').click(function(){
+    console.log("Consuming " + $("#consumeTopic").val() );
+    consume( $("#consumeTopic").val() , function(event) {
+        const output = document.getElementById("consumedEvents");
+        const newLine = document.createElement("div");
+        newLine.textContent = event.data;
+        output.appendChild(newLine);
+    });
+  });
 
 });
 </script>

@@ -3,6 +3,7 @@ package com.csl.kafkador.service;
 import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.dto.Request;
 import com.csl.kafkador.dto.Topic;
+import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.KafkaFuture;
@@ -32,7 +33,9 @@ public class TopicService {
         try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
             KafkaFuture<Collection<TopicListing>> topicsFuture = admin.listTopics().listings();
             return topicsFuture.get();
-        } catch (Exception e) {
+        } catch (ConnectionSessionExpiredException e){
+            throw e;
+        }  catch (Exception e) {
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
         }
     }
@@ -57,7 +60,9 @@ public class TopicService {
                 System.err.println("Failed to create topic: " + e.getMessage());
             }
             return topic;
-        } catch (Exception e) {
+        } catch (ConnectionSessionExpiredException e){
+            throw e;
+        }  catch (Exception e) {
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
         }
     }
@@ -71,7 +76,9 @@ public class TopicService {
         try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
             DeleteTopicsResult deleteTopicsResult = admin.deleteTopics(Collections.singleton(request.getBody()));
             deleteTopicsResult.all().get();
-        } catch (Exception e) {
+        } catch (ConnectionSessionExpiredException e){
+            throw e;
+        }  catch (Exception e) {
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
         }
     }
@@ -97,7 +104,9 @@ public class TopicService {
                 return topic;
             }
 
-        } catch (Exception e) {
+        } catch (ConnectionSessionExpiredException e){
+            throw e;
+        }  catch (Exception e) {
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
         }
         return null;

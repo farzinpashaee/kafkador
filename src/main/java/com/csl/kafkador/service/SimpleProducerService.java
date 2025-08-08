@@ -19,9 +19,6 @@ import java.util.Properties;
 public class SimpleProducerService implements ProducerService<String, String> {
 
     @Autowired
-    SessionHolder sessionHolder;
-
-    @Autowired
     ApplicationConfig applicationConfig;
 
     @Autowired

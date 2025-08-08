@@ -5,6 +5,8 @@ const CONFIG = {
         connect: '/api/connect',
         topics: '/api/topic',
         clusters: '/api/cluster',
+        consume: '/api/consume',
+        produce: '/api/produce',
         consumers: '/api/consumer'
     },
     defaultHeaders: {
@@ -91,6 +93,30 @@ function connect(id,callback){
     });
 }
 
+function produce(topic,event,callback){
+    $.ajax({
+        url: CONFIG.baseUrl + CONFIG.apiEndpoints.produce + "/" + topic,
+        method: 'POST',
+        dataType: 'json',
+        contentType: CONFIG.defaultHeaders['Content-Type'],
+        data: JSON.stringify(event),
+        headers: {
+            'Content-Type': CONFIG.defaultHeaders['Content-Type']
+        },
+        success: function(response) {
+            callback(response)
+            console.log('Success:', response);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', status, error);
+            console.log('Response Text:', xhr.responseText);
+        },
+        complete: function() {
+            console.log('Request complete.');
+        }
+    });
+}
+
 function callApiDummy(){
     $.ajax({
             url: 'https://api.example.com/data', // The API endpoint URL
@@ -137,6 +163,16 @@ function updatePlaceHolder( viewHtml, data ){
           processedView = processedView.replaceAll('${'+key+'}', data[key]);
     });
     return processedView;
+}
+
+function consume( topic, callback) {
+    const eventSource = new EventSource(CONFIG.baseUrl + CONFIG.apiEndpoints.consume + "/" + topic);
+    eventSource.onmessage = function(event) {
+        callback(event)
+    };
+    eventSource.onerror = function(error) {
+      console.error("SSE error:", error);
+    };
 }
 
 const Utils = {
