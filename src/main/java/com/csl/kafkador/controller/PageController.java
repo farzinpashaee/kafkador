@@ -45,6 +45,13 @@ public class PageController {
     }
 
 
+    @GetMapping("/connections")
+    public String connections(Model model, HttpSession session, HttpServletRequest request) {
+        ViewHelper.setPageTitle("Connections", model);
+        return "views/pages/connections.html";
+    }
+
+
     @GetMapping("/topics")
     public String topics(Model model, HttpSession session) throws KafkaAdminApiException {
 
@@ -61,7 +68,7 @@ public class PageController {
     @GetMapping("/consumers")
     public String consumers(Model model, HttpSession session) throws KafkaAdminApiException {
         ViewHelper.setPageTitle("Consumers", model);
-        ConsumerService consumersService = (ConsumerService) applicationContext.getBean("ConsumersService");
+        ConsumerService consumersService = (ConsumerService) applicationContext.getBean("ConsumerService");
         Collection<ConsumerGroupListing> consumerGroups = consumersService.getConsumersGroup( new Request(session));
         model.addAttribute("consumerGroups", consumerGroups);
 

@@ -3,6 +3,7 @@ package com.csl.kafkador.service;
 import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.dto.Request;
 import com.csl.kafkador.dto.Topic;
+import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
@@ -58,7 +59,9 @@ public class ConsumerService {
         try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
             KafkaFuture<Collection<ConsumerGroupListing>> consumersFuture = admin.listConsumerGroups().all();
             return consumersFuture.get();
-        } catch (Exception e) {
+        } catch (ConnectionSessionExpiredException e){
+            throw e;
+        }  catch (Exception e) {
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
         }
     }
