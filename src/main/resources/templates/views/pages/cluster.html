@@ -2,23 +2,33 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="views/fragments/templates :: head"></head>
 <body>
-
+<div th:replace="views/fragments/templates :: header"></div>
 <div th:replace="views/fragments/menu :: menu"></div>
-
-<div class="ui main text container">
-    <h1 class="ui header" th:text="${'Cluster (Controller: '+clusterDetails.controller.host+')'}">Cluster</h1>
-    <p>Cluster ID: <span th:text="${clusterDetails.id}"></span></p>
-    <h3>Brokers:</h3>
-    <div class="ui middle aligned divided list">
-        <div class="item" th:each="node : ${clusterDetails.nodes}">
-            <i class="server icon"></i>
-            <div class="content">
-                <a class="header" href="/node/{id}" th:text="${node.host+':'+node.port}"></a>
+<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Dashboard Overview</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
             </div>
         </div>
     </div>
-</div>
 
+    <div class="row">
+        <h1 th:text="${'Cluster (Controller: '+clusterDetails.controller.host+')'}">Cluster</h1>
+        <p>Cluster ID: <span th:text="${clusterDetails.id}"></span></p>
+        <h3>Brokers:</h3>
+        <div>
+            <div class="item" th:each="node : ${clusterDetails.nodes}">
+                <i class="server icon"></i>
+                <div class="content">
+                    <a class="header" href="/node/{id}" th:text="${node.host+':'+node.port}"></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
 <div th:replace="views/fragments/templates :: scripts"></div>
 </body>
 </html>

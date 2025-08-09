@@ -18,6 +18,30 @@ function createTopic(){
     alert("Creating Topic");
 }
 
+
+function getTopics(callback){
+    $.ajax({
+        url: CONFIG.baseUrl + CONFIG.apiEndpoints.topics,
+        method: 'GET',
+        dataType: 'json',
+        headers: {
+            'Content-Type': CONFIG.defaultHeaders['Content-Type']
+        },
+        success: function(response) {
+            callback(response);
+            console.log('Success:', response);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', status, error);
+            console.log('Response Text:', xhr.responseText);
+        },
+        complete: function() {
+            console.log('Request complete.');
+        }
+    });
+    return connections;
+}
+
 function createConnection( connection ){
     $.ajax({
             url: CONFIG.baseUrl + CONFIG.apiEndpoints.connection,
@@ -42,16 +66,17 @@ function createConnection( connection ){
     });
 }
 
-function getConnections(callback){
+function getConnections(id, callback){
+    $('#'+id+'Loading').show();
     $.ajax({
         url: CONFIG.baseUrl + CONFIG.apiEndpoints.connection,
         method: 'GET',
         dataType: 'json',
         headers: {
-            'SESSION': Utils.getCookie("SESSION"),
             'Content-Type': CONFIG.defaultHeaders['Content-Type']
         },
         success: function(response) {
+            $('#'+id+'Loading').hide();
             callback(response);
             console.log('Success:', response);
         },
@@ -60,12 +85,37 @@ function getConnections(callback){
             console.log('Response Text:', xhr.responseText);
         },
         complete: function() {
+            $('#'+id+'Loading').hide();
             console.log('Request complete.');
         }
     });
     return connections;
 }
 
+function get( id, callback ){
+    $('#'+id+'Loading').show();
+    $.ajax({
+        url: CONFIG.baseUrl + CONFIG.apiEndpoints[id],
+        method: 'GET',
+        dataType: 'json',
+        headers: {
+            'Content-Type': CONFIG.defaultHeaders['Content-Type']
+        },
+        success: function(response) {
+            $('#'+id+'Loading').hide();
+            callback(response);
+            console.log('Success:', response);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', status, error);
+            console.log('Response Text:', xhr.responseText);
+        },
+        complete: function() {
+            $('#'+id+'Loading').hide();
+            console.log('Request complete.');
+        }
+    });
+}
 
 function connect(id,callback){
     $.ajax({

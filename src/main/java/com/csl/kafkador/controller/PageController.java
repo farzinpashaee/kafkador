@@ -57,9 +57,9 @@ public class PageController {
 
         ViewHelper.setPageTitle("Topics", model);
         // connectionService.checkConnection(session);
-        TopicService topicService = (TopicService) applicationContext.getBean("TopicsService");
-        Collection<TopicListing> topics = topicService.getTopics( new Request(session) );
-        model.addAttribute("topics", topics);
+//        TopicService topicService = (TopicService) applicationContext.getBean("TopicsService");
+//        Collection<TopicListing> topics = topicService.getTopics( new Request(session) );
+//        model.addAttribute("topics", topics);
 
         return "views/pages/topics.html";
     }
