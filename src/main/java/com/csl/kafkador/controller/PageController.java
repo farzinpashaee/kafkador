@@ -2,6 +2,7 @@ package com.csl.kafkador.controller;
 
 import com.csl.kafkador.dto.ClusterDetails;
 import com.csl.kafkador.dto.Request;
+import com.csl.kafkador.dto.Topic;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.service.ClusterService;
 import com.csl.kafkador.service.ConsumerService;
@@ -31,7 +32,7 @@ public class PageController {
         ViewHelper.setPageTitle("Cluster", model);
         // connectionService.checkConnection(session);
         ClusterService clusterService = (ClusterService) applicationContext.getBean("ClusterService");
-        ClusterDetails clusterDetails = clusterService.getClusterDetails(new Request(session) );
+        ClusterDetails clusterDetails = clusterService.getClusterDetails();
         model.addAttribute("clusterDetails", clusterDetails);
 
         return "views/pages/cluster.html";
@@ -54,13 +55,7 @@ public class PageController {
 
     @GetMapping("/topics")
     public String topics(Model model, HttpSession session) throws KafkaAdminApiException {
-
         ViewHelper.setPageTitle("Topics", model);
-        // connectionService.checkConnection(session);
-//        TopicService topicService = (TopicService) applicationContext.getBean("TopicsService");
-//        Collection<TopicListing> topics = topicService.getTopics( new Request(session) );
-//        model.addAttribute("topics", topics);
-
         return "views/pages/topics.html";
     }
 
@@ -80,7 +75,7 @@ public class PageController {
     public String sandbox(Model model, HttpSession session) throws KafkaAdminApiException {
         ViewHelper.setPageTitle("Sandbox", model);
         TopicService topicService = (TopicService) applicationContext.getBean("TopicsService");
-        Collection<TopicListing> topics = topicService.getTopics( new Request(session) );
+        Collection<Topic> topics = topicService.getTopics();
         model.addAttribute("topics", topics);
 
         return "views/pages/sandbox.html";

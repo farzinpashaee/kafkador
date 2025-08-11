@@ -1,5 +1,6 @@
 package com.csl.kafkador.service;
 
+import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.dto.Request;
 import com.csl.kafkador.dto.Topic;
@@ -40,7 +41,7 @@ public class ConsumerService {
 
     public Properties getProperties() {
         ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getConnectionServiceImplementation());
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
 
         Properties properties = connectionService.getActiveConnectionProperties();
         properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
@@ -54,7 +55,7 @@ public class ConsumerService {
     public Collection<ConsumerGroupListing> getConsumersGroup(Request request) throws KafkaAdminApiException {
 
         ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getConnectionServiceImplementation());
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
 
         try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
             KafkaFuture<Collection<ConsumerGroupListing>> consumersFuture = admin.listConsumerGroups().all();

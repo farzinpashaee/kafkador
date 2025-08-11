@@ -1,10 +1,12 @@
 package com.csl.kafkador.service;
 
+import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.dto.Request;
 import com.csl.kafkador.dto.Topic;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
+import com.csl.kafkador.util.DtoMapper;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.KafkaFuture;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,8 +15,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
-@Service("TopicsService")
+@Service("TopicService")
 public class TopicService {
 
 
@@ -25,14 +28,14 @@ public class TopicService {
     ApplicationConfig applicationConfig;
 
 
-    public Collection<TopicListing> getTopics( Request request ) throws KafkaAdminApiException {
+    public Collection<Topic> getTopics() throws KafkaAdminApiException {
 
         ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getConnectionServiceImplementation());
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
 
         try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
             KafkaFuture<Collection<TopicListing>> topicsFuture = admin.listTopics().listings();
-            return topicsFuture.get();
+            return topicsFuture.get().stream().map(DtoMapper::topicMapper).collect(Collectors.toList());
         } catch (ConnectionSessionExpiredException e){
             throw e;
         }  catch (Exception e) {
@@ -43,7 +46,7 @@ public class TopicService {
     public Topic createTopic(Request<Topic> request ) throws KafkaAdminApiException {
 
         ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getConnectionServiceImplementation());
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
 
         try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
             Topic topic = request.getBody();
@@ -71,7 +74,7 @@ public class TopicService {
     public void deleteTopic(Request<String> request ) throws KafkaAdminApiException {
 
         ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getConnectionServiceImplementation());
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
 
         try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
             DeleteTopicsResult deleteTopicsResult = admin.deleteTopics(Collections.singleton(request.getBody()));
@@ -87,7 +90,7 @@ public class TopicService {
     public Topic getTopic( Request<String> request ) throws KafkaAdminApiException {
 
         ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getConnectionServiceImplementation());
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
 
         try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
             Topic topic = new Topic();

@@ -7,6 +7,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class PageView {
 
+    private String headTitle;
     private String title;
 
 }

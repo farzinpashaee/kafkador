@@ -3,21 +3,30 @@
 <head th:replace="views/fragments/templates :: head"></head>
 <body>
 
-<div th:replace="views/fragments/menu :: menu"></div>
-
-<div class="ui main text container">
-  <h1 class="ui header" >Consumers</h1>
-  <h3>Consumer Groups:</h3>
-  <div class="ui middle aligned divided list">
-    <div class="item" th:each="consumerGroup : ${consumerGroups}">
-      <i class="clipboard list icon"></i>
-      <div class="content">
-        <a class="header" href="/node/{id}" th:text="${consumerGroup.groupId}"></a>
+<div th:replace="views/fragments/templates :: header"></div>
+<div class="container-fluid">
+  <div class="row">
+    <div th:replace="views/fragments/menu :: menu"></div>
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content min-vh-100">
+      <div th:replace="views/fragments/templates :: title"></div>
+      <p class="placeholder-glow" id="clusterDetailsLoading">
+        <span class="placeholder col-12"></span>
+        <span class="placeholder col-12"></span>
+        <span class="placeholder col-8"></span>
+      </p>
+      <div class="row">
+        <div>
+          <div class="item" th:each="consumerGroup : ${consumerGroups}">
+            <i class="clipboard list icon"></i>
+            <div class="content">
+              <a class="header" href="/node/{id}" th:text="${consumerGroup.groupId}"></a>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </main>
   </div>
 </div>
-
 <div th:replace="views/fragments/templates :: scripts"></div>
 </body>
 </html>

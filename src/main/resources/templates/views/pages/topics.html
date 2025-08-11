@@ -2,35 +2,22 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="views/fragments/templates :: head"></head>
 <body>
-
-<div th:replace="views/fragments/menu :: menu"></div>
-
-<div class="ui main text container">
-  <h1 class="ui header" >Topics</h1>
-
-  <button class="ui primary button" id="createTopicButton">
-    Create Topic
-  </button>
-
-  <div class="ui middle aligned divided list" id="topics">
-  </div>
-</div>
-
-
-<div class="ui modal" id="createTopicModal">
-  <div class="header">
-    Create Topic
-  </div>
-  <div class="image content">
-
-  </div>
-  <div class="actions">
-    <div class="ui black deny button">
-      Cancel
-    </div>
-    <div class="ui primary left labeled icon button ml-0">
-      <i class="checkmark icon"></i> submit
-    </div>
+<div th:replace="views/fragments/templates :: header"></div>
+<div class="container-fluid">
+  <div class="row">
+    <div th:replace="views/fragments/menu :: menu"></div>
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content min-vh-100">
+      <div th:replace="views/fragments/templates :: title"></div>
+      <p class="placeholder-glow" id="clusterDetailsLoading">
+        <span class="placeholder col-12"></span>
+        <span class="placeholder col-12"></span>
+        <span class="placeholder col-8"></span>
+      </p>
+      <div class="row">
+        <div class="ui middle aligned divided list" id="topics">
+        </div>
+      </div>
+    </main>
   </div>
 </div>
 
@@ -42,9 +29,6 @@
 $(document).ready(function(){
   getTopics(function(topics){
     renderView($("#topics"),$("#topicsItemView"),topics);
-  });
-  $("#createTopicButton").click(function(){
-    $('#createTopicModal').modal('show');
   });
 });
 </script>

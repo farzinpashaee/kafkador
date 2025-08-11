@@ -39,7 +39,6 @@ function getTopics(callback){
             console.log('Request complete.');
         }
     });
-    return connections;
 }
 
 function createConnection( connection ){
@@ -67,7 +66,7 @@ function createConnection( connection ){
 }
 
 function getConnections(id, callback){
-    $('#'+id+'Loading').show();
+    //$('#'+id+'Loading').show();
     $.ajax({
         url: CONFIG.baseUrl + CONFIG.apiEndpoints.connection,
         method: 'GET',
@@ -76,7 +75,7 @@ function getConnections(id, callback){
             'Content-Type': CONFIG.defaultHeaders['Content-Type']
         },
         success: function(response) {
-            $('#'+id+'Loading').hide();
+            //$('#'+id+'Loading').hide();
             callback(response);
             console.log('Success:', response);
         },
@@ -85,11 +84,10 @@ function getConnections(id, callback){
             console.log('Response Text:', xhr.responseText);
         },
         complete: function() {
-            $('#'+id+'Loading').hide();
+            //$('#'+id+'Loading').hide();
             console.log('Request complete.');
         }
     });
-    return connections;
 }
 
 function get( id, callback ){
@@ -115,6 +113,10 @@ function get( id, callback ){
             console.log('Request complete.');
         }
     });
+}
+
+function disconnect(){
+    window.location = CONFIG.baseUrl + '/connect';
 }
 
 function connect(id,callback){

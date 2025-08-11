@@ -20,7 +20,8 @@ public class ViewHelper {
 
     public static void setPageTitle( String title, Model model ){
         PageView pageView =  getBasePageView();
-        model.addAttribute("page", pageView.setTitle( siteTitle + " | " + title ) );
+        model.addAttribute("page", pageView.setHeadTitle( siteTitle + " | " + title ) );
+        model.addAttribute("page", pageView.setTitle( title ) );
     }
 
 }

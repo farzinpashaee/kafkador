@@ -11,7 +11,7 @@ public class ClusterDetails {
 
     private String port;
     private String id;
-    private Collection<Node> nodes;
-    private Node controller;
+    private Collection<Broker> nodes;
+    private Broker controller;
 
 }

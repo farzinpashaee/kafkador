@@ -1,7 +1,10 @@
 package com.csl.kafkador.controller;
 
+import com.csl.kafkador.component.KafkadorContext;
+import com.csl.kafkador.model.Connection;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -38,6 +41,11 @@ public class ResourceInterceptor  implements HandlerInterceptor {
                             ModelAndView modelAndView) throws Exception {
         if(modelAndView != null) {
             modelAndView.addObject("baseUrl",baseUrl);
+            HttpSession session = request.getSession();
+            if( session != null ){
+                Connection connection = (Connection) session.getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString());
+                modelAndView.addObject("connection",connection);
+            }
         }
         log.info( "{} - response in {}ms",
                 request.getAttribute("request-id"),

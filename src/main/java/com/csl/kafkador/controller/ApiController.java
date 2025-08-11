@@ -1,5 +1,6 @@
 package com.csl.kafkador.controller;
 
+import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.dto.ClusterDetails;
 import com.csl.kafkador.dto.Event;
@@ -34,52 +35,53 @@ public class ApiController {
 
     @GetMapping("/cluster")
     public ClusterDetails getCluster( HttpSession session ) throws KafkaAdminApiException {
-        ClusterService clusterService = (ClusterService) applicationContext.getBean("ClusterService");
-        return clusterService.getClusterDetails( new Request(session) );
+        ClusterService clusterService = (ClusterService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CLUSTER));
+        ClusterDetails clusterDetails = clusterService.getClusterDetails();
+        return clusterDetails;
     }
 
     @GetMapping("/topic")
-    public Collection<TopicListing> getTopics( HttpSession session ) throws KafkaAdminApiException {
-        TopicService topicService = (TopicService) applicationContext.getBean("TopicsService");
-        return topicService.getTopics( new Request(session) );
+    public Collection<Topic> getTopics( HttpSession session ) throws KafkaAdminApiException {
+        TopicService topicService = (TopicService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
+        return topicService.getTopics();
     }
 
     @PostMapping("/topic")
     public void createTopic(@RequestBody Topic request, HttpSession session ) throws KafkaAdminApiException {
-        TopicService topicService = (TopicService) applicationContext.getBean("TopicsService");
+        TopicService topicService = (TopicService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
         topicService.createTopic(new Request<Topic>(session).setBody(request));
     }
 
     @DeleteMapping("/topic/{id}")
     public void deleteTopic(@PathVariable String name, HttpSession session ) throws KafkaAdminApiException {
-        TopicService topicService = (TopicService) applicationContext.getBean("TopicsService");
+        TopicService topicService = (TopicService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
         topicService.deleteTopic(new Request<String>(session).setBody(name));
     }
 
     @GetMapping("/topic/{name}")
     public Topic getTopic(@PathVariable String name, HttpSession session) throws KafkaAdminApiException {
-        TopicService topicService = (TopicService) applicationContext.getBean("TopicsService");
+        TopicService topicService = (TopicService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
         return topicService.getTopic(new Request<String>(session).setBody(name));
     }
 
     @PostMapping("/connection")
     public Connection createConnection(@RequestBody Connection connection, HttpSession session) throws KafkadorException {
         ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getConnectionServiceImplementation());
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
         return connectionService.createConnection(new Request<Connection>(session).setBody(connection));
     }
 
     @GetMapping("/connection")
     public List<Connection> getConnections(HttpSession session) {
         ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getConnectionServiceImplementation());
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
         return connectionService.getConnections();
     }
 
     @GetMapping("/connect")
     public Connection connect(@RequestParam String id, HttpSession session) throws ConnectionNotFoundException {
         ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getConnectionServiceImplementation());
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
         return connectionService.connect( new Request<String>(session).setBody(id) );
     }
 

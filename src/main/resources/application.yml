@@ -1,6 +1,9 @@
 kafkador:
   url: http://localhost:8080/
-  connectionServiceImplementation: "ConnectionServiceByConfig"
+  connectionServiceImplementation:
+  services:
+    connection:
+      implementation: "ConnectionServiceByConfig"
   connections:
     - id: 1
       name: connection-1

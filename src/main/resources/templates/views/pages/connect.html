@@ -1,28 +1,27 @@
 <!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="views/fragments/templates :: head"></head>
-<body>
+<body class="bg-light">
 
-<div class="ui main text container">
-    <h1 class="ui header" >Connect</h1>
-    <h3>Connections:</h3>
-    <button class="ui labeled icon button" id="addConnection">
-        <i class="plus icon"></i>
-        Create Connection
-    </button>
-    <div class="ui divided list" id="connection">
-        <div class="ui placeholder loadingPlaceholder" id="connectionLoading">
-            <div class="line"></div>
-            <div class="line"></div>
-            <div class="line"></div>
+
+<div class="min-vh-100 d-flex align-items-center justify-content-center">
+    <!-- Use container for responsive widths -->
+    <div class="container connectContainer">
+        <h1><img th:src="${baseUrl + 'assets/images/logo-shape-v1.svg'}" style="width:1.7em; margin-top:-0.3em">
+            Kafkador </h1>
+
+        <h4>Connect to Cluster </h4>
+        <p class="text-gray-500">Or connect to a new cluster by <a href="#">Adding New Connection</a></p>
+        <div class="row" id="connection">
         </div>
     </div>
 </div>
+</div>
 
-<div class="view-element" id="connectionItemView">
-    <div class="item">
-        <div class="content">${name}<br>${host}
-            <button class="ui right floated button connect" data-connection-id="${id}">Connect</button>
+<div class="viewElement" id="connectionItemView">
+    <div class="card m-1">
+        <div class="card-body"><h5>${name}</h5><span class="text-gray-500">${host}</span>
+            <button class="btn btn-primary connect float-end" data-connection-id="${id}" type="button">Connect</button>
         </div>
     </div>
 </div>
@@ -45,6 +44,7 @@ $(document).ready(function(){
             });
     });
 });
+
 </script>
 </body>
 </html>

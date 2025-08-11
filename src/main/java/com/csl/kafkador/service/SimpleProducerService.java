@@ -1,5 +1,6 @@
 package com.csl.kafkador.service;
 
+import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.component.SessionHolder;
 import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.dto.Event;
@@ -27,7 +28,7 @@ public class SimpleProducerService implements ProducerService<String, String> {
     @Override
     public Properties getProperties() {
         ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getConnectionServiceImplementation());
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
 
         Properties properties = connectionService.getActiveConnectionProperties();
         properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");

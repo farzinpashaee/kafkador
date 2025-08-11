@@ -4,35 +4,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <link rel="stylesheet" type="text/css" th:href="${baseUrl + 'css/bootstrap/bootstrap.min.css'}">
+    <link rel="stylesheet" type="text/css" th:href="${baseUrl + 'css/bootstrap/bootstrap-icons.css'}">
     <link rel="stylesheet" type="text/css" th:href="${baseUrl + 'css/kafkador.css'}">
     <link rel="icon" type="image/x-icon" th:href="${baseUrl+'assets/images/logo-shape-white-v1-256.svg'}">
 
-    <title th:text="${page.title} ?: 'title default value'"></title>
+    <title th:text="${page.headTitle} ?: 'title default value'"></title>
 
 </head>
 <body>
-<header th:fragment="header" class="navbar navbar-expand-lg navbar-dark bg-black sticky-top p-0 shadow">
-    <div class="container-fluid">
-        <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="#">
-            <img th:src="${baseUrl + 'assets/images/logo-shape-v1.svg'}" style="width:1.4em; margin-top:-0.3em">Kafkador
-        </a>
-        <button class="navbar-toggler d-md-none collapsed" type="button" data-bs-toggle="collapse"
-                data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false"
-                aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Settings</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Profile</a>
-                </li>
+<header th:fragment="header" class="navbar sticky-top bg-dark flex-md-nowrap p-0 shadow" data-bs-theme="dark">
+    <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6 text-white bg-black" th:href="${baseUrl}">
+        <img th:src="${baseUrl + 'assets/images/logo-shape-v1.svg'}" style="width:1.7em; margin-top:-0.3em"> Kafkador
+    </a>
+    <ul class="navbar-nav flex-row d-md-none">
+        <li class="nav-item text-nowrap">
+            <button class="nav-link px-3 text-white" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSearch" aria-controls="navbarSearch" aria-expanded="false"
+                    aria-label="Toggle search">
+                <svg class="bi" aria-hidden="true">
+                    <use xlink:href="#search"></use>
+                </svg>
+            </button>
+        </li>
+        <li class="nav-item text-nowrap">
+            <button class="nav-link px-3 text-white" type="button" data-bs-toggle="offcanvas"
+                    data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <svg class="bi" aria-hidden="true">
+                    <use xlink:href="#list"></use>
+                </svg>
+            </button>
+        </li>
+    </ul>
+    <div id="navbarSearch" class="navbar-search w-100 collapse"><input class="form-control w-100 rounded-0 border-0" aria-label="Search"></div>
+</header>
+<div th:fragment="title" class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 th:text="${page.title}"></h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="dropdown">
+            <button class="btn btn-primary btn-sm dropdown-toggle headerDropDownButton" type="button" data-bs-toggle="dropdown" aria-expanded="false" th:utext="${ '<span class=&quot;green-circle&quot;></span> ' +connection.host + ' ' }">
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" th:href="${baseUrl+'connections'}"><i class="bi bi-hdd-network"></i><span class="m-2">Connections</span></a></li>
+                <li><a class="dropdown-item" href="#" id="disconnectButton"><i class="bi bi-power"></i><span class="m-2">Disconnect</span></a></li>
             </ul>
         </div>
     </div>
-</header>
+</div>
+
+<!--<header th:fragment="header" class="navbar navbar-expand-lg navbar-dark bg-black sticky-top p-0 shadow">-->
+<!--    <div class="container-fluid">-->
+<!--        <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="#">-->
+<!--            <img th:src="${baseUrl + 'assets/images/logo-shape-v1.svg'}" style="width:1.5em; margin-top:-0.3em"> Kafkador-->
+<!--        </a>-->
+<!--        <button class="navbar-toggler d-md-none collapsed" type="button" data-bs-toggle="collapse"-->
+<!--                data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false"-->
+<!--                aria-label="Toggle navigation">-->
+<!--            <span class="navbar-toggler-icon"></span>-->
+<!--        </button>-->
+<!--        <div class="collapse navbar-collapse" id="navbarNav">-->
+<!--            <ul class="navbar-nav ms-auto">-->
+<!--                <li class="nav-item">-->
+<!--                    <div class="dropdown">-->
+<!--                        <button class="btn btn-primary btn-sm dropdown-toggle headerDropDownButton" type="button" data-bs-toggle="dropdown" aria-expanded="false" th:text="${connection.host + ' ' }">-->
+<!--                        </button>-->
+<!--                        <ul class="dropdown-menu dropdown-menu-end">-->
+<!--                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear m-1"></i> Settings</a></li>-->
+<!--                            <li><a class="dropdown-item" href="#"><i class="bi bi-hdd-network m-1"></i> Connections</a></li>-->
+<!--                            <li><a class="dropdown-item" href="#"><i class="bi bi-power m-1"></i> Disconnect</a></li>-->
+<!--                        </ul>-->
+<!--                    </div>-->
+<!--                </li>-->
+<!--            </ul>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</header>-->
 <footer th:fragment="footer">
     <!-- Footer -->
 </footer>
@@ -42,6 +88,7 @@
             crossorigin="anonymous"></script>
     <script th:src="${baseUrl + 'js/bootstrap/bootstrap.bundle.min.js'}"></script>
     <script th:src="${baseUrl + 'js/kafkador.js'}"></script>
+    <script th:src="${baseUrl + 'js/kafkador.view.js'}"></script>
 </div>
 </body>
 </html>

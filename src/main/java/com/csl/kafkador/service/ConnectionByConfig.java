@@ -31,7 +31,7 @@ public class ConnectionByConfig implements ConnectionService {
         Optional<Connection> optionalConnection = applicationConfig.getConnections().stream()
                 .filter(i -> i.getId().equals(request.getBody()) ).findFirst();
         if( optionalConnection.isPresent() ){
-            sessionHolder.getSession().setAttribute(KafkadorContext.Attribute.ACTIVE_CONNECTION.toString(),optionalConnection.get());
+            sessionHolder.getSession().setAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString(),optionalConnection.get());
             return optionalConnection.get();
         } else {
             throw new ConnectionNotFoundException("Connection with given ID not found!");
@@ -40,7 +40,7 @@ public class ConnectionByConfig implements ConnectionService {
 
     @Override
     public Connection getActiveConnection() throws ConnectionSessionExpiredException {
-        Connection connection = (Connection) sessionHolder.getSession().getAttribute(KafkadorContext.Attribute.ACTIVE_CONNECTION.toString());
+        Connection connection = (Connection) sessionHolder.getSession().getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString());
         if( connection == null ) throw new ConnectionSessionExpiredException("No Active connection found!","/connect");
         return connection;
     }
