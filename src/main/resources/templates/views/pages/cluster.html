@@ -8,30 +8,47 @@
         <div th:replace="views/fragments/menu :: menu"></div>
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content min-vh-100">
             <div th:replace="views/fragments/templates :: title"></div>
-            <p class="placeholder-glow" id="clusterDetailsLoading">
+            <p class="placeholder-glow" id="clusterLoading">
                 <span class="placeholder col-12"></span>
                 <span class="placeholder col-12"></span>
                 <span class="placeholder col-8"></span>
             </p>
-            <div class="row">
-                <h5 th:text="${'Controller: '+clusterDetails.controller.host}"></h5>
-                <h5 th:text="${'Cluster ID: '+clusterDetails.id}"></h5>
-                <h5>Brokers:</h5>
-                <div>
-                    <div class="item" th:each="node : ${clusterDetails.nodes}">
-                        <i class="server icon"></i>
-                        <div class="content">
-                            <a class="header" href="/node/{id}" th:text="${node.host+':'+node.port}"></a>
-                        </div>
-                    </div>
+            <div class="row" id="cluster">
+                <div class="row" id="clusterDetails"></div>
+                <div class="row mt-4">
+                    <h4>Brokers</h4>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th scope="col">id</th>
+                            <th scope="col">Host</th>
+                            <th scope="col">Port</th>
+                            <th scope="col">Hash</th>
+                        </tr>
+                        </thead>
+                        <tbody id="clusterBrokers">
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </main>
     </div>
 </div>
 
+<div class="view-element" id="clusterDetailsView">
+    <h6>Controller: <span id="controllerHost">${controller.host}</span></h6>
+    <h6>Cluster ID: <span id="clusterId">${id}</span></h6>
+</div>
 <div th:replace="views/fragments/templates :: scripts"></div>
 <script>
+$(document).ready(function(){
+    get('cluster', function(response){
+        console.log(response);
+        renderView($("#clusterDetails"),$("#clusterDetailsView"),response);
+        renderViewHtml($("#clusterBrokers"),'<tr><th scope="row">${id}</th><td>${host}</td><td>${port}</td><td>${hash}</td></tr>',response.nodes);
+    });
+});
+
 
 </script>
 </body>

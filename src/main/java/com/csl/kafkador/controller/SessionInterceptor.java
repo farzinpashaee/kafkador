@@ -6,32 +6,26 @@ import com.csl.kafkador.model.Connection;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.UUID;
 
-@Slf4j
-public class ResourceInterceptor  implements HandlerInterceptor {
+public class SessionInterceptor implements HandlerInterceptor {
 
-    private String baseUrl;
 
-    public ResourceInterceptor(){}
-
-    public ResourceInterceptor( String baseUrl ){
-        this.baseUrl = baseUrl;
-    }
+    public SessionInterceptor(){}
 
     @Override
     public boolean preHandle(HttpServletRequest request,
                              HttpServletResponse response,
                              Object handler) throws Exception {
 
-        UUID uuid = UUID.randomUUID();
-        request.setAttribute("start" , System.currentTimeMillis());
-        request.setAttribute("request-id", uuid );
-        log.info( "{} - calling {}" , uuid , request.getRequestURI() );
+
+        HttpSession session = request.getSession();
+        if(session.getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString()) == null)
+            throw new ConnectionSessionExpiredException("No Active Connection Found!","/connect");
+
         return true;
     }
 
@@ -41,10 +35,11 @@ public class ResourceInterceptor  implements HandlerInterceptor {
                             Object handler,
                             ModelAndView modelAndView) throws Exception {
         if(modelAndView != null) {
-            modelAndView.addObject("baseUrl",baseUrl);
+            HttpSession session = request.getSession();
+            if( session != null ){
+                Connection connection = (Connection) session.getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString());
+                modelAndView.addObject("connection",connection);
+            }
         }
-        log.info( "{} - response in {}ms",
-                request.getAttribute("request-id"),
-                System.currentTimeMillis() - (long) request.getAttribute("start") );
     }
 }

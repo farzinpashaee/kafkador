@@ -4,7 +4,24 @@
 <body>
 
 <div th:replace="views/fragments/templates :: header"></div>
-<div th:replace="views/fragments/menu :: menu"></div>
+<div class="container-fluid">
+  <div class="row">
+    <div th:replace="views/fragments/menu :: menu"></div>
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content min-vh-100">
+      <div th:replace="views/fragments/templates :: title"></div>
+      <p class="placeholder-glow" id="clusterDetailsLoading">
+        <span class="placeholder col-12"></span>
+        <span class="placeholder col-12"></span>
+        <span class="placeholder col-8"></span>
+      </p>
+      <div class="row">
+        <div class="ui middle aligned divided list" id="sandbox">
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
 <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
   <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1>Sandbox</h1>

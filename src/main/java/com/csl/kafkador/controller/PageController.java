@@ -28,13 +28,7 @@ public class PageController {
 
     @GetMapping("/")
     public String cluster(Model model, HttpSession session, HttpServletRequest request) throws KafkaAdminApiException {
-
         ViewHelper.setPageTitle("Cluster", model);
-        // connectionService.checkConnection(session);
-        ClusterService clusterService = (ClusterService) applicationContext.getBean("ClusterService");
-        ClusterDetails clusterDetails = clusterService.getClusterDetails();
-        model.addAttribute("clusterDetails", clusterDetails);
-
         return "views/pages/cluster.html";
     }
 
@@ -52,6 +46,12 @@ public class PageController {
         return "views/pages/connections.html";
     }
 
+
+    @GetMapping("/connectors")
+    public String connectors(Model model, HttpSession session, HttpServletRequest request) {
+        ViewHelper.setPageTitle("Connectors", model);
+        return "views/pages/connectors.html";
+    }
 
     @GetMapping("/topics")
     public String topics(Model model, HttpSession session) throws KafkaAdminApiException {

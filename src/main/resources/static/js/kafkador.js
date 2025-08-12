@@ -3,11 +3,11 @@ const CONFIG = {
     apiEndpoints: {
         connection: '/api/connection',
         connect: '/api/connect',
-        topics: '/api/topic',
-        clusters: '/api/cluster',
+        topic: '/api/topic',
+        cluster: '/api/cluster',
         consume: '/api/consume',
         produce: '/api/produce',
-        consumers: '/api/consumer'
+        consumer: '/api/consumer'
     },
     defaultHeaders: {
         'Content-Type': 'application/json'
@@ -21,7 +21,7 @@ function createTopic(){
 
 function getTopics(callback){
     $.ajax({
-        url: CONFIG.baseUrl + CONFIG.apiEndpoints.topics,
+        url: CONFIG.baseUrl + CONFIG.apiEndpoints.topic,
         method: 'GET',
         dataType: 'json',
         headers: {
@@ -91,6 +91,7 @@ function getConnections(id, callback){
 }
 
 function get( id, callback ){
+    //$('#'+id).hide();
     $('#'+id+'Loading').show();
     $.ajax({
         url: CONFIG.baseUrl + CONFIG.apiEndpoints[id],
@@ -100,9 +101,10 @@ function get( id, callback ){
             'Content-Type': CONFIG.defaultHeaders['Content-Type']
         },
         success: function(response) {
-            $('#'+id+'Loading').hide();
-            callback(response);
             console.log('Success:', response);
+            callback(response);
+            $('#'+id+'Loading').hide();
+            //$('#'+id).show();
         },
         error: function(xhr, status, error) {
             console.error('Error:', status, error);
@@ -110,6 +112,7 @@ function get( id, callback ){
         },
         complete: function() {
             $('#'+id+'Loading').hide();
+            //$('#'+id).hide();
             console.log('Request complete.');
         }
     });
@@ -198,22 +201,44 @@ function callApiDummy(){
 }
 
 function renderView( container, view, data ){
+    renderViewHtml( container, $(view).html(), data);
+}
+
+function renderViewHtml( container, html, data ){
     if (Utils.isPlainObject(data)) {
-        $(container).append($(view).html());
+        $(container).append(updatePlaceHolder(html,data));
     } else if (Utils.isArrayOfPlainObjects(data)) {
         data.forEach(function(item, index) {
-            $(container).append(updatePlaceHolder($(view).html(),item));
+            $(container).append(updatePlaceHolder(html,item));
         });
     } else {
         console.log("Input is neither a plain object nor an array of plain objects.");
     }
 }
 
-function updatePlaceHolder( viewHtml, data ){
+function updatePlaceHolderX( viewHtml, data ){
     processedView = viewHtml;
     Object.keys(data).forEach(key => {
-          processedView = processedView.replaceAll('${'+key+'}', data[key]);
+        processedView = processedView.replaceAll('${'+key+'}', data[key]);
     });
+    return processedView;
+}
+
+function updatePlaceHolder(viewHtml, data) {
+    let processedView = viewHtml;
+    function replaceRecursive(obj, prefix = '') {
+        Object.keys(obj).forEach(key => {
+            const value = obj[key];
+            const placeholder = '${' + (prefix ? prefix + '.' : '') + key + '}';
+
+            if (typeof value === 'object' && value !== null) {
+                replaceRecursive(value, (prefix ? prefix + '.' : '') + key);
+            } else {
+                processedView = processedView.replaceAll(placeholder, value);
+            }
+        });
+    }
+    replaceRecursive(data);
     return processedView;
 }
 

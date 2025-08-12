@@ -4,33 +4,80 @@
 <body>
 <div th:replace="views/fragments/templates :: header"></div>
 <div class="container-fluid">
-  <div class="row">
-    <div th:replace="views/fragments/menu :: menu"></div>
-    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content min-vh-100">
-      <div th:replace="views/fragments/templates :: title"></div>
-      <p class="placeholder-glow" id="clusterDetailsLoading">
-        <span class="placeholder col-12"></span>
-        <span class="placeholder col-12"></span>
-        <span class="placeholder col-8"></span>
-      </p>
-      <div class="row">
-        <div class="ui middle aligned divided list" id="topics">
-        </div>
-      </div>
-    </main>
-  </div>
+    <div class="row">
+        <div th:replace="views/fragments/menu :: menu"></div>
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content min-vh-100">
+            <div th:replace="views/fragments/templates :: title"></div>
+            <p class="placeholder-glow" id="topicLoading">
+                <span class="placeholder col-12"></span>
+                <span class="placeholder col-12"></span>
+                <span class="placeholder col-8"></span>
+            </p>
+            <div class="row mt-4">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th scope="col">name</th>
+                        <th scope="col">id</th>
+                        <th scope="col"></th>
+                    </tr>
+                    </thead>
+                    <tbody id="topics">
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
 </div>
 
-<div class="view-element" id="topicsItemView">
-<div class="item"><i class="clipboard list icon"></i><div class="content"><div class="header">${name}</div></div></div>
+<div class="modal fade" tabindex="-1" id="consume">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Consume</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Modal body text goes here.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" tabindex="-1" id="produce">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Produce</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Modal body text goes here.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
 </div>
 <div th:replace="views/fragments/templates :: scripts"></div>
 <script>
 $(document).ready(function(){
-  getTopics(function(topics){
-    renderView($("#topics"),$("#topicsItemView"),topics);
+  get('topic',function(topics){
+    renderViewHtml($("#topics"),'<tr><th scope="row">${name}</th><td>${id}</td><td><button type="button" class="btn btn-primary btn-sm produce" data-bs-toggle="modal" data-bs-target="#produce" data-topic-name="${name}">Produce</button> <button type="button" class="btn btn-primary btn-sm consume" data-bs-toggle="modal" data-bs-target="#consume" data-topic-name="${name}">Consume</button></td></tr>',topics);
+    $(".produce").click(function(){
+        console.log("Produce in " + $(this).data("topic-name"));
+    });
+    $(".consume").click(function(){
+        console.log("Consume from " + $(this).data("topic-name"));
+    });
   });
 });
+
 </script>
 </body>
 </html>
