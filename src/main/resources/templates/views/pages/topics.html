@@ -51,15 +51,28 @@
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Produce</h5>
+                <h5 class="modal-title">Produce Event</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Modal body text goes here.</p>
+                <div class="row">
+                    <p>Send an event to Topic "<span class="fw-bold" id="produceTopicName"></span>"</p>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="produceKey" placeholder="Event Key">
+                    <label for="produceKey">Key</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <textarea class="form-control" id="produceValue" rows="3" placeholder="Event Value"></textarea>
+                    <label for="produceValue">Value</label>
+                </div>
+                <div style="display:none" class="alert alert-success" role="alert" id="produceAlert">
+                    Event sent successfully
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary">Save changes</button>
+                <button type="button" class="btn btn-secondary">Clear</button>
+                <button type="button" class="btn btn-primary" id="sendEvent">Send Event</button>
             </div>
         </div>
     </div>
@@ -70,10 +83,16 @@ $(document).ready(function(){
   get('topic',function(topics){
     renderViewHtml($("#topics"),'<tr><th scope="row">${name}</th><td>${id}</td><td><button type="button" class="btn btn-primary btn-sm produce" data-bs-toggle="modal" data-bs-target="#produce" data-topic-name="${name}">Produce</button> <button type="button" class="btn btn-primary btn-sm consume" data-bs-toggle="modal" data-bs-target="#consume" data-topic-name="${name}">Consume</button></td></tr>',topics);
     $(".produce").click(function(){
-        console.log("Produce in " + $(this).data("topic-name"));
+        $("#produceTopicName").html($(this).data("topic-name"));
+    });
+    $('#sendEvent').click(function(){
+        produce( $("#produceTopicName").html(), { key: $('#produceKey').val(),value: $('#produceValue').val() }, function(response){
+            console.log(response);
+            showAlert( $("#produceAlert"), 'Event sent successfully', 'alert-success' );
+        });
     });
     $(".consume").click(function(){
-        console.log("Consume from " + $(this).data("topic-name"));
+
     });
   });
 });

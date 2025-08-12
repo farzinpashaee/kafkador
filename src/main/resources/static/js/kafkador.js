@@ -7,7 +7,8 @@ const CONFIG = {
         cluster: '/api/cluster',
         consume: '/api/consume',
         produce: '/api/produce',
-        consumer: '/api/consumer'
+        consumer: '/api/consumer',
+        consumerGroup: '/api/consumer-group'
     },
     defaultHeaders: {
         'Content-Type': 'application/json'
@@ -202,6 +203,18 @@ function callApiDummy(){
 
 function renderView( container, view, data ){
     renderViewHtml( container, $(view).html(), data);
+}
+
+
+function showAlert( container, message, type ){
+    $(container).removeClass('alert-primary alert-secondary alert-success alert-danger alert-warning alert-info');
+    $(container).addClass(type);
+    $(container).html(message);
+    $(container).fadeIn(500);
+    const timeoutId = setTimeout(function() {
+        $(container).fadeOut(500);
+    }, 5000);
+    return timeoutId;
 }
 
 function renderViewHtml( container, html, data ){

@@ -9,40 +9,37 @@
         <div th:replace="views/fragments/menu :: menu"></div>
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content min-vh-100">
             <div th:replace="views/fragments/templates :: title"></div>
-            <p class="placeholder-glow" id="clusterDetailsLoading">
+            <p class="placeholder-glow" id="connectionLoading">
                 <span class="placeholder col-12"></span>
                 <span class="placeholder col-12"></span>
                 <span class="placeholder col-8"></span>
             </p>
-            <div class="row">
-                <div class="ui middle aligned divided list" id="connections">
+            <div class="row" id="connection">
+                <div class="row mt-4">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th scope="col">name</th>
+                            <th scope="col">Host</th>
+                            <th scope="col">Port</th>
+                        </tr>
+                        </thead>
+                        <tbody id="connections">
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </main>
     </div>
 </div>
 
-<div class="view-element" id="connectionItemView">
-    <div class="item"><i class="server icon"></i>
-        <div class="content">
-            <div class="header">${name}</div>
-            <div class="description">${host}</div>
-        </div>
-    </div>
-</div>
 <div th:replace="views/fragments/templates :: scripts"></div>
 <script>
 $(document).ready(function(){
-    getConnections( 'connections', function(connections) {
-        renderView($("#connections"),$("#connectionItemView"),connections);
-        $(".connect").click(function(){
-            connect($(this).data("connection-id"),function(response){
-                 window.location.href = CONFIG.baseUrl;
-            });
-        });
+    get( 'connection', function(connections) {
+        renderViewHtml($("#connections"),'<tr><th scope="row">${name}</th><td>${host}</td><td>${port}</td></tr>',connections);
     });
 });
-
 </script>
 </body>
 </html>

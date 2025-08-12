@@ -1,6 +1,7 @@
 package com.csl.kafkador.controller;
 
 import com.csl.kafkador.dto.ClusterDetails;
+import com.csl.kafkador.dto.ConsumerGroup;
 import com.csl.kafkador.dto.Request;
 import com.csl.kafkador.dto.Topic;
 import com.csl.kafkador.exception.KafkaAdminApiException;
@@ -63,10 +64,6 @@ public class PageController {
     @GetMapping("/consumers")
     public String consumers(Model model, HttpSession session) throws KafkaAdminApiException {
         ViewHelper.setPageTitle("Consumers", model);
-        ConsumerService consumersService = (ConsumerService) applicationContext.getBean("ConsumerService");
-        Collection<ConsumerGroupListing> consumerGroups = consumersService.getConsumersGroup( new Request(session));
-        model.addAttribute("consumerGroups", consumerGroups);
-
         return "views/pages/consumers.html";
     }
 

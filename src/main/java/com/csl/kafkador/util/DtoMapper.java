@@ -1,7 +1,9 @@
 package com.csl.kafkador.util;
 
 import com.csl.kafkador.dto.Broker;
+import com.csl.kafkador.dto.ConsumerGroup;
 import com.csl.kafkador.dto.Topic;
+import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.common.Node;
 
@@ -21,5 +23,10 @@ public class DtoMapper {
         return new Topic().setName(topicListing.name())
                 .setId(topicListing.topicId().toString())
                 .setIsInternal(topicListing.isInternal());
+    }
+
+
+    public static ConsumerGroup consumerGroupMapper(ConsumerGroupListing consumerGroupListing){
+        return new ConsumerGroup().setId(consumerGroupListing.groupId());
     }
 }

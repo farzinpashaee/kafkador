@@ -9,40 +9,21 @@
         <div th:replace="views/fragments/menu :: menu"></div>
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content min-vh-100">
             <div th:replace="views/fragments/templates :: title"></div>
-            <p class="placeholder-glow" id="clusterDetailsLoading">
-                <span class="placeholder col-12"></span>
-                <span class="placeholder col-12"></span>
-                <span class="placeholder col-8"></span>
-            </p>
             <div class="row">
-                <div class="ui middle aligned divided list" id="connections">
+                <div class="alert alert-warning" role="alert">
+                    This Service is Not Enabled!
                 </div>
             </div>
         </main>
     </div>
 </div>
 
-<div class="view-element" id="connectionItemView">
-    <div class="item"><i class="server icon"></i>
-        <div class="content">
-            <div class="header">${name}</div>
-            <div class="description">${host}</div>
-        </div>
-    </div>
-</div>
+
 <div th:replace="views/fragments/templates :: scripts"></div>
 <script>
 $(document).ready(function(){
-    getConnections( 'connections', function(connections) {
-        renderView($("#connections"),$("#connectionItemView"),connections);
-        $(".connect").click(function(){
-            connect($(this).data("connection-id"),function(response){
-                 window.location.href = CONFIG.baseUrl;
-            });
-        });
-    });
-});
 
+});
 </script>
 </body>
 </html>
