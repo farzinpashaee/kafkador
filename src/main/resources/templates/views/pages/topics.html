@@ -31,24 +31,34 @@
 </div>
 
 <div class="modal fade" tabindex="-1" id="consume">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Consume</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Modal body text goes here.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary">Save changes</button>
+                <div class="row">
+                    <div class="float-start">
+                        <div class="spinner-border spinner-border-sm float-start" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="float-start ms-1">Consuming "<span class="fw-bold" id="consumeTopicName"></span>"</p>
+                    </div>
+                </div>
+                <div class="border p-3 overflow-auto" style="max-height: 200px;" id="consumeContainer">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="startConsume"><i class="bi bi-play-fill"></i> Start</button>
+                    <button type="button" class="btn btn-primary" id="stopConsume"><i class="bi bi-stop-fill"></i> Stop</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 <div class="modal fade" tabindex="-1" id="produce">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Produce Event</h5>
@@ -81,7 +91,7 @@
 <script>
 $(document).ready(function(){
   get('topic',function(topics){
-    renderViewHtml($("#topics"),'<tr><th scope="row">${name}</th><td>${id}</td><td><button type="button" class="btn btn-primary btn-sm produce" data-bs-toggle="modal" data-bs-target="#produce" data-topic-name="${name}">Produce</button> <button type="button" class="btn btn-primary btn-sm consume" data-bs-toggle="modal" data-bs-target="#consume" data-topic-name="${name}">Consume</button></td></tr>',topics);
+    renderViewHtml($("#topics"),'<tr><th scope="row">${name}</th><td>${id}</td><td><button type="button" class="btn btn-primary btn-sm produce" data-bs-toggle="modal" data-bs-target="#produce" data-topic-name="${name}">Produce</button> <button type="button" class="btn btn-primary btn-sm ms-1 consume" data-bs-toggle="modal" data-bs-target="#consume" data-topic-name="${name}">Consume</button></td></tr>',topics);
     $(".produce").click(function(){
         $("#produceTopicName").html($(this).data("topic-name"));
     });
@@ -92,7 +102,10 @@ $(document).ready(function(){
         });
     });
     $(".consume").click(function(){
-
+        $("#consumeTopicName").html($(this).data("topic-name"));
+        consume( $(this).data("topic-name"), function(event){
+            $("#consumeContainer").append("<div>"+event.data+"</div>");
+        });
     });
   });
 });
