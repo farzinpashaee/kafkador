@@ -5,7 +5,7 @@ import lombok.experimental.Accessors;
 
 @Data
 @Accessors(chain = true)
-public class Broker {
+public class Node {
 
     private Integer id;
     private String idString;

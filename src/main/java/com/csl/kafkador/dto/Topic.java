@@ -18,6 +18,7 @@ public class Topic {
     private Integer partitions;
     private Boolean isInternal;
     private Short replicatorFactor;
-    private List<TopicPartitionInfo> partitionDetails;
+    private List<Partition> partitionDetails;
+
 
 }
