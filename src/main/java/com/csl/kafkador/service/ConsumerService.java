@@ -9,6 +9,7 @@ import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.util.DtoMapper;
 import org.apache.kafka.clients.admin.Admin;
+import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -25,6 +26,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -62,7 +64,10 @@ public class ConsumerService {
 
         try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
             KafkaFuture<Collection<ConsumerGroupListing>> consumersFuture = admin.listConsumerGroups().all();
-            return consumersFuture.get().stream().map(DtoMapper::consumerGroupMapper).collect(Collectors.toList());
+            KafkaFuture<Map<String, ConsumerGroupDescription>> consumerDescribedFuture = admin.describeConsumerGroups(
+                    consumersFuture.get().stream().map(i -> i.groupId() ).collect(Collectors.toList())).all();
+
+            return consumerDescribedFuture.get().entrySet().stream().map( i -> DtoMapper.consumerGroupDescriptionMapper(i.getValue()) ).collect(Collectors.toList());
         } catch (ConnectionSessionExpiredException e){
             throw e;
         }  catch (Exception e) {

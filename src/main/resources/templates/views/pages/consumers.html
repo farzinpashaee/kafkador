@@ -21,6 +21,11 @@
             <thead>
             <tr>
               <th scope="col">ID</th>
+              <th scope="col">Type</th>
+              <th scope="col">Coordinator</th>
+              <th scope="col">Simple Consumer Group</th>
+              <th scope="col">Partition Assignor</th>
+              <th scope="col">Group State</th>
             </tr>
             </thead>
             <tbody id="consumerGroups">
@@ -36,7 +41,7 @@
 $(document).ready(function(){
     get('consumerGroup', function(response){
         console.log(response);
-        renderViewHtml($("#consumerGroups"),'<tr><th scope="row">${id}</th></tr>',response);
+        renderViewHtml($("#consumerGroups"),'<tr><th scope="row">${id}</th><td>${type}</td><td>${coordinator}</td><td>${simpleConsumerGroup}</td><td>${partitionAssignor}</td><td>${groupState}</td></tr>',response);
     });
 });
 </script>
