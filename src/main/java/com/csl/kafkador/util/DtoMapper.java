@@ -5,6 +5,7 @@ import com.csl.kafkador.dto.ConsumerGroup;
 import com.csl.kafkador.dto.Topic;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
+import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.common.Node;
 
@@ -24,6 +25,13 @@ public class DtoMapper {
         return new Topic().setName(topicListing.name())
                 .setId(topicListing.topicId().toString())
                 .setIsInternal(topicListing.isInternal());
+    }
+
+    public static Topic topicDescriptionMapper(TopicDescription topicDescription){
+        return new Topic().setName(topicDescription.name())
+                .setId(topicDescription.topicId().toString())
+                .setPartitions(topicDescription.partitions().size())
+                .setIsInternal(topicDescription.isInternal());
     }
 
 

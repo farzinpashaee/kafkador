@@ -35,7 +35,11 @@ public class TopicService {
 
         try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
             KafkaFuture<Collection<TopicListing>> topicsFuture = admin.listTopics().listings();
-            return topicsFuture.get().stream().map(DtoMapper::topicMapper).collect(Collectors.toList());
+            Collection<TopicListing> topicList = topicsFuture.get();
+            DescribeTopicsResult describeTopicsResult = admin.describeTopics(topicList.stream().map(i->i.name()).collect(Collectors.toList()));
+            Map<String, TopicDescription> topicDescriptions = describeTopicsResult.allTopicNames().get();
+
+            return topicDescriptions.entrySet().stream().map( i -> DtoMapper.topicDescriptionMapper(i.getValue()) ).collect(Collectors.toList());
         } catch (ConnectionSessionExpiredException e){
             throw e;
         }  catch (Exception e) {
