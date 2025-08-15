@@ -1,18 +1,10 @@
 package com.csl.kafkador.controller;
 
-import com.csl.kafkador.dto.ClusterDetails;
-import com.csl.kafkador.dto.ConsumerGroup;
-import com.csl.kafkador.dto.Request;
-import com.csl.kafkador.dto.Topic;
+import com.csl.kafkador.dto.*;
 import com.csl.kafkador.exception.KafkaAdminApiException;
-import com.csl.kafkador.service.ClusterService;
-import com.csl.kafkador.service.ConsumerService;
 import com.csl.kafkador.service.TopicService;
-import com.csl.kafkador.util.ViewHelper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import org.apache.kafka.clients.admin.ConsumerGroupListing;
-import org.apache.kafka.clients.admin.TopicListing;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Controller;
@@ -29,48 +21,63 @@ public class PageController {
 
     @GetMapping("/")
     public String cluster(Model model, HttpSession session, HttpServletRequest request) throws KafkaAdminApiException {
-        ViewHelper.setPageTitle("Cluster", model);
+        new PageView.Builder()
+                .title("Cluster")
+                .icon("bi-diagram-3")
+                .build(model);
         return "views/pages/cluster.html";
     }
 
 
     @GetMapping("/connect")
     public String connect(Model model, HttpSession session, HttpServletRequest request) {
-        ViewHelper.setPageTitle("Connect", model);
+        new PageView.Builder()
+                .title("Connect")
+                .build(model);
         return "views/pages/connect.html";
     }
 
 
     @GetMapping("/connections")
     public String connections(Model model, HttpSession session, HttpServletRequest request) {
-        ViewHelper.setPageTitle("Connections", model);
+        new PageView.Builder()
+                .title("Connections")
+                .build(model);
         return "views/pages/connections.html";
     }
 
 
     @GetMapping("/connectors")
     public String connectors(Model model, HttpSession session, HttpServletRequest request) {
-        ViewHelper.setPageTitle("Connectors", model);
+        new PageView.Builder()
+                .title("Connectors")
+                .build(model);
         return "views/pages/connectors.html";
     }
 
     @GetMapping("/topics")
     public String topics(Model model, HttpSession session) throws KafkaAdminApiException {
-        ViewHelper.setPageTitle("Topics", model);
+        new PageView.Builder()
+                .title("Topics")
+                .build(model);
         return "views/pages/topics.html";
     }
 
 
     @GetMapping("/consumers")
     public String consumers(Model model, HttpSession session) throws KafkaAdminApiException {
-        ViewHelper.setPageTitle("Consumers", model);
+        new PageView.Builder()
+                .title("Consumers")
+                .build(model);
         return "views/pages/consumers.html";
     }
 
 
     @GetMapping("/sandbox")
     public String sandbox(Model model, HttpSession session) throws KafkaAdminApiException {
-        ViewHelper.setPageTitle("Sandbox", model);
+        new PageView.Builder()
+                .title("Sandbox")
+                .build(model);
         TopicService topicService = (TopicService) applicationContext.getBean("TopicsService");
         Collection<Topic> topics = topicService.getTopics();
         model.addAttribute("topics", topics);
