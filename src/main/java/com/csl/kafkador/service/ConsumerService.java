@@ -8,6 +8,7 @@ import com.csl.kafkador.dto.Topic;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.util.DtoMapper;
+import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
@@ -33,16 +34,12 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Service("ConsumerService")
+@RequiredArgsConstructor
 public class ConsumerService {
 
-    @Autowired
-    ApplicationContext applicationContext;
-
-    @Autowired
-    ApplicationConfig applicationConfig;
-
+    private final ApplicationContext applicationContext;
+    private final ApplicationConfig applicationConfig;
     private final ExecutorService executor = Executors.newCachedThreadPool();
-
 
     public Properties getProperties() {
         ConnectionService connectionService = (ConnectionService) applicationContext

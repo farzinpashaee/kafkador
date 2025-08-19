@@ -7,6 +7,7 @@ import com.csl.kafkador.dto.Request;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.util.DtoMapper;
+import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
@@ -18,13 +19,11 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 @Service("ClusterService")
+@RequiredArgsConstructor
 public class ClusterService {
 
-    @Autowired
-    ApplicationContext applicationContext;
-
-    @Autowired
-    ApplicationConfig applicationConfig;
+    private final ApplicationContext applicationContext;
+    private final ApplicationConfig applicationConfig;
 
     public ClusterDetails getClusterDetails() throws KafkaAdminApiException {
 

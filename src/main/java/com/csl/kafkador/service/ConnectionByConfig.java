@@ -8,6 +8,7 @@ import com.csl.kafkador.exception.ConnectionNotFoundException;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkadorException;
 import com.csl.kafkador.model.Connection;
+import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,13 +19,11 @@ import java.util.Properties;
 
 
 @Service("ConnectionServiceByConfig")
+@RequiredArgsConstructor
 public class ConnectionByConfig implements ConnectionService {
 
-    @Autowired
-    ApplicationConfig applicationConfig;
-
-    @Autowired
-    SessionHolder sessionHolder;
+    private final ApplicationConfig applicationConfig;
+    private final SessionHolder sessionHolder;
 
     @Override
     public Connection connect(Request<String> request) throws ConnectionNotFoundException {

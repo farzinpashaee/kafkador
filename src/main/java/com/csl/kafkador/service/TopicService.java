@@ -7,6 +7,7 @@ import com.csl.kafkador.dto.Topic;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.util.DtoMapper;
+import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.KafkaFuture;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,15 +19,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 @Service("TopicService")
+@RequiredArgsConstructor
 public class TopicService {
 
-
-    @Autowired
-    ApplicationContext applicationContext;
-
-    @Autowired
-    ApplicationConfig applicationConfig;
-
+    private final ApplicationContext applicationContext;
+    private final ApplicationConfig applicationConfig;
 
     public Collection<Topic> getTopics() throws KafkaAdminApiException {
 

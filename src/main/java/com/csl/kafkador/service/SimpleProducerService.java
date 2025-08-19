@@ -6,6 +6,7 @@ import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.dto.Event;
 import com.csl.kafkador.dto.Request;
 import com.csl.kafkador.exception.KafkadorException;
+import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -17,13 +18,11 @@ import org.springframework.stereotype.Service;
 import java.util.Properties;
 
 @Service("SimpleProducerService")
+@RequiredArgsConstructor
 public class SimpleProducerService implements ProducerService<String, String> {
 
-    @Autowired
-    ApplicationConfig applicationConfig;
-
-    @Autowired
-    ApplicationContext applicationContext;
+    private final ApplicationConfig applicationConfig;
+    private final ApplicationContext applicationContext;
 
     @Override
     public Properties getProperties() {
