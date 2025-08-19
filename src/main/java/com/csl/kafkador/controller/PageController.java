@@ -85,4 +85,15 @@ public class PageController {
         return "views/pages/sandbox.html";
     }
 
+
+
+    @GetMapping("/settings")
+    public String settings(Model model) throws KafkaAdminApiException {
+        new PageView.Builder()
+                .title("Settings")
+                .build(model);
+
+        return "views/pages/settings.html";
+    }
+
 }
