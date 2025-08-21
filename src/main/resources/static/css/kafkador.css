@@ -105,12 +105,13 @@ span.placeholder{
 }
 
 .sidebar .nav-link {
-  font-size: .875rem;
+  color: #555;
+  font-size: 0.9em;
   font-weight: 500;
 }
 
 .sidebar .nav-link.active {
-  color: #2470dc;
+  color: #0d6efd;
 }
 
 .sidebar-heading {

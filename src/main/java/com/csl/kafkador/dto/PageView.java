@@ -10,6 +10,7 @@ public class PageView {
 
     private String headTitle;
     private String title;
+    private String activeMenu;
     private String icon;
 
     public PageView() {}
@@ -18,6 +19,7 @@ public class PageView {
         this.headTitle = builder.headTitle;
         this.title = builder.title;
         this.icon = builder.icon;
+        this.activeMenu = builder.activeMenu;
     }
 
     // Builder class
@@ -25,10 +27,16 @@ public class PageView {
         private String headTitle;
         private String title;
         private String icon;
+        private String activeMenu;
 
         public Builder title(String title) {
             this.title = title;
             this.headTitle = title;
+            return this;
+        }
+
+        public Builder activeMenu(String activeMenu) {
+            this.activeMenu = activeMenu;
             return this;
         }
 

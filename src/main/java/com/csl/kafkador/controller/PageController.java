@@ -23,6 +23,7 @@ public class PageController {
     public String cluster(Model model, HttpSession session, HttpServletRequest request) throws KafkaAdminApiException {
         new PageView.Builder()
                 .title("Cluster")
+                .activeMenu("cluster")
                 .icon("bi-diagram-3")
                 .build(model);
         return "views/pages/cluster.html";
@@ -33,6 +34,7 @@ public class PageController {
     public String connect(Model model, HttpSession session, HttpServletRequest request) {
         new PageView.Builder()
                 .title("Connect")
+                .activeMenu("connect")
                 .build(model);
         return "views/pages/connect.html";
     }
@@ -42,6 +44,7 @@ public class PageController {
     public String connections(Model model, HttpSession session, HttpServletRequest request) {
         new PageView.Builder()
                 .title("Connections")
+                .activeMenu("connections")
                 .build(model);
         return "views/pages/connections.html";
     }
@@ -51,6 +54,7 @@ public class PageController {
     public String connectors(Model model, HttpSession session, HttpServletRequest request) {
         new PageView.Builder()
                 .title("Connectors")
+                .activeMenu("connectors")
                 .build(model);
         return "views/pages/connectors.html";
     }
@@ -59,6 +63,7 @@ public class PageController {
     public String topics(Model model, HttpSession session) throws KafkaAdminApiException {
         new PageView.Builder()
                 .title("Topics")
+                .activeMenu("topics")
                 .build(model);
         return "views/pages/topics.html";
     }
@@ -68,6 +73,7 @@ public class PageController {
     public String consumers(Model model, HttpSession session) throws KafkaAdminApiException {
         new PageView.Builder()
                 .title("Consumers")
+                .activeMenu("consumers")
                 .build(model);
         return "views/pages/consumers.html";
     }
@@ -91,6 +97,7 @@ public class PageController {
     public String settings(Model model) throws KafkaAdminApiException {
         new PageView.Builder()
                 .title("Settings")
+                .activeMenu("settings")
                 .build(model);
 
         return "views/pages/settings.html";
