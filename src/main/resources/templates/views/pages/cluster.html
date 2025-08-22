@@ -45,7 +45,7 @@ $(document).ready(function(){
     get('cluster', function(response){
         console.log(response);
         renderView($("#clusterDetails"),$("#clusterDetailsView"),response);
-        renderViewHtml($("#clusterBrokers"),'<tr><th scope="row">${id}</th><td>${host}</td><td>${port}</td><td>${hash}</td></tr>',response.nodes);
+        renderViewHtml($("#clusterBrokers"),'<tr><th scope="row">${id}</th><td><a href="../broker/${id}">${host}</a></td><td>${port}</td><td>${hash}</td></tr>',response.nodes);
     });
 });
 </script>

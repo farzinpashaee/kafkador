@@ -10,6 +10,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.Collection;
 
@@ -20,13 +21,32 @@ public class PageController {
     ApplicationContext applicationContext;
 
     @GetMapping("/")
-    public String cluster(Model model, HttpSession session, HttpServletRequest request) throws KafkaAdminApiException {
+    public String cluster(Model model) throws KafkaAdminApiException {
         new PageView.Builder()
                 .title("Cluster")
                 .activeMenu("cluster")
                 .icon("bi-diagram-3")
                 .build(model);
         return "views/pages/cluster.html";
+    }
+
+    @GetMapping("/schema-registry")
+    public String schemaRegistry(Model model) throws KafkaAdminApiException {
+        new PageView.Builder()
+                .title("Schema Registry")
+                .activeMenu("schema-registry")
+                .build(model);
+        return "views/pages/schema-registry.html";
+    }
+
+
+    @GetMapping("/broker/{id}")
+    public String broker(Model model, @PathVariable String id) throws KafkaAdminApiException {
+        new PageView.Builder()
+                .title("Broker")
+                .activeMenu("cluster")
+                .build(model);
+        return "views/pages/broker.html";
     }
 
 
