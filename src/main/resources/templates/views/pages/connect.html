@@ -28,7 +28,7 @@
 <div th:replace="views/fragments/templates :: scripts"></div>
 <script>
 $(document).ready(function(){
-    get( 'connection', function(connection) {
+    get( 'connection', {} , function(connection) {
         renderView($("#connection"),$("#connectionItemView"),connection);
         $(".connect").click(function(){
             connect($(this).data("connection-id"),function(response){

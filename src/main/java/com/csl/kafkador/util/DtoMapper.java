@@ -1,6 +1,6 @@
 package com.csl.kafkador.util;
 
-import com.csl.kafkador.dto.Node;
+import com.csl.kafkador.dto.Broker;
 import com.csl.kafkador.dto.ConsumerGroup;
 import com.csl.kafkador.dto.Partition;
 import com.csl.kafkador.dto.Topic;
@@ -16,8 +16,8 @@ import java.util.stream.Collectors;
 
 public class DtoMapper {
 
-    public static Node clusterNodeMapper(org.apache.kafka.common.Node node, Map<Integer, Long> size){
-        return new Node().setId(node.id())
+    public static Broker clusterNodeMapper(org.apache.kafka.common.Node node, Map<Integer, Long> size){
+        return new Broker().setId(String.valueOf(node.id()))
                 .setHost(node.host())
                 .setPort(node.port())
                 .setIdString(node.idString())
@@ -50,8 +50,8 @@ public class DtoMapper {
                 .setIsr(topicPartitionInfo.isr().stream().map(DtoMapper::nodeMapper).collect(Collectors.toList()));
     }
 
-    public static Node nodeMapper( org.apache.kafka.common.Node node ){
-        return new Node()
+    public static Broker nodeMapper(org.apache.kafka.common.Node node ){
+        return new Broker()
                 .setPort(node.port())
                 .setHost(node.host())
                 .setIsFenced(node.isFenced())

@@ -43,10 +43,10 @@
 <div th:replace="views/fragments/templates :: scripts"></div>
 <script>
 $(document).ready(function(){
-    get('cluster', function(response){
+    get('cluster', {}, function(response){
         console.log(response);
         renderView($("#clusterDetails"),$("#clusterDetailsView"),response);
-        renderViewHtml($("#clusterBrokers"),'<tr><th scope="row">${id}</th><td><a href="../broker/${id}">${host}</a></td><td>${port}</td><td>${size}</td><td>${hash}</td></tr>',response.nodes);
+        renderViewHtml($("#clusterBrokers"),'<tr><th scope="row">${id}</th><td><a href="../broker/${id}">${host}</a></td><td>${port}</td><td>${size}</td><td>${hash}</td></tr>',response.brokers);
     });
 });
 </script>

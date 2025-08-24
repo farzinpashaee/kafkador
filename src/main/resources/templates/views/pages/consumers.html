@@ -39,7 +39,7 @@
 <div th:replace="views/fragments/templates :: scripts"></div>
 <script>
 $(document).ready(function(){
-    get('consumerGroup', function(response){
+    get('consumerGroup', {}, function(response){
         console.log(response);
         renderViewHtml($("#consumerGroups"),'<tr><th scope="row">${id}</th><td>${type}</td><td>${coordinator}</td><td>${simpleConsumerGroup}</td><td>${partitionAssignor}</td><td>${groupState}</td></tr>',response);
     });

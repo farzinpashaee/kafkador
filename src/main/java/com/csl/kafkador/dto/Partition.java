@@ -10,8 +10,8 @@ import java.util.List;
 public class Partition {
 
     private int partition;
-    private Node leader;
-    private List<Node> replicas;
-    private List<Node> isr;
+    private Broker leader;
+    private List<Broker> replicas;
+    private List<Broker> isr;
 
 }

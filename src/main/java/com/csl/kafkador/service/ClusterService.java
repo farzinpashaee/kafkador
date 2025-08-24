@@ -2,25 +2,22 @@ package com.csl.kafkador.service;
 
 import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.config.ApplicationConfig;
+import com.csl.kafkador.dto.Broker;
 import com.csl.kafkador.dto.ClusterDetails;
-import com.csl.kafkador.dto.Request;
+import com.csl.kafkador.dto.ConfigRecord;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
+import com.csl.kafkador.exception.KafkadorException;
 import com.csl.kafkador.util.DtoMapper;
 import lombok.RequiredArgsConstructor;
-import org.apache.kafka.clients.admin.Admin;
-import org.apache.kafka.clients.admin.LogDirDescription;
-import org.apache.kafka.clients.admin.ReplicaInfo;
+import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.kafka.common.config.ConfigResource;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service("ClusterService")
@@ -46,7 +43,7 @@ public class ClusterService {
             Map<Integer, Long> sizeMap = getBrokerReplicaSize(admin.describeLogDirs(brokerIds).allDescriptions().get());
 
             clusterDetails.setId(clusterIdFuture.get());
-            clusterDetails.setNodes(nodes.stream().map( i -> DtoMapper.clusterNodeMapper(i,sizeMap)).collect(Collectors.toList()));
+            clusterDetails.setBrokers(nodes.stream().map(i -> DtoMapper.clusterNodeMapper(i,sizeMap)).collect(Collectors.toList()));
             clusterDetails.setController(DtoMapper.clusterNodeMapper(clusterControllerFuture.get(),sizeMap));
         } catch (ConnectionSessionExpiredException e){
             throw e;
@@ -74,4 +71,49 @@ public class ClusterService {
         return brokerBytes;
     }
 
+    public Broker getBrokerDetail( String id ) throws KafkaAdminApiException {
+        Broker broker = new Broker();
+        broker.setId(id);
+        broker.setConfig(getBrokerConfiguration(id));
+        return broker;
+    }
+
+    public Map<ConfigResource, Config> getBrokerConfiguration( Collection<Node> nodes ){
+        return null;
+    }
+
+    public List<ConfigRecord> getBrokerConfiguration(String id ) throws KafkaAdminApiException {
+        List<ConfigRecord> result = new ArrayList<>();
+        List<ConfigResource> resources = new ArrayList<>();
+        resources.add( new ConfigResource(ConfigResource.Type.BROKER,String.valueOf(id)));
+
+        ConnectionService connectionService = (ConnectionService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
+
+        try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
+            Map<ConfigResource, Config> configMap = admin.describeConfigs(resources)
+                    .all()
+                    .get();
+            Optional<Config> optionalConfig = configMap.entrySet().stream().map(Map.Entry::getValue).findFirst();
+            if(optionalConfig.isPresent()){
+                optionalConfig.get().entries().stream().forEach( c -> {
+                    result.add(new ConfigRecord()
+                            .setName(c.name())
+                            .setValue(c.value())
+                            .setSource(c.source().name())
+                            .setType(c.type().name())
+                            .setReadOnly(c.isReadOnly())
+                            .setSensitive(c.isSensitive())
+                            .setDocumentation(c.documentation()));
+                });
+            } else {
+                throw new KafkadorException("Node Config not found!");
+            }
+            return result;
+        } catch (ConnectionSessionExpiredException e){
+            throw e;
+        } catch (Exception e) {
+            throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
+        }
+    }
 }

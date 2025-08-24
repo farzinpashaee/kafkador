@@ -38,6 +38,14 @@ public class ApiController {
         return clusterDetails;
     }
 
+
+    @GetMapping("/broker/{id}")
+    public Broker getBroker( @PathVariable String id ) throws KafkaAdminApiException {
+        ClusterService clusterService = (ClusterService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CLUSTER));
+        Broker broker = clusterService.getBrokerDetail(id);
+        return broker;
+    }
+
     @GetMapping("/topic")
     public Collection<Topic> getTopics( HttpSession session ) throws KafkaAdminApiException {
         TopicService topicService = (TopicService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));

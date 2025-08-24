@@ -8,6 +8,7 @@ const CONFIG = {
         consume: '/api/consume',
         produce: '/api/produce',
         consumer: '/api/consumer',
+        broker: '/api/broker/{id}',
         consumerGroup: '/api/consumer-group'
     },
     defaultHeaders: {
@@ -91,11 +92,12 @@ function getConnections(id, callback){
     });
 }
 
-function get( id, callback ){
+function get( id, queryData, callback ){
     //$('#'+id).hide();
+    const preparedUrl = CONFIG.baseUrl + Utils.interpolate(CONFIG.apiEndpoints[id],queryData);
     $('#'+id+'Loading').show();
     $.ajax({
-        url: CONFIG.baseUrl + CONFIG.apiEndpoints[id],
+        url: preparedUrl,
         method: 'GET',
         dataType: 'json',
         headers: {
@@ -329,5 +331,12 @@ const Utils = {
             }
         }
         return true;
+    },
+
+    interpolate(input, params) {
+      return input.replace(/\{\s*([\w.]+)(?:\|([^}]*))?\s*\}/g, (_, path, def) => {
+        const val = path.split('.').reduce((o, k) => (o == null ? o : o[k]), params);
+        return val == null ? (def !== undefined ? def : `{${path}}`) : String(val);
+      });
     }
 };

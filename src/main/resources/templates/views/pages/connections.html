@@ -36,7 +36,7 @@
 <div th:replace="views/fragments/templates :: scripts"></div>
 <script>
 $(document).ready(function(){
-    get( 'connection', function(connections) {
+    get( 'connection', {}, function(connections) {
         renderViewHtml($("#connections"),'<tr><th scope="row">${name}</th><td>${host}</td><td>${port}</td></tr>',connections);
     });
 });
