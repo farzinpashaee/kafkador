@@ -10,17 +10,20 @@ import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.common.TopicPartitionInfo;
 
+import java.math.BigDecimal;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class DtoMapper {
 
-    public static Node clusterNodeMapper(org.apache.kafka.common.Node node){
+    public static Node clusterNodeMapper(org.apache.kafka.common.Node node, Map<Integer, Long> size){
         return new Node().setId(node.id())
                 .setHost(node.host())
                 .setPort(node.port())
                 .setIdString(node.idString())
                 .setRack(node.rack())
                 .setHash(node.hashCode())
+                .setSize( new BigDecimal( size.getOrDefault(node.id(),0L) / 1024 ))
                 .setIsFenced(node.isFenced());
     }
 
