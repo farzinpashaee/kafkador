@@ -24,6 +24,21 @@
                         <i class="bi bi-journal-arrow-down"></i> Consumers
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'consumers' ? 'active' : '')}" class="nav-link d-flex align-items-center gap-2" th:href="${baseUrl + 'consumers'}">
+                        <i class="bi bi-shield-lock"></i> Access Control
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'schema-registry' ? 'active' : '')}" class="nav-link d-flex align-items-center gap-2" th:href="${baseUrl + 'schema-registry'}">
+                        <i class="bi bi-grid-3x2-gap"></i> Streams
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'schema-registry' ? 'active' : '')}" class="nav-link d-flex align-items-center gap-2" th:href="${baseUrl + 'schema-registry'}">
+                        <i class="bi bi-database"></i> KsqlDB
+                    </a>
+                </li>
                 <!--                <li class="nav-item"><a class="nav-link d-flex align-items-center gap-2" th:href="${baseUrl + 'sandbox'}">-->
                 <!--                    <i class="bi bi-box-seam"></i> Sandbox-->
                 <!--                </a></li>-->
