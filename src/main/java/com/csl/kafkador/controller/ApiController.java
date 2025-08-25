@@ -14,7 +14,9 @@ import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -32,24 +34,30 @@ public class ApiController {
     ApplicationConfig applicationConfig;
 
     @GetMapping("/cluster")
-    public ClusterDetails getCluster( HttpSession session ) throws KafkaAdminApiException {
+    public ResponseEntity<GenericResponse<ClusterDetails>> getCluster(HttpSession session ) throws KafkaAdminApiException {
         ClusterService clusterService = (ClusterService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CLUSTER));
         ClusterDetails clusterDetails = clusterService.getClusterDetails();
-        return clusterDetails;
+        return new GenericResponse.Builder<ClusterDetails>()
+                .data(clusterDetails)
+                .success(HttpStatus.OK);
     }
 
 
     @GetMapping("/broker/{id}")
-    public Broker getBroker( @PathVariable String id ) throws KafkaAdminApiException {
+    public ResponseEntity<GenericResponse<Broker>> getBroker( @PathVariable String id ) throws KafkaAdminApiException {
         ClusterService clusterService = (ClusterService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CLUSTER));
         Broker broker = clusterService.getBrokerDetail(id);
-        return broker;
+        return new GenericResponse.Builder<Broker>()
+                .data(broker)
+                .success(HttpStatus.OK);
     }
 
     @GetMapping("/topic")
-    public Collection<Topic> getTopics( HttpSession session ) throws KafkaAdminApiException {
+    public ResponseEntity<GenericResponse<Collection<Topic>>> getTopics( HttpSession session ) throws KafkaAdminApiException {
         TopicService topicService = (TopicService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
-        return topicService.getTopics();
+        return new GenericResponse.Builder<Collection<Topic>>()
+                .data(topicService.getTopics())
+                .success(HttpStatus.OK);
     }
 
     @PostMapping("/topic")
@@ -78,17 +86,21 @@ public class ApiController {
     }
 
     @GetMapping("/connection")
-    public List<Connection> getConnections(HttpSession session) {
+    public ResponseEntity<GenericResponse<List<Connection>>> getConnections(HttpSession session) {
         ConnectionService connectionService = (ConnectionService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
-        return connectionService.getConnections();
+        return new GenericResponse.Builder<List<Connection>>()
+                .data(connectionService.getConnections())
+                .success(HttpStatus.OK);
     }
 
     @GetMapping("/consumer-group")
-    public Collection<ConsumerGroup> getConsumerGroup(HttpSession session) throws KafkaAdminApiException {
+    public ResponseEntity<GenericResponse<Collection<ConsumerGroup>>> getConsumerGroup(HttpSession session) throws KafkaAdminApiException {
         ConsumerService consumersService = (ConsumerService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONSUMER));
-        return consumersService.getConsumersGroup();
+        return new GenericResponse.Builder<Collection<ConsumerGroup>>()
+                .data(consumersService.getConsumersGroup())
+                .success(HttpStatus.OK);
     }
 
     @GetMapping("/connect")

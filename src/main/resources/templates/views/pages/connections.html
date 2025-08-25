@@ -37,7 +37,7 @@
 <script>
 $(document).ready(function(){
     get( 'connection', {}, function(connections) {
-        renderViewHtml($("#connections"),'<tr><th scope="row">${name}</th><td>${host}</td><td>${port}</td></tr>',connections);
+        renderViewHtml($("#connections"),'<tr><th scope="row">${name}</th><td>${host}</td><td>${port}</td></tr>',connections.data);
     });
 });
 </script>

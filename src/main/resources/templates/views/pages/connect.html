@@ -29,7 +29,7 @@
 <script>
 $(document).ready(function(){
     get( 'connection', {} , function(connection) {
-        renderView($("#connection"),$("#connectionItemView"),connection);
+        renderView($("#connection"),$("#connectionItemView"),connection.data);
         $(".connect").click(function(){
             connect($(this).data("connection-id"),function(response){
                  window.location.href = CONFIG.baseUrl;

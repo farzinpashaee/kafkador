@@ -4,10 +4,10 @@ import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.dto.Broker;
 import com.csl.kafkador.dto.ClusterDetails;
-import com.csl.kafkador.dto.ConfigRecord;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.exception.KafkadorException;
+import com.csl.kafkador.record.ConfigEntry;
 import com.csl.kafkador.util.DtoMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.*;
@@ -82,8 +82,8 @@ public class ClusterService {
         return null;
     }
 
-    public List<ConfigRecord> getBrokerConfiguration(String id ) throws KafkaAdminApiException {
-        List<ConfigRecord> result = new ArrayList<>();
+    public List<ConfigEntry> getBrokerConfiguration(String id ) throws KafkaAdminApiException {
+        List<ConfigEntry> result = new ArrayList<>();
         List<ConfigResource> resources = new ArrayList<>();
         resources.add( new ConfigResource(ConfigResource.Type.BROKER,String.valueOf(id)));
 
@@ -97,14 +97,15 @@ public class ClusterService {
             Optional<Config> optionalConfig = configMap.entrySet().stream().map(Map.Entry::getValue).findFirst();
             if(optionalConfig.isPresent()){
                 optionalConfig.get().entries().stream().forEach( c -> {
-                    result.add(new ConfigRecord()
-                            .setName(c.name())
-                            .setValue(c.value())
-                            .setSource(c.source().name())
-                            .setType(c.type().name())
-                            .setReadOnly(c.isReadOnly())
-                            .setSensitive(c.isSensitive())
-                            .setDocumentation(c.documentation()));
+                    result.add(new ConfigEntry(
+                            c.name(),
+                            c.value(),
+                            c.source().name(),
+                            c.isSensitive(),
+                            c.isReadOnly(),
+                            c.type().name(),
+                            c.documentation()
+                    ));
                 });
             } else {
                 throw new KafkadorException("Node Config not found!");

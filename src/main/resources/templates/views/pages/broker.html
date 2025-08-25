@@ -65,7 +65,7 @@
 $(document).ready(function(){
     get('broker', { id: "1" } , function(response){
         console.log(response);
-        renderViewHtml($("#brokerConfig"),'<tr><th scope="row">${name}</th><td>${value}</td><td>${type}</td><td>${source}</td><td>${sensitive}</td><td>${readOnly}</td></tr>',response.config);
+        renderViewHtml($("#brokerConfig"),'<tr><th scope="row">${name}</th><td>${value}</td><td>${type}</td><td>${source}</td><td>${sensitive}</td><td>${readOnly}</td></tr>',response.data.config);
     });
 });
 
