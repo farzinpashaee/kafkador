@@ -30,15 +30,6 @@ public class PageController {
         return "views/pages/cluster.html";
     }
 
-    @GetMapping("/schema-registry")
-    public String schemaRegistry(Model model) throws KafkaAdminApiException {
-        new PageView.Builder()
-                .title("Schema Registry")
-                .activeMenu("schema-registry")
-                .build(model);
-        return "views/pages/schema-registry.html";
-    }
-
 
     @GetMapping("/broker/{id}")
     public String broker(Model model, @PathVariable String id) throws KafkaAdminApiException {
@@ -77,6 +68,45 @@ public class PageController {
                 .activeMenu("connectors")
                 .build(model);
         return "views/pages/connectors.html";
+    }
+
+
+    @GetMapping("/access-control")
+    public String accessControl(Model model, HttpSession session, HttpServletRequest request) {
+        new PageView.Builder()
+                .title("Access Control")
+                .activeMenu("access-control")
+                .build(model);
+        return "views/pages/access-control.html";
+    }
+
+    @GetMapping("/ksql-db")
+    public String ksqlDB(Model model, HttpSession session, HttpServletRequest request) {
+        new PageView.Builder()
+                .title("KsqlDB")
+                .activeMenu("ksql-db")
+                .build(model);
+        return "views/pages/ksql-db.html";
+    }
+
+
+    @GetMapping("/schema-registry")
+    public String schemaRegistry(Model model, HttpSession session, HttpServletRequest request) {
+        new PageView.Builder()
+                .title("Schema Registry")
+                .activeMenu("schema-registry")
+                .build(model);
+        return "views/pages/schema-registry.html";
+    }
+
+
+    @GetMapping("/streams")
+    public String streams(Model model, HttpSession session, HttpServletRequest request) {
+        new PageView.Builder()
+                .title("Streams")
+                .activeMenu("streams")
+                .build(model);
+        return "views/pages/streams.html";
     }
 
     @GetMapping("/topics")

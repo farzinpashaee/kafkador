@@ -25,17 +25,17 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'consumers' ? 'active' : '')}" class="nav-link d-flex align-items-center gap-2" th:href="${baseUrl + 'consumers'}">
+                    <a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'access-control' ? 'active' : '')}" class="nav-link d-flex align-items-center gap-2" th:href="${baseUrl + 'access-control'}">
                         <i class="bi bi-shield-lock"></i> Access Control
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'schema-registry' ? 'active' : '')}" class="nav-link d-flex align-items-center gap-2" th:href="${baseUrl + 'schema-registry'}">
+                    <a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'streams' ? 'active' : '')}" class="nav-link d-flex align-items-center gap-2" th:href="${baseUrl + 'streams'}">
                         <i class="bi bi-grid-3x2-gap"></i> Streams
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'schema-registry' ? 'active' : '')}" class="nav-link d-flex align-items-center gap-2" th:href="${baseUrl + 'schema-registry'}">
+                    <a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'ksql-db' ? 'active' : '')}" class="nav-link d-flex align-items-center gap-2" th:href="${baseUrl + 'ksql-db'}">
                         <i class="bi bi-database"></i> KsqlDB
                     </a>
                 </li>
