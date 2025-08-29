@@ -338,5 +338,15 @@ const Utils = {
         const val = path.split('.').reduce((o, k) => (o == null ? o : o[k]), params);
         return val == null ? (def !== undefined ? def : `{${path}}`) : String(val);
       });
+    },
+
+    prepareViewTrueFalse(list,field,trueView,falseView) {
+      list.forEach(item => {
+        if( eval("item." + field) ){
+          eval("item." + field + " = " + JSON.stringify(trueView));
+        } else {
+          eval("item." + field + " = " + JSON.stringify(falseView));
+        }
+      });
     }
 };

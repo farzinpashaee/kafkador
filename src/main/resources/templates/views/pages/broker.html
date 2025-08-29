@@ -38,11 +38,11 @@
                                 <thead>
                                 <tr>
                                     <th scope="col">Name</th>
-                                    <th scope="col">Value</th>
-                                    <th scope="col">Type</th>
-                                    <th scope="col">Source</th>
-                                    <th scope="col">Sensitive</th>
-                                    <th scope="col">ReadOnly</th>
+                                    <th scope="col" class="text-truncate">Value</th>
+                                    <th scope="col" class="text-center">Type</th>
+<!--                                    <th scope="col" class="text-center">Source</th>-->
+                                    <th scope="col" class="text-center">Sensitive</th>
+                                    <th scope="col" class="text-center">Read Only</th>
                                 </tr>
                                 </thead>
                                 <tbody id="brokerConfig">
@@ -68,7 +68,9 @@
 $(document).ready(function(){
     get('broker', { id: "1" } , function(response){
         console.log(response);
-        renderViewHtml($("#brokerConfig"),'<tr><th scope="row">${name}</th><td>${value}</td><td>${type}</td><td>${source}</td><td>${sensitive}</td><td>${readOnly}</td></tr>',response.data.config);
+        Utils.prepareViewTrueFalse(response.data.config,"readOnly",'<i class="bi bi-pencil-square" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Tooltip on bottom"></i>','<i class="bi bi-pencil-square opacity-25"></i>');
+        Utils.prepareViewTrueFalse(response.data.config,"sensitive",'<i class="bi bi-eye-slash text-danger"></i>','<i class="bi bi-eye opacity-25"></i>');
+        renderViewHtml($("#brokerConfig"),'<tr><th scope="row">${name}</th><td class="text-truncate">${value}</td><td class="text-center">${type}</td><!--<td class="text-center">${source}</td>--><td class="text-center">${sensitive}</td><td class="text-center">${readOnly}</td></tr>',response.data.config);
     });
 });
 
