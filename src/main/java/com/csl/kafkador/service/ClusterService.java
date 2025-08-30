@@ -15,7 +15,10 @@ import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.config.ConfigResource;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.support.RequestContextUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,6 +29,8 @@ public class ClusterService {
 
     private final ApplicationContext applicationContext;
     private final ApplicationConfig applicationConfig;
+
+    private final MessageSource messageSource;
 
     public ClusterDetails getClusterDetails() throws KafkaAdminApiException {
 
@@ -82,10 +87,11 @@ public class ClusterService {
         return null;
     }
 
-    public List<ConfigEntry> getBrokerConfiguration(String id ) throws KafkaAdminApiException {
+    public List<ConfigEntry> getBrokerConfiguration( String id ) throws KafkaAdminApiException {
         List<ConfigEntry> result = new ArrayList<>();
         List<ConfigResource> resources = new ArrayList<>();
         resources.add( new ConfigResource(ConfigResource.Type.BROKER,String.valueOf(id)));
+        Locale locale = LocaleContextHolder.getLocale();
 
         ConnectionService connectionService = (ConnectionService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
@@ -97,19 +103,19 @@ public class ClusterService {
             Optional<Config> optionalConfig = configMap.entrySet().stream().map(Map.Entry::getValue).findFirst();
             if(optionalConfig.isPresent()){
                 optionalConfig.get().entries().stream().forEach( c -> {
-                    result.add(new ConfigEntry(
-                            c.name(),
-                            c.value(),
-                            c.source().name(),
-                            c.isSensitive(),
-                            c.isReadOnly(),
-                            c.type().name(),
-                            c.documentation()
-                    ));
+                    String documentation = c.documentation();
+                    if( documentation == null ){
+                        documentation = messageSource.getMessage("broker.documentation." + c.name(), null, null , locale);
+                    }
+                    result.add(new ConfigEntry( c.name(), c.value(), c.source().name(), c.isSensitive(), c.isReadOnly(),
+                            c.type().name(), documentation ));
                 });
             } else {
                 throw new KafkadorException("Node Config not found!");
             }
+            Collections.sort(result, (o1, o2) -> {
+                return o1.name().compareTo(o2.name());
+            });
             return result;
         } catch (ConnectionSessionExpiredException e){
             throw e;
