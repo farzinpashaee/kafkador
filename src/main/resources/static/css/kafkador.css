@@ -99,6 +99,10 @@ span.placeholder{
   max-width: 30em;
 }
 
+.cursor-pointer{
+    cursor: pointer;
+}
+
 /* Sidebar */
 @media (min-width: 768px) {
   .sidebar .offcanvas-lg {
