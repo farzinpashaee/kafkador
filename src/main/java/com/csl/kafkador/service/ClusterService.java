@@ -9,6 +9,7 @@ import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.exception.KafkadorException;
 import com.csl.kafkador.record.ConfigEntry;
 import com.csl.kafkador.util.DtoMapper;
+import com.csl.kafkador.util.ViewHelper;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.KafkaFuture;
@@ -108,7 +109,7 @@ public class ClusterService {
                         documentation = messageSource.getMessage("broker.documentation." + c.name(), null, null , locale);
                     }
                     result.add(new ConfigEntry( c.name(), c.value(), c.source().name(), c.isSensitive(), c.isReadOnly(),
-                            c.type().name(), documentation ));
+                            c.type().name(), documentation, ViewHelper.getDocumentationLink(c.name())));
                 });
             } else {
                 throw new KafkadorException("Node Config not found!");

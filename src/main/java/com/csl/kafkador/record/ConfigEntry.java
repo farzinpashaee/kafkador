@@ -7,5 +7,6 @@ public record ConfigEntry(
         Boolean sensitive,
         Boolean readOnly,
         String type,
-        String documentation) {
+        String documentation,
+        String documentationLink) {
 }

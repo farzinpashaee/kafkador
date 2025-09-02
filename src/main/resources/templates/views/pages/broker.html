@@ -89,8 +89,14 @@ $(document).ready(function(){
         renderViewHtml($("#brokerConfig"),'<tr><th scope="row">${name} <a class="documentationLink" data-name="${name}" href="#" data-bs-toggle="modal" data-bs-target="#exampleModal" ><i class="bi bi-question-circle opacity-75 cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Check Documentation"></i></a></th><td class="text-truncate">${value}</td><!--<td class="text-center">${type}</td><td class="text-center">${source}</td>--><td class="text-center">${sensitive}</td><td class="text-center">${readOnly}</td></tr>',response.data.config);
         const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
         const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+        $(".documentationLink").each(function(index, element) {
+            const config = response.data.config.find(config => config.name === $(this).data("name"));
+            if(config.documentation == null)
+                $(this).hide();
+        });
         $(".documentationLink").click(function(){
-            $("#documentationBody").html($(this).data("name"));
+            const config = response.data.config.find(config => config.name === $(this).data("name"));
+            $("#documentationBody").html(config.documentation + "</br><a target='_blank' href='"+config.documentationLink+"'>Read more</a>");
         });
     });
 });
