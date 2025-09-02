@@ -118,6 +118,15 @@ public class PageController {
         return "views/pages/topics.html";
     }
 
+    @GetMapping("/topic/{name}")
+    public String topic(Model model, @PathVariable String name) throws KafkaAdminApiException {
+        new PageView.Builder()
+                .title(name)
+                .activeMenu("topics")
+                .build(model);
+        return "views/pages/topic.html";
+    }
+
 
     @GetMapping("/consumers")
     public String consumers(Model model, HttpSession session) throws KafkaAdminApiException {

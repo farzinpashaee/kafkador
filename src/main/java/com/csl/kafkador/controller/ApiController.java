@@ -60,6 +60,16 @@ public class ApiController {
                 .success(HttpStatus.OK);
     }
 
+    @GetMapping("/topic/{name}")
+    public ResponseEntity<GenericResponse<Topic>> getTopic( @PathVariable String name ) throws KafkaAdminApiException {
+        TopicService topicService = (TopicService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
+        Topic topic = topicService.getTopic(name);
+        return new GenericResponse.Builder<Topic>()
+                .data(topic)
+                .success(HttpStatus.OK);
+    }
+
+
     @PostMapping("/topic")
     public void createTopic(@RequestBody Topic request, HttpSession session ) throws KafkaAdminApiException {
         TopicService topicService = (TopicService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
@@ -70,12 +80,6 @@ public class ApiController {
     public void deleteTopic(@PathVariable String name, HttpSession session ) throws KafkaAdminApiException {
         TopicService topicService = (TopicService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
         topicService.deleteTopic(new Request<String>(session).setBody(name));
-    }
-
-    @GetMapping("/topic/{name}")
-    public Topic getTopic(@PathVariable String name, HttpSession session) throws KafkaAdminApiException {
-        TopicService topicService = (TopicService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
-        return topicService.getTopic(new Request<String>(session).setBody(name));
     }
 
     @PostMapping("/connection")

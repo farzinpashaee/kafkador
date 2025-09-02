@@ -6,12 +6,17 @@ import com.csl.kafkador.dto.Request;
 import com.csl.kafkador.dto.Topic;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
+import com.csl.kafkador.record.ConfigEntry;
 import com.csl.kafkador.util.DtoMapper;
+import com.csl.kafkador.util.ViewHelper;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.KafkaFuture;
+import org.apache.kafka.common.config.ConfigResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -24,6 +29,7 @@ public class TopicService {
 
     private final ApplicationContext applicationContext;
     private final ApplicationConfig applicationConfig;
+    private final MessageSource messageSource;
 
     public Collection<Topic> getTopics() throws KafkaAdminApiException {
 
@@ -88,7 +94,7 @@ public class TopicService {
     }
 
 
-    public Topic getTopic( Request<String> request ) throws KafkaAdminApiException {
+    public Topic getTopic( String name ) throws KafkaAdminApiException {
 
         ConnectionService connectionService = (ConnectionService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
@@ -96,15 +102,16 @@ public class TopicService {
         try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
             Topic topic = new Topic();
             Set<String> topicNames = new HashSet<>();
-            topicNames.add(request.getBody());
+            topicNames.add(name);
             DescribeTopicsResult result = admin.describeTopics(topicNames);
 
             Map<String, TopicDescription> topicDescriptions = result.allTopicNames().get();
-            TopicDescription topicDescription = topicDescriptions.get(request.getBody());
+            TopicDescription topicDescription = topicDescriptions.get(name);
             if (topicDescription != null) {
                 topic.setName(topicDescription.name());
                 topic.setId(topicDescription.topicId().toString());
                 topic.setPartitions(topicDescription.partitions().size());
+                topic.setConfig(getBrokerConfiguration(topicDescription.name()));
                 return topic;
             }
 
@@ -114,6 +121,37 @@ public class TopicService {
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
         }
         return null;
+    }
+
+    public List<ConfigEntry> getBrokerConfiguration( String name ) throws KafkaAdminApiException {
+        List<ConfigEntry> result = new ArrayList<>();
+        ConnectionService connectionService = (ConnectionService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
+        Locale locale = LocaleContextHolder.getLocale();
+
+        try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
+            ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, name);
+            DescribeConfigsResult describeConfigsResult = admin.describeConfigs(Collections.singleton(configResource));
+            describeConfigsResult.all().get().forEach((resource, config) -> {
+                System.out.println("Configuration for " + resource.name() + ":");
+                config.entries().forEach(c -> {
+                    String documentation = c.documentation();
+                    if( documentation == null ){
+                        documentation = messageSource.getMessage("broker.documentation." + c.name(), null, null , locale);
+                    }
+                    result.add(new ConfigEntry( c.name(), c.value(), c.source().name(), c.isSensitive(), c.isReadOnly(),
+                            c.type().name(), documentation, ViewHelper.getDocumentationLink(c.name())));
+                });
+            });
+            Collections.sort(result, (o1, o2) -> {
+                return o1.name().compareTo(o2.name());
+            });
+            return result;
+        } catch (ConnectionSessionExpiredException e){
+            throw e;
+        } catch (Exception e) {
+            throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
+        }
     }
 
 }

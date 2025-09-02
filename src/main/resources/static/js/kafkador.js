@@ -9,6 +9,7 @@ const CONFIG = {
         produce: '/api/produce',
         consumer: '/api/consumer',
         broker: '/api/broker/{id}',
+        topicDetails: '/api/topic/{name}',
         consumerGroup: '/api/consumer-group'
     },
     defaultHeaders: {
@@ -267,6 +268,9 @@ function consume( topic, callback) {
     };
 }
 
+
+
+
 const Utils = {
     /**
      * Get cookie value by name
@@ -331,6 +335,17 @@ const Utils = {
             }
         }
         return true;
+    },
+
+    extractPathParams(template, actualPath) {
+      const regexPattern = template
+        .replace(/\$\{([^}]+)\}/g, (_, key) => `(?<${key}>[^/]+)`)
+        .replace(/\//g, "\\/");
+
+      const regex = new RegExp(`^${regexPattern}$`);
+      const match = actualPath.match(regex);
+
+      return match ? match.groups : {};
     },
 
     interpolate(input, params) {

@@ -1,5 +1,6 @@
 package com.csl.kafkador.dto;
 
+import com.csl.kafkador.record.ConfigEntry;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.apache.kafka.common.Node;
@@ -19,6 +20,7 @@ public class Topic {
     private Boolean isInternal;
     private Short replicatorFactor;
     private List<Partition> partitionDetails;
+    private List<ConfigEntry> config;
 
 
 }

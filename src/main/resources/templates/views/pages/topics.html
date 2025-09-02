@@ -95,7 +95,7 @@
 <script>
 $(document).ready(function(){
   get('topic', {}, function(topics){
-    renderViewHtml($("#topics"),'<tr><th scope="row">${name}</th><td>${id}</td><td>${partitions}</td><td><button type="button" class="btn btn-primary btn-sm produce" data-bs-toggle="modal" data-bs-target="#produce" data-topic-name="${name}">Produce</button> <button type="button" class="btn btn-primary btn-sm ms-1 consume" data-bs-toggle="modal" data-bs-target="#consume" data-topic-name="${name}">Consume</button></td></tr>',topics.data);
+    renderViewHtml($("#topics"),'<tr><th scope="row"><a href="/topic/${name}">${name}</a></th><td>${id}</td><td>${partitions}</td><td><button type="button" class="btn btn-primary btn-sm produce" data-bs-toggle="modal" data-bs-target="#produce" data-topic-name="${name}">Produce</button> <button type="button" class="btn btn-primary btn-sm ms-1 consume" data-bs-toggle="modal" data-bs-target="#consume" data-topic-name="${name}">Consume</button></td></tr>',topics.data);
     $(".produce").click(function(){
         $("#produceTopicName").html($(this).data("topic-name"));
     });
