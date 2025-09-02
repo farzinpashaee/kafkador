@@ -103,6 +103,10 @@ span.placeholder{
     cursor: pointer;
 }
 
+.opacity-15 {
+    opacity: .15 !important;
+}
+
 /* Sidebar */
 @media (min-width: 768px) {
   .sidebar .offcanvas-lg {
