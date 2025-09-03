@@ -46,12 +46,15 @@ public class ConnectionServiceBySession {
     }
 
     public Connection connect( Request<String> request ) throws ConnectionNotFoundException {
-        List<Connection> connections = sessionHolder.getSession().getAttribute(KafkadorContext.SessionAttribute.CONNECTIONS.toString()) == null ?
+        List<Connection> connections = sessionHolder.getSession().getAttribute(KafkadorContext.SessionAttribute.CONNECTIONS.toString()) == "" ?
                 new ArrayList<>() : (List<Connection>) sessionHolder.getSession().getAttribute(KafkadorContext.SessionAttribute.CONNECTIONS.toString());
 
         Optional<Connection> connection = connections.stream().filter(i -> i.getId().equals(request.getBody()) ).findFirst();
         if(connection.isPresent()){
             request.getHttpSession().setAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString(),connection.get());
+            String redirectAfterLogin = request.getHttpSession().getAttribute("redirectAfterLogin") == null ?
+                    null : request.getHttpSession().getAttribute("redirectAfterLogin").toString();
+            connection.get().setRedirectAfterLogin(redirectAfterLogin);
             return connection.get();
         } else {
             throw new ConnectionNotFoundException("Connection with given ID not Found!");

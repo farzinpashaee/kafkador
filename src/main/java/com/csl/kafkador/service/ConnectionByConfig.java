@@ -31,6 +31,9 @@ public class ConnectionByConfig implements ConnectionService {
                 .filter(i -> i.getId().equals(request.getBody()) ).findFirst();
         if( optionalConnection.isPresent() ){
             sessionHolder.getSession().setAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString(),optionalConnection.get());
+            String redirectAfterLogin = request.getHttpSession().getAttribute("redirectAfterLogin") == null ?
+                    null : request.getHttpSession().getAttribute("redirectAfterLogin").toString();
+            optionalConnection.get().setRedirectAfterLogin(redirectAfterLogin);
             return optionalConnection.get();
         } else {
             throw new ConnectionNotFoundException("Connection with given ID not found!");

@@ -108,10 +108,13 @@ public class ApiController {
     }
 
     @GetMapping("/connect")
-    public Connection connect(@RequestParam String id, HttpSession session) throws ConnectionNotFoundException {
+    public ResponseEntity<GenericResponse<Connection>> connect(@RequestParam String id, HttpSession session) throws ConnectionNotFoundException {
         ConnectionService connectionService = (ConnectionService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
-        return connectionService.connect( new Request<String>(session).setBody(id) );
+        Connection connection =  connectionService.connect( new Request<String>(session).setBody(id) );
+        return new GenericResponse.Builder<Connection>()
+                .data(connection)
+                .success(HttpStatus.OK);
     }
 
     @PostMapping("/produce/{topic}")

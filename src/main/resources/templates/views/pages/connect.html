@@ -32,7 +32,8 @@ $(document).ready(function(){
         renderView($("#connection"),$("#connectionItemView"),connection.data);
         $(".connect").click(function(){
             connect($(this).data("connection-id"),function(response){
-                 window.location.href = CONFIG.baseUrl;
+                 console.log(response);
+                 window.location.href = CONFIG.baseUrl + ( response.data.redirectAfterLogin == null ? "" : response.data.redirectAfterLogin);
             });
         });
     });

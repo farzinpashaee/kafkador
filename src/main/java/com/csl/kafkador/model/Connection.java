@@ -15,5 +15,6 @@ public class Connection implements Serializable {
     private String port;
     private String name;
     private Boolean defaultConnection;
+    private String redirectAfterLogin;
 
 }
