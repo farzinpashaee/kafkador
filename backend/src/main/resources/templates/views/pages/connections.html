@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="views/fragments/templates :: head"></head>
+<body>
+
+<div th:replace="views/fragments/templates :: header"></div>
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="views/fragments/menu :: menu"></div>
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content min-vh-100">
+            <div th:replace="views/fragments/templates :: title"></div>
+            <p class="placeholder-glow" id="connectionLoading">
+                <span class="placeholder col-12"></span>
+                <span class="placeholder col-12"></span>
+                <span class="placeholder col-8"></span>
+            </p>
+            <div class="row" id="connection">
+                <div class="row mt-4">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th scope="col">name</th>
+                                <th scope="col">Host</th>
+                                <th scope="col">Port</th>
+                            </tr>
+                            </thead>
+                            <tbody id="connections">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="views/fragments/templates :: scripts"></div>
+<script>
+$(document).ready(function(){
+    get( 'connection', {}, function(connections) {
+        renderViewHtml($("#connections"),'<tr><th scope="row">${name}</th><td>${host}</td><td>${port}</td></tr>',connections.data);
+    });
+});
+</script>
+</body>
+</html>

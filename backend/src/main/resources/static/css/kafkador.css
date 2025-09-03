@@ -1,0 +1,146 @@
+@font-face {
+      font-family: 'Rubik';
+      src: url('../assets/fonts/Rubik-Regular.woff2') format('woff2'),
+           url('../assets/fonts/Rubik-Regular.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+body {
+    font-family: Rubik, -apple-system, Arial, sans-serif;
+    background-color: #f8f9fa;
+}
+
+header {
+    height: 3em;
+}
+
+.main.container {
+    margin-top: 6em;
+}
+
+.ml-0{
+   margin-left: 0em!important;
+}
+
+.logo {
+    margin-right: 6px!important;
+    width: 24px!important;
+}
+
+.viewElement{
+    display:none;
+}
+
+.loadingPlaceholder{
+    display:none;
+}
+
+.headerDropDownButton{
+    background-color:#000;
+    border: 0px;
+    padding-left: 0.7em;
+}
+
+.bg-black {
+    background-color:#000;
+}
+
+.text-gray-500 {
+    color: #adb5bd
+}
+
+.green-circle {
+    height: 0.7em;
+    width: 0.7em;
+    background-color: #479f76;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.connectContainer {
+    max-width: 540px;
+}
+
+.connectContainer h1 {
+    font-weight: bold;
+    text-align: center;
+    margin-top: -2em
+}
+
+.connectContainer h4 {
+    margin-top: 1em;
+    margin-bottom: 0em;
+}
+
+.connectContainer h5 {
+    margin-bottom: 0em;
+}
+
+#connection .connect {
+   margin-top: -1.2em;
+}
+
+span.placeholder{
+    height: 0.6em;
+    min-height: 0.6em;
+}
+
+.bi {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+}
+
+.text-truncate {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 30em;
+}
+
+.cursor-pointer{
+    cursor: pointer;
+}
+
+.opacity-15 {
+    opacity: .15 !important;
+}
+
+/* Sidebar */
+@media (min-width: 768px) {
+  .sidebar .offcanvas-lg {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 48px;
+  }
+  .navbar-search {
+    display: block;
+  }
+}
+
+.sidebar .nav-link {
+  color: #555;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.sidebar .nav-link.active {
+  color: #0d6efd;
+}
+
+.sidebar-heading {
+  font-size: .75rem;
+}
+
+/* Navbar */
+.navbar-brand {
+  padding-top: .75rem;
+  padding-bottom: .75rem;
+  background-color: rgba(0, 0, 0, .25);
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
+}
+
+.navbar .form-control {
+  padding: .75rem 1rem;
+}

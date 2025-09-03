@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="views/fragments/templates :: head"></head>
+<body>
+<div th:replace="views/fragments/templates :: header"></div>
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="views/fragments/menu :: menu"></div>
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content min-vh-100">
+            <div th:replace="views/fragments/templates :: title"></div>
+            <p class="placeholder-glow" id="topicLoading">
+                <span class="placeholder col-12"></span>
+                <span class="placeholder col-12"></span>
+                <span class="placeholder col-8"></span>
+            </p>
+            <div class="row mt-4">
+
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">ID</th>
+                            <th scope="col">Partitions</th>
+                            <th scope="col"></th>
+                        </tr>
+                        </thead>
+                        <tbody id="topics">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal fade" tabindex="-1" id="consume">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Consume</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="float-start">
+                        <div class="spinner-border spinner-border-sm float-start" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="float-start ms-1">Consuming "<span class="fw-bold" id="consumeTopicName"></span>"</p>
+                    </div>
+                </div>
+                <div class="border p-3 overflow-auto" style="max-height: 200px;" id="consumeContainer">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="startConsume"><i class="bi bi-play-fill"></i> Start</button>
+                    <button type="button" class="btn btn-primary" id="stopConsume"><i class="bi bi-stop-fill"></i> Stop</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" tabindex="-1" id="produce">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Produce Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <p>Send an event to Topic "<span class="fw-bold" id="produceTopicName"></span>"</p>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="produceKey" placeholder="Event Key">
+                    <label for="produceKey">Key</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <textarea class="form-control" id="produceValue" rows="3" placeholder="Event Value"></textarea>
+                    <label for="produceValue">Value</label>
+                </div>
+                <div style="display:none" class="alert alert-success" role="alert" id="produceAlert">
+                    Event sent successfully
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary">Clear</button>
+                <button type="button" class="btn btn-primary" id="sendEvent">Send Event</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:replace="views/fragments/templates :: scripts"></div>
+<script>
+$(document).ready(function(){
+  get('topic', {}, function(topics){
+    renderViewHtml($("#topics"),'<tr><th scope="row"><a href="/topic/${name}">${name}</a></th><td>${id}</td><td>${partitions}</td><td><button type="button" class="btn btn-primary btn-sm produce" data-bs-toggle="modal" data-bs-target="#produce" data-topic-name="${name}">Produce</button> <button type="button" class="btn btn-primary btn-sm ms-1 consume" data-bs-toggle="modal" data-bs-target="#consume" data-topic-name="${name}">Consume</button></td></tr>',topics.data);
+    $(".produce").click(function(){
+        $("#produceTopicName").html($(this).data("topic-name"));
+    });
+    $('#sendEvent').click(function(){
+        produce( $("#produceTopicName").html(), { key: $('#produceKey').val(),value: $('#produceValue').val() }, function(response){
+            console.log(response);
+            showAlert( $("#produceAlert"), 'Event sent successfully', 'alert-success' );
+        });
+    });
+    $(".consume").click(function(){
+        $("#consumeTopicName").html($(this).data("topic-name"));
+        consume( $(this).data("topic-name"), function(event){
+            $("#consumeContainer").append("<div>"+event.data+"</div>");
+        });
+    });
+  });
+});
+
+</script>
+</body>
+</html>

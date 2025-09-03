@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="views/fragments/templates :: head"></head>
+<body>
+
+<div th:replace="views/fragments/templates :: header"></div>
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="views/fragments/menu :: menu"></div>
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content min-vh-100">
+            <div th:replace="views/fragments/templates :: title"></div>
+            <p class="placeholder-glow" id="consumerGroupLoading">
+                <span class="placeholder col-12"></span>
+                <span class="placeholder col-12"></span>
+                <span class="placeholder col-8"></span>
+            </p>
+            <div class="row" id="consumerGroup">
+                <div class="row mt-4">
+                    <h4>Consumer Groups</h4>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Type</th>
+                                <th scope="col">Coordinator</th>
+                                <th scope="col">Simple Consumer Group</th>
+                                <th scope="col">Partition Assignor</th>
+                                <th scope="col">Group State</th>
+                            </tr>
+                            </thead>
+                            <tbody id="consumerGroups">
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<div th:replace="views/fragments/templates :: scripts"></div>
+<script>
+$(document).ready(function(){
+    get('consumerGroup', {}, function(response){
+        console.log(response);
+        renderViewHtml($("#consumerGroups"),'<tr><th scope="row">${id}</th><td>${type}</td><td>${coordinator}</td><td>${simpleConsumerGroup}</td><td>${partitionAssignor}</td><td>${groupState}</td></tr>',response.data);
+    });
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="views/fragments/templates :: head"></head>
+<body class="bg-light">
+
+
+<div class="min-vh-100 d-flex align-items-center justify-content-center">
+    <!-- Use container for responsive widths -->
+    <div class="container connectContainer">
+        <h1><img th:src="${baseUrl + 'assets/images/logo-shape-v1.svg'}" style="width:1.7em; margin-top:-0.3em">
+            Kafkador </h1>
+
+        <h4>Connect to Cluster </h4>
+        <p class="text-gray-500">Or connect to a new cluster by <a href="#">Adding New Connection</a></p>
+        <div class="row" id="connection">
+        </div>
+    </div>
+</div>
+</div>
+
+<div class="viewElement" id="connectionItemView">
+    <div class="card m-1">
+        <div class="card-body"><h5>${name}</h5><span class="text-gray-500">${host}</span>
+            <button class="btn btn-primary connect float-end" data-connection-id="${id}" type="button">Connect</button>
+        </div>
+    </div>
+</div>
+<div th:replace="views/fragments/templates :: scripts"></div>
+<script>
+$(document).ready(function(){
+    get( 'connection', {} , function(connection) {
+        renderView($("#connection"),$("#connectionItemView"),connection.data);
+        $(".connect").click(function(){
+            connect($(this).data("connection-id"),function(response){
+                 console.log(response);
+                 window.location.href = CONFIG.baseUrl + ( response.data.redirectAfterLogin == null ? "" : response.data.redirectAfterLogin);
+            });
+        });
+    });
+    $("#addConnection").click(function(){
+        createConnection({
+                name: 'name-x',
+                host: '127.0.0.1',
+                port: '9066'
+            });
+    });
+});
+
+</script>
+</body>
+</html>

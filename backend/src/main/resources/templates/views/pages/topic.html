@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="views/fragments/templates :: head"></head>
+<body>
+
+<div th:replace="views/fragments/templates :: header"></div>
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="views/fragments/menu :: menu"></div>
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content min-vh-100">
+            <div th:replace="views/fragments/templates :: title"></div>
+            <div class="row">
+
+            </div>
+            <div class="row">
+                <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab"
+                                data-bs-target="#overview" type="button" role="tab"
+                                aria-controls="overview" aria-selected="true">
+                            Configurations
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="projects-tab" data-bs-toggle="tab"
+                                data-bs-target="#projects" type="button" role="tab"
+                                aria-controls="projects" aria-selected="false">
+                            Logs
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content border border-top-0 p-3" id="profileTabsContent">
+                    <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab" tabindex="0">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col" class="text-truncate">Value</th>
+<!--                                    <th scope="col" class="text-center">Type</th>-->
+<!--                                    <th scope="col" class="text-center">Source</th>-->
+                                    <th scope="col" class="text-center">Sensitive</th>
+                                    <th scope="col" class="text-center">Read Only</th>
+                                </tr>
+                                </thead>
+                                <tbody id="topicConfig">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="projects" role="tabpanel" aria-labelledby="projects-tab" tabindex="0">
+                        <div class="alert alert-warning" role="alert">
+                            This Service is Not Enabled!
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab" tabindex="0">
+                        <div class="alert alert-warning" role="alert">
+                            This Service is Not Enabled!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal fade" id="documentationModal" tabindex="-1" aria-labelledby="documentationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="documentationModalLabel">Documentation</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="documentationBody">
+                ...
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="views/fragments/templates :: scripts"></div>
+<script>
+$(document).ready(function(){
+    get('topicDetails', Utils.extractPathParams('/topic/${name}',window.location.pathname) , function(response){
+        console.log(response);
+        Utils.prepareViewTrueFalse(response.data.config,"readOnly",'<i class="bi bi-pencil-square opacity-15" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Read Only"></i>','<i class="bi bi-pencil-square opacity-75 cursor-pointer"></i>');
+        Utils.prepareViewTrueFalse(response.data.config,"sensitive",'<i class="bi bi-eye-slash text-danger"></i>','<i class="bi bi-eye opacity-75"></i>');
+        renderViewHtml($("#topicConfig"),'<tr><th scope="row">${name} <a class="documentationLink" data-name="${name}" href="#" data-bs-toggle="modal" data-bs-target="#documentationModal" ><i class="bi bi-question-circle opacity-75 cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Check Documentation"></i></a></th><td class="text-truncate">${value}</td><!--<td class="text-center">${type}</td><td class="text-center">${source}</td>--><td class="text-center">${sensitive}</td><td class="text-center">${readOnly}</td></tr>',response.data.config);
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+        $(".documentationLink").each(function(index, element) {
+            const config = response.data.config.find(config => config.name === $(this).data("name"));
+            if(config.documentation == null)
+                $(this).hide();
+        });
+        $(".documentationLink").click(function(){
+            const config = response.data.config.find(config => config.name === $(this).data("name"));
+            $("#documentationBody").html(config.documentation + "</br><a target='_blank' href='"+config.documentationLink+"'>Read more</a>");
+        });
+    });
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="menu" class="sidebar border border-right col-md-3 col-lg-2 p-0 bg-body-tertiary">
+    <div class="offcanvas-md offcanvas-end bg-body-tertiary" tabindex="-1" id="sidebarMenu"
+         aria-labelledby="sidebarMenuLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="sidebarMenuLabel">Main Menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarMenu"
+                    aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body d-md-flex flex-column p-0 pt-lg-3 overflow-y-auto">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'cluster' ? 'active' : '')}" aria-current="page" th:href="${baseUrl}">
+                        <i class="bi bi-diagram-3"></i> Cluster
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'topics' ? 'active' : '')}" th:href="${baseUrl + 'topics'}">
+                        <i class="bi bi-chat-square-text"></i> Topics
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'consumers' ? 'active' : '')}" class="nav-link d-flex align-items-center gap-2" th:href="${baseUrl + 'consumers'}">
+                        <i class="bi bi-journal-arrow-down"></i> Consumers
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'access-control' ? 'active' : '')}" class="nav-link d-flex align-items-center gap-2" th:href="${baseUrl + 'access-control'}">
+                        <i class="bi bi-shield-lock"></i> Access Control
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'streams' ? 'active' : '')}" class="nav-link d-flex align-items-center gap-2" th:href="${baseUrl + 'streams'}">
+                        <i class="bi bi-grid-3x2-gap"></i> Streams
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'ksql-db' ? 'active' : '')}" class="nav-link d-flex align-items-center gap-2" th:href="${baseUrl + 'ksql-db'}">
+                        <i class="bi bi-database"></i> KsqlDB
+                    </a>
+                </li>
+                <!--                <li class="nav-item"><a class="nav-link d-flex align-items-center gap-2" th:href="${baseUrl + 'sandbox'}">-->
+                <!--                    <i class="bi bi-box-seam"></i> Sandbox-->
+                <!--                </a></li>-->
+                <li class="nav-item">
+                    <a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'connectors' ? 'active' : '')}" class="nav-link d-flex align-items-center gap-2" th:href="${baseUrl + 'connectors'}">
+                        <i class="bi bi-box-arrow-in-right"></i> Connectors
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'schema-registry' ? 'active' : '')}" class="nav-link d-flex align-items-center gap-2" th:href="${baseUrl + 'schema-registry'}">
+                        <i class="bi bi-layers"></i> Schema Registry
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'connections' ? 'active' : '')}" class="nav-link d-flex align-items-center gap-2" th:href="${baseUrl + 'connections'}">
+                        <i class="bi bi-hdd-network"></i> Connections
+                    </a>
+                </li>
+            </ul>
+            <hr class="my-3">
+            <ul class="nav flex-column mb-auto">
+                <li class="nav-item"><a th:class="${'nav-link d-flex align-items-center gap-2 ' + (page.activeMenu == 'settings' ? 'active' : '')}" th:href="${baseUrl + 'settings'}">
+                    <i class="bi bi-gear"></i> Settings
+                </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
