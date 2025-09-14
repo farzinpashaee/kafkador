@@ -6,6 +6,7 @@ import { TopicComponent } from './components/topic/topic.component'
 import { ConsumerComponent } from './components/consumer/consumer.component'
 import { ConnectComponent } from './components/connect/connect.component'
 import { BrokerComponent } from './components/broker/broker.component'
+import { TopicsComponent } from './components/topics/topics.component'
 
 export const routes: Routes = [
   {
@@ -13,7 +14,8 @@ export const routes: Routes = [
     component: DashboardLayoutComponent,
     children: [
       { path: '', component: ClusterComponent, title: 'Cluster' },
-      { path: 'topics', component: TopicComponent, title: 'Topics' },
+      { path: 'topics', component: TopicsComponent, title: 'Topics' },
+      { path: 'topic/:name', component: TopicComponent, title: 'Topic' },
       { path: 'consumers', component: ConsumerComponent, title: 'Consumers' },
       { path: 'broker/:id', component: BrokerComponent, title: 'Broker' }
     ]

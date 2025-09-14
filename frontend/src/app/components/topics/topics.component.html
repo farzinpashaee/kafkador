@@ -1,0 +1,30 @@
+<p class="placeholder-glow" *ngIf="isLoading">
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-8"></span>
+</p>
+<div class="row mt-4" *ngIf="!isLoading">
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+      <tr>
+        <th scope="col">Name</th>
+        <th scope="col">ID</th>
+        <th scope="col">Partitions</th>
+        <th scope="col"></th>
+      </tr>
+      </thead>
+      <tbody >
+        <tr *ngFor="let topic of topics">
+          <th scope="row"><a routerLink="/topic/{{topic.name}}" routerLinkActive="active">{{topic.name}}</a></th>
+          <td>{{topic.id}}</td>
+          <td>{{topic.partitions}}</td>
+          <td>
+            <button type="button" class="btn btn-primary btn-sm produce" data-bs-toggle="modal" data-bs-target="#produce" data-topic-name="${name}">Produce</button>
+            <button type="button" class="btn btn-primary btn-sm ms-1 consume" data-bs-toggle="modal" data-bs-target="#consume" data-topic-name="${name}">Consume</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

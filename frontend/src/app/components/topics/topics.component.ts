@@ -6,24 +6,22 @@ import { GenericResponse } from '../../models/generic-response';
 import { Topic } from '../../models/topic';
 
 @Component({
-  selector: 'app-topic',
+  selector: 'app-topics',
   imports: [CommonModule,RouterModule],
-  templateUrl: './topic.component.html',
-  styleUrl: './topic.component.scss'
+  templateUrl: './topics.component.html',
+  styleUrl: './topics.component.scss'
 })
-export class TopicComponent {
+export class TopicsComponent {
 
-  topicName!: string;
-  topic!: Topic;
+  topics!: Topic[];
   isLoading: boolean = true;
 
   constructor(private apiService: ApiService,
     private route: ActivatedRoute) {}
 
   ngOnInit() {
-    this.topicName = this.route.snapshot.paramMap.get('name')!;
-    this.apiService.getTopicDetails(this.topicName).subscribe((res: GenericResponse<Topic>) => {
-      this.topic = res.data;
+    this.apiService.getTopics().subscribe((res: GenericResponse<Topic[]>) => {
+      this.topics = res.data;
       this.isLoading = false;
     });
   }

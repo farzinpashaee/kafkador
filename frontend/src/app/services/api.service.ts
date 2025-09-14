@@ -5,6 +5,7 @@ import { catchError } from 'rxjs/operators';
 import { Cluster } from '../models/cluster';
 import { Connection } from '../models/connection';
 import { Broker } from '../models/broker';
+import { Topic } from '../models/topic';
 import { GenericResponse } from '../models/generic-response';
 
 @Injectable({
@@ -26,6 +27,14 @@ export class ApiService {
 
   public getConnections(): Observable<GenericResponse<Connection[]>> {
     return this.http.get<GenericResponse<Connection[]>>(`${ApiService.ApiBaseUrl}/connection`,{ withCredentials: true });
+  }
+
+  public getTopics(): Observable<GenericResponse<Topic[]>> {
+    return this.http.get<GenericResponse<Topic[]>>(`${ApiService.ApiBaseUrl}/topic`,{ withCredentials: true });
+  }
+
+  public getTopicDetails(name:string): Observable<GenericResponse<Topic>> {
+    return this.http.get<GenericResponse<Topic>>(`${ApiService.ApiBaseUrl}/topic/${name}`,{ withCredentials: true });
   }
 
   public connect(id:string): Observable<GenericResponse<Connection>> {
