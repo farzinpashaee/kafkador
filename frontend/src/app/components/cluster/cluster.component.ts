@@ -4,10 +4,11 @@ import { Cluster } from '../../models/cluster';
 import { GenericResponse } from '../../models/generic-response';
 import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-cluster',
-  imports: [CommonModule],
+  imports: [CommonModule,RouterModule],
   templateUrl: './cluster.component.html',
   styleUrl: './cluster.component.scss'
 })

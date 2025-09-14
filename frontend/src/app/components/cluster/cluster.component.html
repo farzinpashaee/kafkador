@@ -22,7 +22,7 @@
         <tbody id="clusterBrokers">
           <tr *ngFor="let broker of cluster.brokers">
             <th scope="row">{{broker.id}}</th>
-            <td><a href="../broker/{{broker.id}}">{{broker.host}}</a></td>
+            <td><a routerLink="/broker/{{broker.id}}" routerLinkActive="active">{{broker.host}}</a></td>
             <td>{{broker.port}}</td>
             <td>{{broker.size}}</td>
             <td>{{broker.hash}}</td>

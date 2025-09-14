@@ -4,6 +4,7 @@ import { throwError, Observable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Cluster } from '../models/cluster';
 import { Connection } from '../models/connection';
+import { Broker } from '../models/broker';
 import { GenericResponse } from '../models/generic-response';
 
 @Injectable({
@@ -17,6 +18,10 @@ export class ApiService {
 
   public getClusterDetails(): Observable<GenericResponse<Cluster>> {
     return this.http.get<GenericResponse<Cluster>>(`${ApiService.ApiBaseUrl}/cluster`,{ withCredentials: true });
+  }
+
+  public getBrokerDetails(id:string): Observable<GenericResponse<Broker>> {
+    return this.http.get<GenericResponse<Broker>>(`${ApiService.ApiBaseUrl}/broker/${id}`,{ withCredentials: true });
   }
 
   public getConnections(): Observable<GenericResponse<Connection[]>> {
