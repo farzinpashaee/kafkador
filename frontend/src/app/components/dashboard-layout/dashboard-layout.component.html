@@ -98,7 +98,7 @@
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
               <li><a class="dropdown-item" routerLink="/connections" routerLinkActive="active"><i class="bi bi-hdd-network"></i><span class="m-2">Connections</span></a></li>
-              <li><a class="dropdown-item" routerLink="/disconnect" routerLinkActive="active"><i class="bi bi-power"></i><span class="m-2">Disconnect</span></a></li>
+              <li><a class="dropdown-item" (click)="disconnect()" ><i class="bi bi-power"></i><span class="m-2">Disconnect</span></a></li>
             </ul>
           </div>
         </div>

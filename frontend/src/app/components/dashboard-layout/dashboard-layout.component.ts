@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
-import { RouterModule, RouterOutlet, ActivatedRoute } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { RouterModule, RouterOutlet, ActivatedRoute, Router } from '@angular/router';
 import { LocalStorageService } from '../../services/local-storage.service';
+import { ApiService } from '../../services/api.service';
 import { Connection } from '../../models/connection';
+import { GenericResponse } from '../../models/generic-response';
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -13,8 +15,10 @@ export class DashboardLayoutComponent {
 
   connectedHost = "Active Host" ;
   activeConnection!: Connection ;
+  router = inject(Router);
 
   constructor(private route: ActivatedRoute,
+              private apiService: ApiService,
               private localStorageService: LocalStorageService) {}
 
   ngOnInit() {
@@ -25,4 +29,10 @@ export class DashboardLayoutComponent {
     }
   }
 
+  disconnect(){
+    this.apiService.disconnect().subscribe((res: GenericResponse<Connection>) => {
+      this.localStorageService.removeItem('activeConnection');
+      this.router.navigate(['/connect']);
+    });
+  }
 }

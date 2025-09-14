@@ -12,6 +12,7 @@ import java.util.Properties;
 public interface ConnectionService {
 
     Connection connect( Request<String> request ) throws ConnectionNotFoundException;
+    Connection disconnect() throws ConnectionNotFoundException;
     List<Connection> getConnections();
     Connection getActiveConnection() throws ConnectionSessionExpiredException;
     Properties getActiveConnectionProperties() throws ConnectionSessionExpiredException;

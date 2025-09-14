@@ -1,0 +1,27 @@
+<p class="placeholder-glow" *ngIf="isLoading">
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-8"></span>
+</p>
+<div class="row"  *ngIf="!isLoading">
+  <div class="row mt-4">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+        <tr>
+          <th scope="col">name</th>
+          <th scope="col">Host</th>
+          <th scope="col">Port</th>
+        </tr>
+        </thead>
+        <tbody>
+          <tr  *ngFor="let connection of connections">
+            <th scope="row">{{connection.name}}</th>
+            <td>{{connection.host}}</td>
+            <td>{{connection.port}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

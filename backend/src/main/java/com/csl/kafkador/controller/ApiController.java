@@ -117,6 +117,16 @@ public class ApiController {
                 .success(HttpStatus.OK);
     }
 
+    @GetMapping("/disconnect")
+    public ResponseEntity<GenericResponse<Void>> disconnect() throws ConnectionNotFoundException {
+        ConnectionService connectionService = (ConnectionService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
+        connectionService.disconnect();
+        return new GenericResponse.Builder<Void>()
+                .data(null)
+                .success(HttpStatus.OK);
+    }
+
     @PostMapping("/produce/{topic}")
     public Event produce(@RequestBody Event<String,String> event, @PathVariable String topic) throws KafkadorException {
         ProducerService producerService = (ProducerService) applicationContext

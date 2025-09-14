@@ -41,6 +41,12 @@ public class ConnectionByConfig implements ConnectionService {
     }
 
     @Override
+    public Connection disconnect() throws ConnectionNotFoundException {
+        sessionHolder.getSession().setAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString(),null);
+        return null;
+    }
+
+    @Override
     public Connection getActiveConnection() throws ConnectionSessionExpiredException {
         Connection connection = (Connection) sessionHolder.getSession().getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString());
         if( connection == null ) throw new ConnectionSessionExpiredException("No Active connection found!","/connect");
