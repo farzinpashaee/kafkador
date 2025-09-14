@@ -36,7 +36,9 @@
               "src/assets/css/bootstrap/bootstrap-icons.css",
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [
+              "src/assets/js/bootstrap/bootstrap.bundle.min.js"
+            ]
           },
           "configurations": {
             "production": {

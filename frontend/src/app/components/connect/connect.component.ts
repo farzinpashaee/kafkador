@@ -1,10 +1,11 @@
 import { Component, inject  } from '@angular/core';
 import { Router } from '@angular/router';
-import { GenericResponse } from '../../models/generic-response';
-import { Connection } from '../../models/connection';
-import { ApiService } from '../../services/api.service';
 import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
+import { ApiService } from '../../services/api.service';
+import { LocalStorageService } from '../../services/local-storage.service';
+import { GenericResponse } from '../../models/generic-response';
+import { Connection } from '../../models/connection';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -16,10 +17,12 @@ import { environment } from '../../environments/environment';
 export class ConnectComponent  {
 
   connections: Connection[] = [];
+  connection!: Connection;
   baseUrl = environment.baseUrl;
   router = inject(Router);
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService,
+    private localStorageService: LocalStorageService) {}
 
   ngOnInit() {
     this.apiService.getConnections().subscribe((res: GenericResponse<Connection[]>) => {
@@ -29,7 +32,8 @@ export class ConnectComponent  {
 
   connect(id:string){
     this.apiService.connect(id).subscribe((res: GenericResponse<Connection>) => {
-      console.log(res.data);
+      this.connection = res.data;
+      this.localStorageService.setItem('activeConnection', this.connection);
       this.router.navigate(['/cluster']);
     });
   }
