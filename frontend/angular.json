@@ -32,7 +32,8 @@
               }
             ],
             "styles": [
-              "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "src/assets/css/bootstrap/bootstrap.min.css",
+              "src/assets/css/bootstrap/bootstrap-icons.css",
               "src/styles.scss"
             ],
             "scripts": []
