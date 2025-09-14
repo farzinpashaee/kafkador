@@ -1,0 +1,65 @@
+<p class="placeholder-glow" *ngIf="isLoading">
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-8"></span>
+</p>
+<div class="row"  *ngIf="!isLoading">
+  <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="overview-tab" data-bs-toggle="tab"
+              data-bs-target="#overview" type="button" role="tab"
+              aria-controls="overview" aria-selected="true">
+        Configurations
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="projects-tab" data-bs-toggle="tab"
+              data-bs-target="#projects" type="button" role="tab"
+              aria-controls="projects" aria-selected="false">
+        Logs
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content border border-top-0 p-3" id="profileTabsContent">
+    <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab" tabindex="0">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col" class="text-truncate">Value</th>
+            <th scope="col" class="text-center">Sensitive</th>
+            <th scope="col" class="text-center">Read Only</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let config of broker.config">
+              <th scope="row">{{config.name}} <a class="documentationLink" data-name="${name}" href="#" data-bs-toggle="modal" data-bs-target="#documentationModal" ><i class="bi bi-question-circle opacity-75 cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Check Documentation"></i></a></th>
+              <td class="text-truncate">{{config.value}}</td>
+              <td class="text-center">
+                <i *ngIf="config.sensitive" class="bi bi-eye-slash text-danger"></i>
+                <i *ngIf="!config.sensitive" class="bi bi-eye opacity-75"></i>
+              </td>
+              <td class="text-center">
+                <i *ngIf="config.readOnly" class="bi bi-pencil-square opacity-15" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Read Only"></i>
+                <i *ngIf="!config.readOnly" class="bi bi-pencil-square opacity-75 cursor-pointer"></i>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="projects" role="tabpanel" aria-labelledby="projects-tab" tabindex="0">
+      <div class="alert alert-warning" role="alert">
+        This Service is Not Enabled!
+      </div>
+    </div>
+    <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab" tabindex="0">
+      <div class="alert alert-warning" role="alert">
+        This Service is Not Enabled!
+      </div>
+    </div>
+  </div>
+</div>
