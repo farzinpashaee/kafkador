@@ -6,6 +6,7 @@ import { Cluster } from '../models/cluster';
 import { Connection } from '../models/connection';
 import { Broker } from '../models/broker';
 import { Topic } from '../models/topic';
+import { ConsumerGroup } from '../models/consumer-group';
 import { GenericResponse } from '../models/generic-response';
 
 @Injectable({
@@ -35,6 +36,10 @@ export class ApiService {
 
   public getTopicDetails(name:string): Observable<GenericResponse<Topic>> {
     return this.http.get<GenericResponse<Topic>>(`${ApiService.ApiBaseUrl}/topic/${name}`,{ withCredentials: true });
+  }
+
+  public getConsumerGroups(): Observable<GenericResponse<ConsumerGroup[]>> {
+    return this.http.get<GenericResponse<ConsumerGroup[]>>(`${ApiService.ApiBaseUrl}/consumer-group`,{ withCredentials: true });
   }
 
   public connect(id:string): Observable<GenericResponse<Connection>> {

@@ -3,7 +3,7 @@ import { DashboardLayoutComponent } from './components/dashboard-layout/dashboar
 import { BaseLayoutComponent } from './components/base-layout/base-layout.component'
 import { ClusterComponent } from './components/cluster/cluster.component'
 import { TopicComponent } from './components/topic/topic.component'
-import { ConsumerComponent } from './components/consumer/consumer.component'
+import { ConsumersComponent } from './components/consumers/consumers.component'
 import { ConnectComponent } from './components/connect/connect.component'
 import { BrokerComponent } from './components/broker/broker.component'
 import { TopicsComponent } from './components/topics/topics.component'
@@ -14,10 +14,10 @@ export const routes: Routes = [
     component: DashboardLayoutComponent,
     children: [
       { path: '', component: ClusterComponent, title: 'Cluster' },
+      { path: 'broker/:id', component: BrokerComponent, title: 'Broker' },
       { path: 'topics', component: TopicsComponent, title: 'Topics' },
       { path: 'topic/:name', component: TopicComponent, title: 'Topic' },
-      { path: 'consumers', component: ConsumerComponent, title: 'Consumers' },
-      { path: 'broker/:id', component: BrokerComponent, title: 'Broker' }
+      { path: 'consumers', component: ConsumersComponent, title: 'Consumers' }
     ]
   },
   {
