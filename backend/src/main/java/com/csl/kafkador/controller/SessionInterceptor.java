@@ -9,10 +9,8 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.util.UUID;
 
 public class SessionInterceptor implements HandlerInterceptor {
-
 
     public SessionInterceptor(){}
 
@@ -24,7 +22,7 @@ public class SessionInterceptor implements HandlerInterceptor {
 
         HttpSession session = request.getSession();
         if(session.getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString()) == null)
-            throw new ConnectionSessionExpiredException("No Active Connection Found!","/connect");
+            throw new ConnectionSessionExpiredException("No Active Connection Found!", "/connect");
 
         return true;
     }
