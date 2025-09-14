@@ -1,1 +1,34 @@
-<p>cluster works!</p>
+<p class="placeholder-glow" *ngIf="isLoading">
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-8"></span>
+</p>
+<div class="view-element" id="clusterDetailsView"  *ngIf="!isLoading">
+  <h6>Controller: <span>{{cluster.controller.host}}</span></h6>
+  <h6>Cluster ID: <span>{{cluster.id}}</span></h6>
+  <div class="row mt-4">
+    <h4>Brokers</h4>
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+        <tr>
+          <th scope="col">id</th>
+          <th scope="col">Host</th>
+          <th scope="col">Port</th>
+          <th scope="col">Size (KB)</th>
+          <th scope="col">Hash</th>
+        </tr>
+        </thead>
+        <tbody id="clusterBrokers">
+          <tr *ngFor="let broker of cluster.brokers">
+            <th scope="row">{{broker.id}}</th>
+            <td><a href="../broker/{{broker.id}}">{{broker.host}}</a></td>
+            <td>{{broker.port}}</td>
+            <td>{{broker.size}}</td>
+            <td>{{broker.hash}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

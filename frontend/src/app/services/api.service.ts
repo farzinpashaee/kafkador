@@ -26,9 +26,8 @@ export class ApiService {
   public connect(id:string): Observable<GenericResponse<Connection>> {
     let params = new HttpParams();
     params = params.set('id', id);
-    return this.http.get<GenericResponse<Connection>>(`${ApiService.ApiBaseUrl}/connect`,{ params })
+    return this.http.get<GenericResponse<Connection>>(`${ApiService.ApiBaseUrl}/connect`,{ params, withCredentials: true })
       .pipe(catchError((error: HttpErrorResponse) => {
-          console.error('Error fetching cluster details:', error);
           return throwError(() => error);
         })
       );
