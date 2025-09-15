@@ -15,13 +15,13 @@ export const routes: Routes = [
     path: '',
     component: DashboardLayoutComponent,
     children: [
-      { path: '', component: DashboardComponent, title: 'Dashboard' },
-      { path: 'cluster', component: ClusterComponent, title: 'Cluster' },
-      { path: 'broker/:id', component: BrokerComponent, title: 'Broker' },
-      { path: 'topics', component: TopicsComponent, title: 'Topics' },
-      { path: 'topic/:name', component: TopicComponent, title: 'Topic' },
-      { path: 'consumers', component: ConsumersComponent, title: 'Consumers' },
-      { path: 'connections', component: ConnectionsComponent, title: 'Connections' }
+      { path: '', component: DashboardComponent, title: 'Dashboard', data: { breadcrumb: 'Dashboard' } },
+      { path: 'cluster', component: ClusterComponent, title: 'Cluster', data: { breadcrumb: 'Cluster' } },
+      { path: 'broker/:id', component: BrokerComponent, title: 'Broker', data: { breadcrumb: 'Broker' } },
+      { path: 'topics', component: TopicsComponent, title: 'Topics', data: { breadcrumb: 'Topics' } },
+      { path: 'topic/:name', component: TopicComponent, title: 'Topic', data: { breadcrumb: 'Topic' } },
+      { path: 'consumers', component: ConsumersComponent, title: 'Consumers', data: { breadcrumb: 'Consumers' } },
+      { path: 'connections', component: ConnectionsComponent, title: 'Connections', data: { breadcrumb: 'Connections' } }
     ]
   },
   {

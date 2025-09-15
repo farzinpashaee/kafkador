@@ -5,10 +5,12 @@ import { LocalStorageService } from '../../services/local-storage.service';
 import { ApiService } from '../../services/api.service';
 import { Connection } from '../../models/connection';
 import { GenericResponse } from '../../models/generic-response';
+import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
 
 @Component({
   selector: 'app-dashboard-layout',
-  imports: [RouterOutlet, RouterModule, CommonModule],
+  standalone: true,
+  imports: [RouterOutlet, RouterModule, CommonModule, BreadcrumbComponent],
   templateUrl: './dashboard-layout.component.html',
   styleUrl: './dashboard-layout.component.scss'
 })
