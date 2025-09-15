@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { Cluster } from '../../models/cluster';
 import { GenericResponse } from '../../models/generic-response';
 import { Observable } from 'rxjs';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-cluster',

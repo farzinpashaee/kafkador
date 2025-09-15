@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet, ActivatedRoute, Router } from '@angular/router';
 import { LocalStorageService } from '../../services/local-storage.service';
 import { ApiService } from '../../services/api.service';
@@ -7,7 +8,7 @@ import { GenericResponse } from '../../models/generic-response';
 
 @Component({
   selector: 'app-dashboard-layout',
-  imports: [RouterOutlet, RouterModule],
+  imports: [RouterOutlet, RouterModule, CommonModule],
   templateUrl: './dashboard-layout.component.html',
   styleUrl: './dashboard-layout.component.scss'
 })

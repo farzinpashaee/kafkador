@@ -33,54 +33,59 @@
         <div class="offcanvas-body d-md-flex flex-column p-0 pt-lg-3 overflow-y-auto">
           <ul class="nav flex-column">
             <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2" aria-current="page" href="/">
+              <a class="nav-link d-flex align-items-center gap-2 active" aria-current="page" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                <i class="bi bi-columns-gap"></i> Dashboard
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2" aria-current="page" routerLink="/cluster" routerLinkActive="active">
                 <i class="bi bi-diagram-3"></i> Cluster
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2" routerLink="topics">
+              <a class="nav-link d-flex align-items-center gap-2" routerLink="/topics" routerLinkActive="active">
                 <i class="bi bi-chat-square-text"></i> Topics
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2" class="nav-link d-flex align-items-center gap-2" href="/consumers">
+              <a class="nav-link d-flex align-items-center gap-2"  routerLink="/consumers" routerLinkActive="active">
                 <i class="bi bi-journal-arrow-down"></i> Consumers
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2" class="nav-link d-flex align-items-center gap-2" href="/access-control">
+              <a class="nav-link d-flex align-items-center gap-2" routerLink="/access-control" routerLinkActive="active">
                 <i class="bi bi-shield-lock"></i> Access Control
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2" class="nav-link d-flex align-items-center gap-2" href="/streams">
+              <a class="nav-link d-flex align-items-center gap-2" routerLink="/streams" routerLinkActive="active">
                 <i class="bi bi-grid-3x2-gap"></i> Streams
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2" class="nav-link d-flex align-items-center gap-2" href="/ksql-db">
+              <a class="nav-link d-flex align-items-center gap-2"  routerLink="/ksql-db" routerLinkActive="active">
                 <i class="bi bi-database"></i> KsqlDB
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2" class="nav-link d-flex align-items-center gap-2" href="/connectors">
+              <a class="nav-link d-flex align-items-center gap-2"  routerLink="/connectors" routerLinkActive="active">
                 <i class="bi bi-box-arrow-in-right"></i> Connectors
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2" class="nav-link d-flex align-items-center gap-2" href="/schema-registry">
+              <a class="nav-link d-flex align-items-center gap-2"  routerLink="/schema-registry" routerLinkActive="active">
                 <i class="bi bi-layers"></i> Schema Registry
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2" class="nav-link d-flex align-items-center gap-2" href="/connections">
+              <a class="nav-link d-flex align-items-center gap-2" routerLink="/connections" routerLinkActive="active">
                 <i class="bi bi-hdd-network"></i> Connections
               </a>
             </li>
           </ul>
           <hr class="my-3">
           <ul class="nav flex-column mb-auto">
-            <li class="nav-item"><a class="nav-link d-flex align-items-center gap-2" href="/settings">
+            <li class="nav-item"><a class="nav-link d-flex align-items-center gap-2" routerLink="/settings" routerLinkActive="active">
               <i class="bi bi-gear"></i> Settings
             </a>
             </li>
