@@ -17,9 +17,9 @@ export const routes: Routes = [
     children: [
       { path: '', component: DashboardComponent, title: 'Dashboard', data: { breadcrumb: 'Dashboard' } },
       { path: 'cluster', component: ClusterComponent, title: 'Cluster', data: { breadcrumb: 'Cluster' } },
-      { path: 'broker/:id', component: BrokerComponent, title: 'Broker', data: { breadcrumb: 'Broker' } },
+      { path: 'broker/:id', component: BrokerComponent, title: 'Broker', data: { breadcrumb: 'Cluster > Broker' } },
       { path: 'topics', component: TopicsComponent, title: 'Topics', data: { breadcrumb: 'Topics' } },
-      { path: 'topic/:name', component: TopicComponent, title: 'Topic', data: { breadcrumb: 'Topic' } },
+      { path: 'topic/:name', component: TopicComponent, title: 'Topic', data: { breadcrumb: 'Topics > {{Topic Name}}' } },
       { path: 'consumers', component: ConsumersComponent, title: 'Consumers', data: { breadcrumb: 'Consumers' } },
       { path: 'connections', component: ConnectionsComponent, title: 'Connections', data: { breadcrumb: 'Connections' } }
     ]

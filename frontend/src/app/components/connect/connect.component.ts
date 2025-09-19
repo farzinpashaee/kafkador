@@ -34,7 +34,7 @@ export class ConnectComponent  {
     this.apiService.connect(id).subscribe((res: GenericResponse<Connection>) => {
       this.connection = res.data;
       this.localStorageService.setItem('activeConnection', this.connection);
-      this.router.navigate(['/cluster']);
+      this.router.navigate(['/']);
     });
   }
 
