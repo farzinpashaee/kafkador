@@ -12,6 +12,7 @@ import { AccessControlComponent } from './components/access-control/access-contr
 import { StreamsComponent } from './components/streams/streams.component'
 import { ConnectorsComponent } from './components/connectors/connectors.component'
 import { KsqlDBComponent } from './components/ksql-db/ksql-db.component'
+import { SchemaRegistryComponent } from './components/schema-registry/schema-registry.component'
 import { ConnectionsComponent } from './components/connections/connections.component'
 
 export const routes: Routes = [
@@ -29,6 +30,7 @@ export const routes: Routes = [
       { path: 'streams', component: StreamsComponent, title: 'Streams', data: { breadcrumb: 'Streams' } },
       { path: 'ksqldb', component: KsqlDBComponent, title: 'KsqlDB', data: { breadcrumb: 'KsqlDB' } },
       { path: 'connectors', component: ConnectorsComponent, title: 'Connectors', data: { breadcrumb: 'Connectors' } },
+      { path: 'schema-registry', component: SchemaRegistryComponent, title: 'Schema Registry', data: { breadcrumb: 'Schema Registry' } },
       { path: 'connections', component: ConnectionsComponent, title: 'Connections', data: { breadcrumb: 'Connections' } }
     ]
   },
