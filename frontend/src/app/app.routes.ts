@@ -11,6 +11,7 @@ import { TopicsComponent } from './components/topics/topics.component'
 import { AccessControlComponent } from './components/access-control/access-control.component'
 import { StreamsComponent } from './components/streams/streams.component'
 import { ConnectorsComponent } from './components/connectors/connectors.component'
+import { KsqlDBComponent } from './components/ksql-db/ksql-db.component'
 import { ConnectionsComponent } from './components/connections/connections.component'
 
 export const routes: Routes = [
@@ -26,6 +27,7 @@ export const routes: Routes = [
       { path: 'consumers', component: ConsumersComponent, title: 'Consumers', data: { breadcrumb: 'Consumers' } },
       { path: 'access-control', component: AccessControlComponent, title: 'Access Control', data: { breadcrumb: 'Access Control' } },
       { path: 'streams', component: StreamsComponent, title: 'Streams', data: { breadcrumb: 'Streams' } },
+      { path: 'ksqldb', component: KsqlDBComponent, title: 'KsqlDB', data: { breadcrumb: 'KsqlDB' } },
       { path: 'connectors', component: ConnectorsComponent, title: 'Connectors', data: { breadcrumb: 'Connectors' } },
       { path: 'connections', component: ConnectionsComponent, title: 'Connections', data: { breadcrumb: 'Connections' } }
     ]
