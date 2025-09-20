@@ -22,6 +22,15 @@
   </ul>
 
   <div class="tab-content border border-top-0 p-3" id="profileTabsContent">
+    <form>
+      <div class="mb-3 row">
+        <label for="table-filtering-search" class="col-xs-3 col-sm-auto col-form-label">Search:</label>
+        <div class="col-xs-3 col-sm-auto">
+          <input id="table-filtering-search" class="form-control" type="text" [formControl]="filter" />
+        </div>
+      </div>
+    </form>
+
     <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab" tabindex="0">
       <div class="table-responsive">
         <table class="table">
@@ -34,7 +43,8 @@
           </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let config of broker.config">
+          @for (config of brokerConfig; track config.name; let i = $index) {
+            <tr>
               <th scope="row">{{config.name}} <a class="documentationLink" data-name="${name}" href="#" data-bs-toggle="modal" data-bs-target="#documentationModal" ><i class="bi bi-question-circle opacity-75 cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Check Documentation"></i></a></th>
               <td class="text-truncate">{{config.value}}</td>
               <td class="text-center">
@@ -46,6 +56,7 @@
                 <i *ngIf="!config.readOnly" class="bi bi-pencil-square opacity-75 cursor-pointer"></i>
               </td>
             </tr>
+          }
           </tbody>
         </table>
       </div>
