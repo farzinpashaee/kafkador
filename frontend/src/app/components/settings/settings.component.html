@@ -1,3 +1,28 @@
-<div class="alert alert-warning" role="alert">
-  This Service is Not Enabled!
+<div class="row">
+  <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="overview-tab" data-bs-toggle="tab"
+              data-bs-target="#generic" type="button" role="tab"
+              aria-controls="generic" aria-selected="true">
+        Generic
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="projects-tab" data-bs-toggle="tab"
+              data-bs-target="#cluster" type="button" role="tab"
+              aria-controls="cluster" aria-selected="false">
+        Cluster
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content border border-top-0 p-3" id="profileTabsContent">
+    <div class="tab-pane fade show active" id="generic" role="tabpanel" aria-labelledby="generic-tab" tabindex="0">
+      generic
+    </div>
+
+    <div class="tab-pane fade" id="cluster" role="tabpanel" aria-labelledby="cluster-tab" tabindex="0">
+      cluster
+    </div>
+  </div>
 </div>
