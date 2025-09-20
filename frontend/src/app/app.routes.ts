@@ -14,6 +14,7 @@ import { ConnectorsComponent } from './components/connectors/connectors.componen
 import { KsqlDBComponent } from './components/ksql-db/ksql-db.component'
 import { SchemaRegistryComponent } from './components/schema-registry/schema-registry.component'
 import { ConnectionsComponent } from './components/connections/connections.component'
+import { SettingsComponent } from './components/settings/settings.component'
 
 export const routes: Routes = [
   {
@@ -31,7 +32,8 @@ export const routes: Routes = [
       { path: 'ksqldb', component: KsqlDBComponent, title: 'KsqlDB', data: { breadcrumb: 'KsqlDB' } },
       { path: 'connectors', component: ConnectorsComponent, title: 'Connectors', data: { breadcrumb: 'Connectors' } },
       { path: 'schema-registry', component: SchemaRegistryComponent, title: 'Schema Registry', data: { breadcrumb: 'Schema Registry' } },
-      { path: 'connections', component: ConnectionsComponent, title: 'Connections', data: { breadcrumb: 'Connections' } }
+      { path: 'connections', component: ConnectionsComponent, title: 'Connections', data: { breadcrumb: 'Connections' } },
+      { path: 'settings', component: SettingsComponent, title: 'Settings', data: { breadcrumb: 'Settings' } }
     ]
   },
   {
