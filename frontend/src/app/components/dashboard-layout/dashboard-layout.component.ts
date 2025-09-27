@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule,DOCUMENT  } from '@angular/common';
 import { RouterModule, RouterOutlet, ActivatedRoute, Router } from '@angular/router';
 import { LocalStorageService } from '../../services/local-storage.service';
 import { ApiService } from '../../services/api.service';
@@ -19,12 +19,18 @@ export class DashboardLayoutComponent {
   connectedHost = "Active Host" ;
   activeConnection!: Connection ;
   router = inject(Router);
+  document = inject(DOCUMENT);
+  isDark = false;
 
   constructor(private route: ActivatedRoute,
               private apiService: ApiService,
               private localStorageService: LocalStorageService) {}
 
   ngOnInit() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    this.document.body.setAttribute('data-bs-theme', savedTheme);
+    this.isDark = savedTheme === 'dark';
+
     const activeConnectionFromStorage = this.localStorageService.getItem('activeConnection');
     if (activeConnectionFromStorage !== null) {
       this.activeConnection = activeConnectionFromStorage as Connection;
@@ -38,4 +44,13 @@ export class DashboardLayoutComponent {
       this.router.navigate(['/connect']);
     });
   }
+
+  toggleTheme() {
+      console.log("xxxxxxxxxxxxxxx");
+      this.isDark = !this.isDark;
+      const theme = this.isDark ? 'dark' : 'light';
+      this.document.body.setAttribute('data-bs-theme', theme);
+      localStorage.setItem('theme', theme);
+  }
+
 }

@@ -8,13 +8,42 @@
 
 body {
     font-family: Rubik, -apple-system, Arial, sans-serif;
-    background-color: #f8f9fa;
+    background-color: var(--app-bg);
 }
-
 
 header {
     height: 3em;
 }
+
+:root,
+[data-bs-theme="light"] {
+  --app-bg: #ffffff;
+  --app-surface: #f8f9fa;
+  --app-text: #000000;
+  --app-text-muted: #6c757d;
+  --app-primary: #0d6efd;
+  --app-success: #198754;
+  --app-warning: #ffc107;
+  --app-danger: #dc3545;
+}
+
+/* Dark mode */
+[data-bs-theme="dark"] {
+  --app-bg: #121212;
+  --app-surface: #1e1e1e;
+  --app-text: #ffffff;
+  --app-text-muted: #a0a0a0;
+  --app-primary: #0d6efd;
+  --app-success: #25d366;
+  --app-warning: #ffd54f;
+  --app-danger: #ff6b6b;
+}
+
+.card {
+  background-color: var(--app-surface);
+  color: var(--app-text);
+}
+
 
 .h-description {
   color: #CCC;
