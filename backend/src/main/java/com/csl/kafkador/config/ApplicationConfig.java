@@ -21,6 +21,7 @@ public class ApplicationConfig {
     private String url;
     private Map<String,Service> services = new HashMap<String,Service>();
     private List<Connection> connections = new ArrayList<>();
+    private ObserverService observerService;
 
     public String getServiceImplementation(KafkadorContext.Service service){
         if( !services.containsKey(service.getKey()) )
@@ -31,6 +32,21 @@ public class ApplicationConfig {
     @Data
     public static class Service {
         String implementation;
+    }
+
+    @Data
+    public static class ObserverService {
+        Boolean enabled = false;
+        Integer retentionPeriod = 30;
+        List<Observer> observers;
+    }
+
+    @Data
+    public static class Observer {
+        String id;
+        Boolean enabled = false;
+        Boolean log = false;
+        String frequency = "* * * * *";
     }
 
 }

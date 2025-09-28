@@ -24,7 +24,7 @@ public class KafkadorContext {
     }
 
     public static enum Service {
-        CONNECTION("Connection", "ConnectionServiceByConfig"),
+        CONNECTION("Connection", "ConnectionService"),
         TOPIC("topic", "TopicService"),
         CLUSTER("cluster", "ClusterService"),
         CONSUMER("consumer", "ConsumerService"),

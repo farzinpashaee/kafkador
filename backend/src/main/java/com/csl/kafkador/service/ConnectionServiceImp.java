@@ -8,6 +8,7 @@ import com.csl.kafkador.exception.ConnectionNotFoundException;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkadorException;
 import com.csl.kafkador.model.Connection;
+import com.csl.kafkador.repository.ConnectionRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,22 +18,21 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 
-
-@Service("ConnectionServiceByConfig")
+@Service("ConnectionService")
 @RequiredArgsConstructor
-public class ConnectionByConfig implements ConnectionService {
+public class ConnectionServiceImp implements ConnectionService {
 
+    private final ConnectionRepository connectionRepository;
     private final ApplicationConfig applicationConfig;
     private final SessionHolder sessionHolder;
 
     @Override
-    public Connection connect(Request<String> request) throws ConnectionNotFoundException {
-        Optional<Connection> optionalConnection = applicationConfig.getConnections().stream()
-                .filter(i -> i.getId().equals(request.getBody()) ).findFirst();
+    public Connection connect(Integer id) throws ConnectionNotFoundException {
+        Optional<Connection> optionalConnection = connectionRepository.findById(id);
         if( optionalConnection.isPresent() ){
             sessionHolder.getSession().setAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString(),optionalConnection.get());
-            String redirectAfterLogin = request.getHttpSession().getAttribute("redirectAfterLogin") == null ?
-                    null : request.getHttpSession().getAttribute("redirectAfterLogin").toString();
+            String redirectAfterLogin = sessionHolder.getSession().getAttribute("redirectAfterLogin") == null ?
+                    null : sessionHolder.getSession().getAttribute("redirectAfterLogin").toString();
             optionalConnection.get().setRedirectAfterLogin(redirectAfterLogin);
             return optionalConnection.get();
         } else {
@@ -42,8 +42,14 @@ public class ConnectionByConfig implements ConnectionService {
 
     @Override
     public Connection disconnect() throws ConnectionNotFoundException {
+        Connection connection =  (Connection) sessionHolder.getSession().getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString());
         sessionHolder.getSession().setAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString(),null);
-        return null;
+        return connection;
+    }
+
+    @Override
+    public List<Connection> getConnections() {
+        return connectionRepository.findAll();
     }
 
     @Override
@@ -57,20 +63,13 @@ public class ConnectionByConfig implements ConnectionService {
     public Properties getActiveConnectionProperties() throws ConnectionSessionExpiredException {
         Connection connection = getActiveConnection();
         String bootstrapServers = connection.getHost() + ":" + connection.getPort() ;
-        Properties props = new Properties();
-        props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        return props;
+        Properties properties = new Properties();
+        properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        return properties;
     }
 
     @Override
-    public Connection createConnection(Request<Connection> request) throws KafkadorException {
-        throw new KafkadorException("Service implementation is not available");
+    public Connection createConnection(Connection connection) throws KafkadorException {
+        return null;
     }
-
-    @Override
-    public List<Connection> getConnections() {
-        return applicationConfig.getConnections();
-    }
-
-
 }

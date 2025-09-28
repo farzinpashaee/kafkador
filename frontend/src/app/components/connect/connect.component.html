@@ -1,21 +1,25 @@
 <div class="min-vh-100 d-flex align-items-center justify-content-center">
   <div class="container connectContainer">
-    <h1>
-      <img src="/images/logo-shape-v1.svg" style="width:1.7em; margin-top:-0.3em">
-      Kafkador
-    </h1>
+    <div class="row">
+      <h1>
+        <img src="/images/logo-shape-v1.svg" style="width:1.7em; margin-top:-0.3em">
+        Kafkador
+      </h1>
+    </div>
 
-    <h4>Connect to Cluster</h4>
-    <p class="text-gray-500">
-      Or connect to a new cluster by <a href="#">Adding New Connection</a>
-    </p>
+    <div class="row text-center ">
+      <h4>Connect to Cluster</h4>
+      <p class="text-gray-500">
+        Or connect to a new cluster by <a href="#">Adding New Connection</a>
+      </p>
+    </div>
 
     <div class="row" id="connection">
       <div *ngFor="let conn of connections">
         <div class="card m-1">
           <div class="card-body">
             <h5>{{ conn.name }}</h5>
-            <span class="text-gray-500">{{ conn.host }}</span>
+            <span class="text-gray-500">{{ conn.host }}:{{ conn.port }}</span>
             <button class="btn btn-primary connect float-end" type="button" (click)="connect(conn.id)">
               Connect
             </button>

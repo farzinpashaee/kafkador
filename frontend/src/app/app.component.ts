@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterModule, RouterOutlet } from '@angular/router';
+import { DOCUMENT } from '@angular/common';
 
 @Component({
   selector: 'app-root',
@@ -10,4 +11,6 @@ import { RouterModule, RouterOutlet } from '@angular/router';
 export class AppComponent {
   title = 'Kafkador';
   baseUrl = 'http://localhost:4200'
+
+
 }

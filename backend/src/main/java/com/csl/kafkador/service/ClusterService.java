@@ -30,7 +30,6 @@ public class ClusterService {
 
     private final ApplicationContext applicationContext;
     private final ApplicationConfig applicationConfig;
-
     private final MessageSource messageSource;
 
     public ClusterDetails getClusterDetails() throws KafkaAdminApiException {
@@ -124,4 +123,31 @@ public class ClusterService {
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
         }
     }
+
+    public void getClusterHealthStatus() throws KafkaAdminApiException {
+
+        ClusterDetails clusterDetails = new ClusterDetails();
+        ConnectionService connectionService = (ConnectionService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
+
+        try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
+
+            DescribeClusterResult clusterResult = admin.describeCluster();
+            Collection<Node> nodes = clusterResult.nodes().get();
+            Node controller = clusterResult.controller().get();
+
+            System.out.println("✅ Cluster ID: " + clusterResult.clusterId().get());
+            System.out.println("✅ Brokers (expected/actual): " + nodes.size() + " / " + nodes.size());
+            System.out.println("✅ Controller Broker ID: " + controller.id());
+
+
+        } catch (ConnectionSessionExpiredException e){
+            throw e;
+        } catch (Exception e) {
+            throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
+        }
+
+    }
+
+
 }

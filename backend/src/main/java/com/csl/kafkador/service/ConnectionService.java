@@ -11,11 +11,11 @@ import java.util.Properties;
 
 public interface ConnectionService {
 
-    Connection connect( Request<String> request ) throws ConnectionNotFoundException;
+    Connection connect( Integer id ) throws ConnectionNotFoundException;
     Connection disconnect() throws ConnectionNotFoundException;
     List<Connection> getConnections();
     Connection getActiveConnection() throws ConnectionSessionExpiredException;
     Properties getActiveConnectionProperties() throws ConnectionSessionExpiredException;
-    Connection createConnection( Request<Connection> request ) throws KafkadorException;
+    Connection createConnection( Connection connection ) throws KafkadorException;
 
 }
