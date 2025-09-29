@@ -15,5 +15,6 @@ public class Cluster {
     private String host;
     private String port;
     private String name;
+    private String controller;
 
 }

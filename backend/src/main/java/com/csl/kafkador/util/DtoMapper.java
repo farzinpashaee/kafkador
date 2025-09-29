@@ -1,9 +1,7 @@
 package com.csl.kafkador.util;
 
-import com.csl.kafkador.dto.Broker;
-import com.csl.kafkador.dto.ConsumerGroup;
-import com.csl.kafkador.dto.Partition;
-import com.csl.kafkador.dto.Topic;
+import com.csl.kafkador.dto.*;
+import com.csl.kafkador.model.Cluster;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.TopicDescription;
@@ -16,8 +14,24 @@ import java.util.stream.Collectors;
 
 public class DtoMapper {
 
-    public static Broker clusterNodeMapper(org.apache.kafka.common.Node node, Map<Integer, Long> size){
-        return new Broker().setId(String.valueOf(node.id()))
+    public static ClusterDto clusterMapper( Cluster cluster ){
+        return new ClusterDto()
+                .setId(cluster.getId())
+                .setHost(cluster.getHost())
+                .setPort(cluster.getPort())
+                .setName(cluster.getName());
+    }
+
+    public static ConnectionDto connectionMapper( ClusterDto cluster ){
+        return new ConnectionDto()
+                .setId(cluster.getId())
+                .setHost(cluster.getHost())
+                .setPort(cluster.getPort())
+                .setName(cluster.getName());
+    }
+
+    public static BrokerDto clusterNodeMapper(org.apache.kafka.common.Node node, Map<Integer, Long> size){
+        return new BrokerDto().setId(String.valueOf(node.id()))
                 .setHost(node.host())
                 .setPort(node.port())
                 .setIdString(node.idString())
@@ -50,8 +64,8 @@ public class DtoMapper {
                 .setIsr(topicPartitionInfo.isr().stream().map(DtoMapper::nodeMapper).collect(Collectors.toList()));
     }
 
-    public static Broker nodeMapper(org.apache.kafka.common.Node node ){
-        return new Broker()
+    public static BrokerDto nodeMapper(org.apache.kafka.common.Node node ){
+        return new BrokerDto()
                 .setPort(node.port())
                 .setHost(node.host())
                 .setIsFenced(node.isFenced())

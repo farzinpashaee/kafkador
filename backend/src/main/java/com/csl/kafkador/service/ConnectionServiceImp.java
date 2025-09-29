@@ -2,13 +2,13 @@ package com.csl.kafkador.service;
 
 import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.component.SessionHolder;
-import com.csl.kafkador.config.ApplicationConfig;
-import com.csl.kafkador.dto.Request;
-import com.csl.kafkador.exception.ConnectionNotFoundException;
+import com.csl.kafkador.dto.ClusterDto;
+import com.csl.kafkador.exception.ClusterNotFoundException;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
-import com.csl.kafkador.exception.KafkadorException;
-import com.csl.kafkador.model.Connection;
-import com.csl.kafkador.repository.ConnectionRepository;
+import com.csl.kafkador.dto.ConnectionDto;
+import com.csl.kafkador.exception.KafkaAdminApiException;
+import com.csl.kafkador.model.Cluster;
+import com.csl.kafkador.util.DtoMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,59 +17,74 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 @Service("ConnectionService")
 @RequiredArgsConstructor
 public class ConnectionServiceImp implements ConnectionService {
 
-    private final ConnectionRepository connectionRepository;
-    private final ApplicationConfig applicationConfig;
+    private final ClusterService clusterService;
     private final SessionHolder sessionHolder;
 
     @Override
-    public Connection connect(Integer id) throws ConnectionNotFoundException {
-        Optional<Connection> optionalConnection = connectionRepository.findById(id);
-        if( optionalConnection.isPresent() ){
-            sessionHolder.getSession().setAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString(),optionalConnection.get());
-            String redirectAfterLogin = sessionHolder.getSession().getAttribute("redirectAfterLogin") == null ?
-                    null : sessionHolder.getSession().getAttribute("redirectAfterLogin").toString();
-            optionalConnection.get().setRedirectAfterLogin(redirectAfterLogin);
-            return optionalConnection.get();
-        } else {
-            throw new ConnectionNotFoundException("Connection with given ID not found!");
-        }
+    public ConnectionDto create(ConnectionDto connection) throws KafkaAdminApiException {
+        ClusterDto clusterDto = clusterService.save(connection.getHost(),connection.getPort());
+        return DtoMapper.connectionMapper(clusterDto);
     }
 
     @Override
-    public Connection disconnect() throws ConnectionNotFoundException {
-        Connection connection =  (Connection) sessionHolder.getSession().getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString());
+    public ConnectionDto connect(String id) throws ClusterNotFoundException {
+        ClusterDto cluster = clusterService.find(id);
+        ConnectionDto connection = DtoMapper.connectionMapper(cluster);
+        sessionHolder.getSession().setAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString(),connection);
+        return connection;
+    }
+
+    @Override
+    public ConnectionDto disconnect() throws ClusterNotFoundException {
+        ConnectionDto connection = (ConnectionDto) sessionHolder.getSession().getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString());
         sessionHolder.getSession().setAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString(),null);
         return connection;
     }
 
     @Override
-    public List<Connection> getConnections() {
-        return connectionRepository.findAll();
+    public List<ConnectionDto> getConnections() {
+        return clusterService.findAll().stream()
+                .map(DtoMapper::connectionMapper)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Connection getActiveConnection() throws ConnectionSessionExpiredException {
-        Connection connection = (Connection) sessionHolder.getSession().getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString());
+    public ConnectionDto getActiveConnection() throws ConnectionSessionExpiredException {
+        ConnectionDto connection = (ConnectionDto) sessionHolder.getSession().getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString());
         if( connection == null ) throw new ConnectionSessionExpiredException("No Active connection found!","/connect");
         return connection;
     }
 
     @Override
     public Properties getActiveConnectionProperties() throws ConnectionSessionExpiredException {
-        Connection connection = getActiveConnection();
+        ConnectionDto connection = getActiveConnection();
         String bootstrapServers = connection.getHost() + ":" + connection.getPort() ;
         Properties properties = new Properties();
         properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         return properties;
     }
 
-    @Override
-    public Connection createConnection(Connection connection) throws KafkadorException {
-        return null;
+    @Autowired
+    public Properties getConnectionProperties(String id) throws ClusterNotFoundException {
+        ClusterDto cluster = clusterService.find(id);
+        String bootstrapServers = cluster.getHost() + ":" + cluster.getPort() ;
+        Properties properties = new Properties();
+        properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        return properties;
     }
+
+    @Override
+    public Properties getConnectionProperties(String host, String port) {
+        String bootstrapServers = host + ":" + port ;
+        Properties properties = new Properties();
+        properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        return properties;
+    }
+
 }

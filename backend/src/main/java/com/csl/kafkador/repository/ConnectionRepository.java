@@ -1,7 +1,7 @@
 package com.csl.kafkador.repository;
 
-import com.csl.kafkador.model.Connection;
+import com.csl.kafkador.dto.ConnectionDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ConnectionRepository extends JpaRepository<Connection,Integer> {
+public interface ConnectionRepository extends JpaRepository<ConnectionDto,Integer> {
 }

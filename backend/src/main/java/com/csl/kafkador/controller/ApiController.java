@@ -3,15 +3,12 @@ package com.csl.kafkador.controller;
 import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.dto.*;
-import com.csl.kafkador.exception.ConnectionNotFoundException;
+import com.csl.kafkador.exception.ClusterNotFoundException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.exception.KafkadorException;
-import com.csl.kafkador.model.Connection;
+import com.csl.kafkador.dto.ConnectionDto;
 import com.csl.kafkador.service.*;
 import jakarta.servlet.http.HttpSession;
-import org.apache.kafka.clients.admin.ConsumerGroupListing;
-import org.apache.kafka.clients.admin.TopicListing;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
@@ -29,25 +26,28 @@ public class ApiController {
 
     @Autowired
     ApplicationContext applicationContext;
-
     @Autowired
     ApplicationConfig applicationConfig;
+    @Autowired
+    ConnectionService connectionService;
+
 
     @GetMapping("/cluster")
-    public ResponseEntity<GenericResponse<ClusterDetails>> getCluster(HttpSession session ) throws KafkaAdminApiException {
+    public ResponseEntity<GenericResponse<ClusterDto>> getCluster() throws KafkaAdminApiException, ClusterNotFoundException {
         ClusterService clusterService = (ClusterService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CLUSTER));
-        ClusterDetails clusterDetails = clusterService.getClusterDetails();
-        return new GenericResponse.Builder<ClusterDetails>()
-                .data(clusterDetails)
+        ConnectionDto connection = connectionService.getActiveConnection();
+        ClusterDto cluster = clusterService.getClusterDetails(connection.getId());
+        return new GenericResponse.Builder<ClusterDto>()
+                .data(cluster)
                 .success(HttpStatus.OK);
     }
 
 
     @GetMapping("/broker/{id}")
-    public ResponseEntity<GenericResponse<Broker>> getBroker( @PathVariable String id ) throws KafkaAdminApiException {
-        ClusterService clusterService = (ClusterService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CLUSTER));
-        Broker broker = clusterService.getBrokerDetail(id);
-        return new GenericResponse.Builder<Broker>()
+    public ResponseEntity<GenericResponse<BrokerDto>> getBroker(@PathVariable String id ) throws KafkaAdminApiException {
+        BrokerService brokerService = (BrokerService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.BROKER));
+        BrokerDto broker = brokerService.getDetail(id);
+        return new GenericResponse.Builder<BrokerDto>()
                 .data(broker)
                 .success(HttpStatus.OK);
     }
@@ -83,17 +83,15 @@ public class ApiController {
     }
 
     @PostMapping("/connection")
-    public Connection createConnection(@RequestBody Connection connection, HttpSession session) throws KafkadorException {
-        ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
-        return connectionService.createConnection(connection);
+    public ConnectionDto createConnection(@RequestBody ConnectionDto connection) throws KafkaAdminApiException {
+        return connectionService.create(connection);
     }
 
     @GetMapping("/connection")
-    public ResponseEntity<GenericResponse<List<Connection>>> getConnections(HttpSession session) {
+    public ResponseEntity<GenericResponse<List<ConnectionDto>>> getConnections(HttpSession session) {
         ConnectionService connectionService = (ConnectionService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
-        return new GenericResponse.Builder<List<Connection>>()
+        return new GenericResponse.Builder<List<ConnectionDto>>()
                 .data(connectionService.getConnections())
                 .success(HttpStatus.OK);
     }
@@ -108,17 +106,17 @@ public class ApiController {
     }
 
     @GetMapping("/connect")
-    public ResponseEntity<GenericResponse<Connection>> connect(@RequestParam Integer id, HttpSession session) throws ConnectionNotFoundException {
+    public ResponseEntity<GenericResponse<ConnectionDto>> connect(@RequestParam String id, HttpSession session) throws ClusterNotFoundException {
         ConnectionService connectionService = (ConnectionService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
-        Connection connection =  connectionService.connect( id );
-        return new GenericResponse.Builder<Connection>()
+        ConnectionDto connection =  connectionService.connect( id );
+        return new GenericResponse.Builder<ConnectionDto>()
                 .data(connection)
                 .success(HttpStatus.OK);
     }
 
     @GetMapping("/disconnect")
-    public ResponseEntity<GenericResponse<Void>> disconnect() throws ConnectionNotFoundException {
+    public ResponseEntity<GenericResponse<Void>> disconnect() throws ClusterNotFoundException {
         ConnectionService connectionService = (ConnectionService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
         connectionService.disconnect();

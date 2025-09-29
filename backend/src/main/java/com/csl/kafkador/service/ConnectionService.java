@@ -1,21 +1,22 @@
 package com.csl.kafkador.service;
 
-import com.csl.kafkador.dto.Request;
-import com.csl.kafkador.exception.ConnectionNotFoundException;
+import com.csl.kafkador.exception.ClusterNotFoundException;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
-import com.csl.kafkador.exception.KafkadorException;
-import com.csl.kafkador.model.Connection;
+import com.csl.kafkador.dto.ConnectionDto;
+import com.csl.kafkador.exception.KafkaAdminApiException;
 
 import java.util.List;
 import java.util.Properties;
 
 public interface ConnectionService {
 
-    Connection connect( Integer id ) throws ConnectionNotFoundException;
-    Connection disconnect() throws ConnectionNotFoundException;
-    List<Connection> getConnections();
-    Connection getActiveConnection() throws ConnectionSessionExpiredException;
+    ConnectionDto create( ConnectionDto connectionDto ) throws KafkaAdminApiException;
+    ConnectionDto connect( String clusterId ) throws ClusterNotFoundException;
+    ConnectionDto disconnect() throws ClusterNotFoundException;
+    List<ConnectionDto> getConnections();
+    ConnectionDto getActiveConnection() throws ConnectionSessionExpiredException;
     Properties getActiveConnectionProperties() throws ConnectionSessionExpiredException;
-    Connection createConnection( Connection connection ) throws KafkadorException;
+    Properties getConnectionProperties(String id) throws ClusterNotFoundException;
+    Properties getConnectionProperties(String host, String port);
 
 }

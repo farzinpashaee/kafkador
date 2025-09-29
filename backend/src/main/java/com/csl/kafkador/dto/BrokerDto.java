@@ -3,14 +3,13 @@ package com.csl.kafkador.dto;
 import com.csl.kafkador.record.ConfigEntry;
 import lombok.Data;
 import lombok.experimental.Accessors;
-import org.apache.kafka.clients.admin.Config;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Data
 @Accessors(chain = true)
-public class Broker {
+public class BrokerDto {
 
     private String id;
     private String idString;

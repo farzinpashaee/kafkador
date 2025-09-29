@@ -1,13 +1,9 @@
 package com.csl.kafkador.component;
 
-import com.csl.kafkador.model.Connection;
-import lombok.Data;
-import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 @Component
 public class KafkadorContext {
@@ -27,6 +23,7 @@ public class KafkadorContext {
         CONNECTION("Connection", "ConnectionService"),
         TOPIC("topic", "TopicService"),
         CLUSTER("cluster", "ClusterService"),
+        BROKER("broker", "BrokerService"),
         CONSUMER("consumer", "ConsumerService"),
         PRODUCER("producer", "ProducerService");
 

@@ -2,10 +2,9 @@ package com.csl.kafkador.config;
 
 
 import com.csl.kafkador.component.KafkadorContext;
-import com.csl.kafkador.model.Connection;
+import com.csl.kafkador.dto.ConnectionDto;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.ArrayList;
@@ -20,7 +19,7 @@ public class ApplicationConfig {
 
     private String url;
     private Map<String,Service> services = new HashMap<String,Service>();
-    private List<Connection> connections = new ArrayList<>();
+    private List<ConnectionDto> connections = new ArrayList<>();
     private ObserverService observerService;
 
     public String getServiceImplementation(KafkadorContext.Service service){

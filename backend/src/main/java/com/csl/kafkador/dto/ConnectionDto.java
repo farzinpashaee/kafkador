@@ -1,20 +1,18 @@
-package com.csl.kafkador.model;
+package com.csl.kafkador.dto;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 import java.io.Serializable;
-import java.util.List;
 
 @Data
-@Table
-@Entity
-public class Connection implements Serializable {
+@Accessors(chain = true)
+public class ConnectionDto implements Serializable {
 
-    @Id
-    private Integer id;
+    private String id;
     private String host;
     private String port;
     private String name;

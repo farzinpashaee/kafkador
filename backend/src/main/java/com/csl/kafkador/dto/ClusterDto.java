@@ -1,14 +1,18 @@
 package com.csl.kafkador.dto;
 
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 import java.util.Collection;
 
 @Data
-public class ClusterDetails {
+@Accessors(chain = true)
+public class ClusterDto {
 
-    private String port;
     private String id;
+    private String host;
+    private String port;
+    private String name;
     private Collection<BrokerDto> brokers;
     private BrokerDto controller;
 

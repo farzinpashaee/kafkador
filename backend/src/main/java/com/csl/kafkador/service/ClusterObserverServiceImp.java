@@ -23,23 +23,23 @@ public class ClusterObserverServiceImp implements ObserverService {
     @Override
     public void capture(ApplicationConfig.Observer observerConfig) {
 
-        try {
-            ClusterDetails clusterDetails = clusterService.getClusterDetails();
-
-            Metric metric = new Metric();
-            metric.setClusterId(clusterDetails.getId());
-            metric.setMetricName(MetricEnum.NUMBER_OF_BROKERS.toString());
-            metric.setEntityId(String.valueOf(clusterDetails.getId()));
-            metric.setNumericMetricValue( Double.valueOf( clusterDetails.getBrokers().size()) );
-            metric.setCreateDateTime(new Date());
-            metricRepository.save(metric);
-
-            if(observerConfig.getLog())
-                log.info(observerConfig.getId() + " Observer captured at " + System.currentTimeMillis());
-
-        } catch (KafkaAdminApiException e) {
-            throw new RuntimeException(e);
-        }
+//        try {
+//            ClusterDetails clusterDetails = clusterService.getClusterDetails();
+//
+//            Metric metric = new Metric();
+//            metric.setClusterId(clusterDetails.getId());
+//            metric.setMetricName(MetricEnum.NUMBER_OF_BROKERS.toString());
+//            metric.setEntityId(String.valueOf(clusterDetails.getId()));
+//            metric.setNumericMetricValue( Double.valueOf( clusterDetails.getBrokers().size()) );
+//            metric.setCreateDateTime(new Date());
+//            metricRepository.save(metric);
+//
+//            if(observerConfig.getLog())
+//                log.info(observerConfig.getId() + " Observer captured at " + System.currentTimeMillis());
+//
+//        } catch (KafkaAdminApiException e) {
+//            throw new RuntimeException(e);
+//        }
 
     }
 }
