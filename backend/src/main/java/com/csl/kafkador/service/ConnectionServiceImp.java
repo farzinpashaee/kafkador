@@ -70,15 +70,6 @@ public class ConnectionServiceImp implements ConnectionService {
         return properties;
     }
 
-    @Autowired
-    public Properties getConnectionProperties(String id) throws ClusterNotFoundException {
-        ClusterDto cluster = clusterService.find(id);
-        String bootstrapServers = cluster.getHost() + ":" + cluster.getPort() ;
-        Properties properties = new Properties();
-        properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        return properties;
-    }
-
     @Override
     public Properties getConnectionProperties(String host, String port) {
         String bootstrapServers = host + ":" + port ;

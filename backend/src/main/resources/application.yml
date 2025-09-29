@@ -1,7 +1,7 @@
 kafkador:
   url: http://localhost:8080/
   connectionServiceImplementation:
-  observerService:
+  observerService: # TODO: move to database enable per cluster. the config record must create when the cluster record created
     enabled: false
     retentionPeriod: 30 # in days
     observers:

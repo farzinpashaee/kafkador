@@ -16,7 +16,6 @@ public interface ConnectionService {
     List<ConnectionDto> getConnections();
     ConnectionDto getActiveConnection() throws ConnectionSessionExpiredException;
     Properties getActiveConnectionProperties() throws ConnectionSessionExpiredException;
-    Properties getConnectionProperties(String id) throws ClusterNotFoundException;
     Properties getConnectionProperties(String host, String port);
 
 }

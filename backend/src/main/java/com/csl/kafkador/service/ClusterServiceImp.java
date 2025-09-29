@@ -1,18 +1,22 @@
 package com.csl.kafkador.service;
 
 import com.csl.kafkador.dto.ClusterDto;
+import com.csl.kafkador.dto.ObserverConfigDto;
 import com.csl.kafkador.exception.ClusterNotFoundException;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.model.Cluster;
 import com.csl.kafkador.repository.ClusterRepository;
 import com.csl.kafkador.util.DtoMapper;
+import com.csl.kafkador.util.KafkaHelper;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -24,8 +28,9 @@ import java.util.stream.Collectors;
 public class ClusterServiceImp implements ClusterService {
 
     private final ClusterRepository clusterRepository;
-    private final BrokerService brokerService;
-    private final ConnectionService connectionService;
+
+    @Qualifier("ObserverKafkadorConfigService")
+    private final KafkadorConfigService<ObserverConfigDto,ObserverConfigDto.ObserverCluster> kafkadorConfigService;
 
     @Override
     public ClusterDto find(String id) throws ClusterNotFoundException {
@@ -44,6 +49,7 @@ public class ClusterServiceImp implements ClusterService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     @Override
     public ClusterDto save(String host, String port) throws KafkaAdminApiException {
         String clusterId = getClusterId(host,port);
@@ -52,13 +58,19 @@ public class ClusterServiceImp implements ClusterService {
         cluster.setHost(host);
         cluster.setPort(port);
         clusterRepository.save(cluster);
+
+        ObserverConfigDto.ObserverCluster observerCluster = new ObserverConfigDto.ObserverCluster();
+        observerCluster.setClusterId(clusterId);
+        observerCluster.setEnabled(true);
+        observerCluster.setObservers(ObserverConfigDto.defaultObserverConfig());
+        kafkadorConfigService.save(observerCluster);
         return DtoMapper.clusterMapper(cluster);
     }
 
 
     @Override
     public String getClusterId(String host, String port) throws KafkaAdminApiException {
-        Properties properties = connectionService.getConnectionProperties(host,port);
+        Properties properties = KafkaHelper.getConnectionProperties(host,port);
         try (Admin admin = Admin.create(properties)) {
             KafkaFuture<String> clusterIdFuture = admin.describeCluster().clusterId();
             return clusterIdFuture.get();
@@ -72,7 +84,7 @@ public class ClusterServiceImp implements ClusterService {
     @Override
     public ClusterDto getClusterDetails(String id) throws ClusterNotFoundException, KafkaAdminApiException {
         ClusterDto clusterDetails = new ClusterDto();
-        Properties properties = connectionService.getConnectionProperties(id);
+        Properties properties = KafkaHelper.getConnectionProperties(find(id));
         try (Admin admin = Admin.create(properties)) {
             KafkaFuture<String> clusterIdFuture = admin.describeCluster().clusterId();
             KafkaFuture<Collection<Node>> clusterNodesFuture = admin.describeCluster().nodes();
@@ -80,7 +92,7 @@ public class ClusterServiceImp implements ClusterService {
 
             Collection<Node> nodes = clusterNodesFuture.get();
             List<Integer> brokerIds = nodes.stream().map(Node::id).toList();
-            Map<Integer, Long> sizeMap = brokerService.getReplicaSize(admin.describeLogDirs(brokerIds).allDescriptions().get());
+            Map<Integer, Long> sizeMap = KafkaHelper.getReplicaSize(admin.describeLogDirs(brokerIds).allDescriptions().get());
 
             clusterDetails.setId(clusterIdFuture.get());
             clusterDetails.setBrokers(nodes.stream().map(i -> DtoMapper.clusterNodeMapper(i,sizeMap)).collect(Collectors.toList()));

@@ -6,19 +6,18 @@ import lombok.Data;
 import java.util.Date;
 
 @Data
-@Table
 @Entity
-public class Metric {
+@Table
+public class KafkadorConfig {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    private String clusterId;
-    private String entityType;
-    private String entityId;
-    private String metricName;
-    private String metricValue;
-    private Double numericMetricValue;
+    private String configKey;
+    @Column(length = 2000)
+    private String configValue;
+    private String profile;
     private Date createDateTime;
+    private Date updateDateTime;
 
 }

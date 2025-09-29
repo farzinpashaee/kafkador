@@ -12,7 +12,6 @@ import java.util.Map;
 public interface BrokerService {
 
     BrokerDto getDetail(String id);
-    Map<Integer, Long> getReplicaSize(Map<Integer, Map<String, LogDirDescription>> map );
     List<ConfigEntry> getConfigurations(String id ) throws KafkaAdminApiException, ClusterNotFoundException;
 
 }

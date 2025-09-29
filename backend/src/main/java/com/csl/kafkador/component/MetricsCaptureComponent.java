@@ -1,11 +1,15 @@
 package com.csl.kafkador.component;
 
 import com.csl.kafkador.config.ApplicationConfig;
+import com.csl.kafkador.dto.ObserverConfigDto;
+import com.csl.kafkador.exception.KafkadorConfigNotFoundException;
+import com.csl.kafkador.service.KafkadorConfigService;
 import com.csl.kafkador.service.ObserverService;
 import com.csl.kafkador.util.ValidationHelper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
@@ -22,30 +26,43 @@ public class MetricsCaptureComponent {
     private final TaskScheduler taskScheduler;
     private final ExecutorService executorService;
     private final ApplicationContext applicationContext;
+    @Qualifier("ObserverKafkadorConfigService")
+    private final KafkadorConfigService<ObserverConfigDto,ObserverConfigDto.ObserverCluster> kafkadorConfigService;
 
     @PostConstruct
     public void init(){
 
-        if(ValidationHelper.safeCall( () -> applicationConfig.getObserverService().getEnabled())){
-            log.info("Initiating Observer component");
-            List<ApplicationConfig.Observer> observersConfig = applicationConfig.getObserverService().getObservers();
-            if( observersConfig != null && observersConfig.size() > 0 ){
-                for( ApplicationConfig.Observer observerConfig : observersConfig ){
-                    if(observerConfig.getEnabled()) {
-                        CronTrigger cronTrigger = new CronTrigger(observerConfig.getFrequency());
-                        taskScheduler.schedule(
-                                () -> {
-                                    if(observerConfig.getLog())
-                                        log.info(observerConfig.getId() + " Observer starting at " + System.currentTimeMillis());
-                                    ObserverService observerService = (ObserverService) applicationContext.getBean(observerConfig.getId()+"Observer");
-                                    observerService.capture(observerConfig);
-                                }, cronTrigger);
+        try {
+            ObserverConfigDto observerConfig = kafkadorConfigService.get("kafkador.observer");
+            if( observerConfig.getEnabled() ) {
+                if( observerConfig.getObserverClusters() != null && observerConfig.getObserverClusters().size() > 0 ) {
+                    for (ObserverConfigDto.ObserverCluster observerCluster : observerConfig.getObserverClusters()) {
+                        if(observerCluster.getObservers() != null && observerCluster.getObservers().size() > 0){
+                            for(ObserverConfigDto.Observer observer: observerCluster.getObservers() ){
+                                if(observer.getEnabled()){
+                                    CronTrigger cronTrigger = new CronTrigger(observer.getFrequency());
+                                    taskScheduler.schedule(
+                                            () -> {
+                                                if(observer.getLog())
+                                                    log.info(observer.getId() + " Observer starting at " + System.currentTimeMillis());
+                                                ObserverService observerService = (ObserverService) applicationContext.getBean(observer.getId()+"Observer");
+                                                observerService.capture(observerCluster.getClusterId(), observer);
+                                            }, cronTrigger);
+                                }
+                            }
+                        } else {
+                            log.info("No Observer Cluster Group configuration found!");
+                        }
                     }
+                } else {
+                    log.info("No Observer Cluster configuration found!");
                 }
             } else {
-                log.info("No metric configuration found!");
+                log.info("No Observer configuration found!");
             }
 
+        } catch (KafkadorConfigNotFoundException e) {
+            throw new RuntimeException(e);
         }
 
     }
