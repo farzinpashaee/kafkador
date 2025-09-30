@@ -91,12 +91,10 @@ public class TopicService {
     }
 
 
-    public Topic getTopic( String name ) throws KafkaAdminApiException {
+    public Topic getTopic( String clusterId, String name ) throws KafkaAdminApiException {
 
-        ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
-
-        try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
+        try{
+            Admin admin = connectionService.getAdminClient(clusterId);
             Topic topic = new Topic();
             Set<String> topicNames = new HashSet<>();
             topicNames.add(name);
@@ -108,7 +106,7 @@ public class TopicService {
                 topic.setName(topicDescription.name());
                 topic.setId(topicDescription.topicId().toString());
                 topic.setPartitions(topicDescription.partitions().size());
-                topic.setConfig(getBrokerConfiguration(topicDescription.name()));
+                topic.setConfig(getBrokerConfiguration(clusterId, topicDescription.name()));
                 return topic;
             }
 
@@ -120,13 +118,12 @@ public class TopicService {
         return null;
     }
 
-    public List<ConfigEntry> getBrokerConfiguration( String name ) throws KafkaAdminApiException {
+    public List<ConfigEntry> getBrokerConfiguration( String clusterId, String name ) throws KafkaAdminApiException {
         List<ConfigEntry> result = new ArrayList<>();
-        ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
         Locale locale = LocaleContextHolder.getLocale();
 
-        try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
+        try {
+            Admin admin = connectionService.getAdminClient(clusterId);
             ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, name);
             DescribeConfigsResult describeConfigsResult = admin.describeConfigs(Collections.singleton(configResource));
             describeConfigsResult.all().get().forEach((resource, config) -> {

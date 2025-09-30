@@ -65,7 +65,8 @@ public class ApiController {
     @GetMapping("/topic/{name}")
     public ResponseEntity<GenericResponse<Topic>> getTopic( @PathVariable String name ) throws KafkaAdminApiException {
         TopicService topicService = (TopicService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
-        Topic topic = topicService.getTopic(name);
+        ConnectionDto connection = connectionService.getActiveConnection();
+        Topic topic = topicService.getTopic(connection.getId(), name);
         return new GenericResponse.Builder<Topic>()
                 .data(topic)
                 .success(HttpStatus.OK);
