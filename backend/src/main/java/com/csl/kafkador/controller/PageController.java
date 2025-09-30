@@ -144,7 +144,7 @@ public class PageController {
                 .title("Sandbox")
                 .build(model);
         TopicService topicService = (TopicService) applicationContext.getBean("TopicsService");
-        Collection<Topic> topics = topicService.getTopics();
+        Collection<Topic> topics = topicService.getTopics("");
         model.addAttribute("topics", topics);
 
         return "views/pages/sandbox.html";

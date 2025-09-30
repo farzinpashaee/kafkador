@@ -11,6 +11,7 @@ import com.csl.kafkador.util.DtoMapper;
 import com.csl.kafkador.util.ViewHelper;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.*;
+import org.apache.kafka.common.Cluster;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.config.ConfigResource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,14 +30,13 @@ public class TopicService {
 
     private final ApplicationContext applicationContext;
     private final ApplicationConfig applicationConfig;
+    private final ConnectionService connectionService;
     private final MessageSource messageSource;
 
-    public Collection<Topic> getTopics() throws KafkaAdminApiException {
+    public Collection<Topic> getTopics(String clusterId) throws KafkaAdminApiException {
 
-        ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
-
-        try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
+        try {
+            Admin admin = connectionService.getAdminClient(clusterId);
             KafkaFuture<Collection<TopicListing>> topicsFuture = admin.listTopics().listings();
             Collection<TopicListing> topicList = topicsFuture.get();
             DescribeTopicsResult describeTopicsResult = admin.describeTopics(topicList.stream().map(i->i.name()).collect(Collectors.toList()));
@@ -50,13 +50,10 @@ public class TopicService {
         }
     }
 
-    public Topic createTopic(Request<Topic> request ) throws KafkaAdminApiException {
+    public Topic createTopic( String clusterId , Topic topic ) throws KafkaAdminApiException {
 
-        ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
-
-        try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
-            Topic topic = request.getBody();
+        try {
+            Admin admin = connectionService.getAdminClient(clusterId);
             NewTopic newTopic = new NewTopic(topic.getName(),
                     topic.getPartitions(),
                     topic.getReplicatorFactor());

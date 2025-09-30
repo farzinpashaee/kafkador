@@ -1,6 +1,7 @@
 package com.csl.kafkador.util;
 
 import com.csl.kafkador.dto.ClusterDto;
+import com.csl.kafkador.dto.ConnectionDto;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.LogDirDescription;
 import org.apache.kafka.clients.admin.ReplicaInfo;
@@ -38,6 +39,13 @@ public class KafkaHelper {
 
     public static Properties getConnectionProperties(ClusterDto cluster) {
         String bootstrapServers = cluster.getHost() + ":" + cluster.getPort() ;
+        Properties properties = new Properties();
+        properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        return properties;
+    }
+
+    public static Properties getConnectionProperties(ConnectionDto connection) {
+        String bootstrapServers = connection.getHost() + ":" + connection.getPort() ;
         Properties properties = new Properties();
         properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         return properties;

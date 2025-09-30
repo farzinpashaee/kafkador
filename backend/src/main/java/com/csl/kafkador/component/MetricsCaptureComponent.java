@@ -3,9 +3,8 @@ package com.csl.kafkador.component;
 import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.dto.ObserverConfigDto;
 import com.csl.kafkador.exception.KafkadorConfigNotFoundException;
-import com.csl.kafkador.service.KafkadorConfigService;
+import com.csl.kafkador.service.ConfigService;
 import com.csl.kafkador.service.ObserverService;
-import com.csl.kafkador.util.ValidationHelper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +14,6 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 @Slf4j
@@ -27,13 +25,13 @@ public class MetricsCaptureComponent {
     private final ExecutorService executorService;
     private final ApplicationContext applicationContext;
     @Qualifier("ObserverKafkadorConfigService")
-    private final KafkadorConfigService<ObserverConfigDto,ObserverConfigDto.ObserverCluster> kafkadorConfigService;
+    private final ConfigService<ObserverConfigDto,ObserverConfigDto.ObserverCluster> configService;
 
     @PostConstruct
     public void init(){
 
         try {
-            ObserverConfigDto observerConfig = kafkadorConfigService.get("kafkador.observer");
+            ObserverConfigDto observerConfig = configService.get("kafkador.observer");
             if( observerConfig.getEnabled() ) {
                 if( observerConfig.getObserverClusters() != null && observerConfig.getObserverClusters().size() > 0 ) {
                     for (ObserverConfigDto.ObserverCluster observerCluster : observerConfig.getObserverClusters()) {

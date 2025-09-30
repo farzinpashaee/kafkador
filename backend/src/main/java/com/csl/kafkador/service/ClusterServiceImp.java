@@ -13,7 +13,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.Admin;
-import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -28,9 +27,9 @@ import java.util.stream.Collectors;
 public class ClusterServiceImp implements ClusterService {
 
     private final ClusterRepository clusterRepository;
-
+    private final ConnectionService connectionService;
     @Qualifier("ObserverKafkadorConfigService")
-    private final KafkadorConfigService<ObserverConfigDto,ObserverConfigDto.ObserverCluster> kafkadorConfigService;
+    private final ConfigService<ObserverConfigDto,ObserverConfigDto.ObserverCluster> configService;
 
     @Override
     public ClusterDto find(String id) throws ClusterNotFoundException {
@@ -64,7 +63,7 @@ public class ClusterServiceImp implements ClusterService {
         observerCluster.setClusterId(clusterId);
         observerCluster.setEnabled(true);
         observerCluster.setObservers(ObserverConfigDto.defaultObserverConfig());
-        kafkadorConfigService.save(observerCluster);
+        configService.save(observerCluster);
         return DtoMapper.clusterMapper(cluster);
     }
 
@@ -85,8 +84,8 @@ public class ClusterServiceImp implements ClusterService {
     @Override
     public ClusterDto getClusterDetails(String id) throws ClusterNotFoundException, KafkaAdminApiException {
         ClusterDto clusterDetails = new ClusterDto();
-        Properties properties = KafkaHelper.getConnectionProperties(find(id));
-        try (Admin admin = Admin.create(properties)) { // TODO: move to connection and not create everytime
+        try{
+            Admin admin = connectionService.getAdminClient(id);
             KafkaFuture<String> clusterIdFuture = admin.describeCluster().clusterId();
             KafkaFuture<Collection<Node>> clusterNodesFuture = admin.describeCluster().nodes();
             KafkaFuture<Node> clusterControllerFuture = admin.describeCluster().controller();

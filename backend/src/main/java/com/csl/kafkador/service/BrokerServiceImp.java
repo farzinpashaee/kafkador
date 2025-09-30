@@ -27,24 +27,27 @@ import java.util.*;
 @RequiredArgsConstructor
 public class BrokerServiceImp implements BrokerService {
 
-    private final ClusterService clusterService;
+    private final ConnectionService connectionService;
     private final MessageSource messageSource;
 
     @Override
-    public BrokerDto getDetail(String id) {
-        return null;
+    public BrokerDto getDetail(String clusterId, String brokerId) throws KafkaAdminApiException {
+        BrokerDto broker = new BrokerDto();
+        broker.setId(brokerId);
+        broker.setConfig(getConfigurations(clusterId,brokerId));
+        return broker;
     }
 
     @Override
-    public List<ConfigEntry> getConfigurations(String id) throws KafkaAdminApiException, ClusterNotFoundException {
+    public List<ConfigEntry> getConfigurations(String clusterId, String brokerId) throws KafkaAdminApiException {
 
         List<ConfigEntry> result = new ArrayList<>();
         List<ConfigResource> resources = new ArrayList<>();
-        resources.add( new ConfigResource(ConfigResource.Type.BROKER,String.valueOf(id)));
+        resources.add( new ConfigResource(ConfigResource.Type.BROKER,String.valueOf(brokerId)));
         Locale locale = LocaleContextHolder.getLocale();
 
-        Properties properties = KafkaHelper.getConnectionProperties(clusterService.find(id));
-        try (Admin admin = Admin.create(properties)) {
+        try{
+            Admin admin = connectionService.getAdminClient(clusterId);
             Map<ConfigResource, Config> configMap = admin.describeConfigs(resources)
                     .all()
                     .get();

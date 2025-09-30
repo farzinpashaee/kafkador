@@ -12,9 +12,9 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.Optional;
 
-@Service("ObserverKafkadorConfigService")
+@Service("ObserverConfigService")
 @RequiredArgsConstructor
-public class ObserverKafkadorConfigServiceImp implements KafkadorConfigService<ObserverConfigDto,ObserverConfigDto.ObserverCluster> {
+public class ObserverConfigServiceImp implements ConfigService<ObserverConfigDto,ObserverConfigDto.ObserverCluster> {
 
     ObjectMapper objectMapper = new ObjectMapper();
     private final KafkadorConfigRepository kafkadorConfigRepository;

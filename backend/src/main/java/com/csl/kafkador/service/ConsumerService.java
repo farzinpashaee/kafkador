@@ -39,6 +39,7 @@ public class ConsumerService {
 
     private final ApplicationContext applicationContext;
     private final ApplicationConfig applicationConfig;
+    private final ConnectionService connectionService;
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
     public Properties getProperties() {
@@ -54,12 +55,10 @@ public class ConsumerService {
         return properties;
     }
 
-    public Collection<ConsumerGroup> getConsumersGroup() throws KafkaAdminApiException {
+    public Collection<ConsumerGroup> getConsumersGroup(String clusterId) throws KafkaAdminApiException {
 
-        ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
-
-        try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
+        try {
+            Admin admin = connectionService.getAdminClient(clusterId);
             KafkaFuture<Collection<ConsumerGroupListing>> consumersFuture = admin.listConsumerGroups().all();
             KafkaFuture<Map<String, ConsumerGroupDescription>> consumerDescribedFuture = admin.describeConsumerGroups(
                     consumersFuture.get().stream().map(i -> i.groupId() ).collect(Collectors.toList())).all();

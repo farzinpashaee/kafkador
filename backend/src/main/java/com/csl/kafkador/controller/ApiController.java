@@ -46,7 +46,8 @@ public class ApiController {
     @GetMapping("/broker/{id}")
     public ResponseEntity<GenericResponse<BrokerDto>> getBroker(@PathVariable String id ) throws KafkaAdminApiException {
         BrokerService brokerService = (BrokerService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.BROKER));
-        BrokerDto broker = brokerService.getDetail(id);
+        ConnectionDto connection = connectionService.getActiveConnection();
+        BrokerDto broker = brokerService.getDetail(connection.getId(), id);
         return new GenericResponse.Builder<BrokerDto>()
                 .data(broker)
                 .success(HttpStatus.OK);
@@ -55,8 +56,9 @@ public class ApiController {
     @GetMapping("/topic")
     public ResponseEntity<GenericResponse<Collection<Topic>>> getTopics( HttpSession session ) throws KafkaAdminApiException {
         TopicService topicService = (TopicService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
+        ConnectionDto connection = connectionService.getActiveConnection();
         return new GenericResponse.Builder<Collection<Topic>>()
-                .data(topicService.getTopics())
+                .data(topicService.getTopics(connection.getId()))
                 .success(HttpStatus.OK);
     }
 
@@ -71,9 +73,10 @@ public class ApiController {
 
 
     @PostMapping("/topic")
-    public void createTopic(@RequestBody Topic request, HttpSession session ) throws KafkaAdminApiException {
+    public void createTopic(@RequestBody Topic topic) throws KafkaAdminApiException {
         TopicService topicService = (TopicService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
-        topicService.createTopic(new Request<Topic>(session).setBody(request));
+        ConnectionDto connection = connectionService.getActiveConnection();
+        topicService.createTopic(connection.getId(),topic);
     }
 
     @DeleteMapping("/topic/{id}")
@@ -100,8 +103,9 @@ public class ApiController {
     public ResponseEntity<GenericResponse<Collection<ConsumerGroup>>> getConsumerGroup(HttpSession session) throws KafkaAdminApiException {
         ConsumerService consumersService = (ConsumerService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONSUMER));
+        ConnectionDto connection = connectionService.getActiveConnection();
         return new GenericResponse.Builder<Collection<ConsumerGroup>>()
-                .data(consumersService.getConsumersGroup())
+                .data(consumersService.getConsumersGroup(connection.getId()))
                 .success(HttpStatus.OK);
     }
 

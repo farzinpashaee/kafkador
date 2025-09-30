@@ -11,7 +11,7 @@ import java.util.Map;
 
 public interface BrokerService {
 
-    BrokerDto getDetail(String id);
-    List<ConfigEntry> getConfigurations(String id ) throws KafkaAdminApiException, ClusterNotFoundException;
+    BrokerDto getDetail(String clusterId, String brokerId) throws KafkaAdminApiException;
+    List<ConfigEntry> getConfigurations(String clusterId, String brokerId) throws KafkaAdminApiException, ClusterNotFoundException;
 
 }

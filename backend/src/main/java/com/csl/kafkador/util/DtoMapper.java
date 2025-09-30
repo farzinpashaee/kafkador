@@ -30,6 +30,14 @@ public class DtoMapper {
                 .setName(cluster.getName());
     }
 
+    public static ConnectionDto connectionMapper( Cluster cluster ){
+        return new ConnectionDto()
+                .setId(cluster.getId())
+                .setHost(cluster.getHost())
+                .setPort(cluster.getPort())
+                .setName(cluster.getName());
+    }
+
     public static BrokerDto clusterNodeMapper(org.apache.kafka.common.Node node, Map<Integer, Long> size){
         return new BrokerDto().setId(String.valueOf(node.id()))
                 .setHost(node.host())
