@@ -47,7 +47,7 @@ public class ClusterObserverServiceImp implements ObserverService {
                for( BrokerDto broker : clusterDetails.getBrokers() ) {
                    Metric brokerSize = new Metric();
                    brokerSize.setClusterId(clusterDetails.getId());
-                   brokerSize.setMetricName(MetricEnum.NUMBER_OF_BROKERS.toString());
+                   brokerSize.setMetricName(MetricEnum.SIZE_OF_BROKER.toString());
                    brokerSize.setEntityId(broker.getId());
                    brokerSize.setNumericMetricValue(broker.getSize());
                    brokerSize.setCreateDateTime(new Date());

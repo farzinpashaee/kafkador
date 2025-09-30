@@ -8,7 +8,10 @@ import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.exception.KafkadorException;
 import com.csl.kafkador.dto.ConnectionDto;
 import com.csl.kafkador.service.*;
+import com.csl.kafkador.util.MetricEnum;
+import com.csl.kafkador.util.TimeUnitEnum;
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
@@ -22,19 +25,19 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class ApiController {
 
-    @Autowired
-    ApplicationContext applicationContext;
-    @Autowired
-    ApplicationConfig applicationConfig;
-    @Autowired
-    ConnectionService connectionService;
+    private final ApplicationContext applicationContext;
+    private final ApplicationConfig applicationConfig;
+    private final ConnectionService connectionService;
+    private final MetricService metricService;
 
 
     @GetMapping("/cluster")
     public ResponseEntity<GenericResponse<ClusterDto>> getCluster() throws KafkaAdminApiException, ClusterNotFoundException {
-        ClusterService clusterService = (ClusterService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CLUSTER));
+        ClusterService clusterService = (ClusterService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CLUSTER));
         ConnectionDto connection = connectionService.getActiveConnection();
         ClusterDto cluster = clusterService.getClusterDetails(connection.getId());
         return new GenericResponse.Builder<ClusterDto>()
@@ -45,7 +48,8 @@ public class ApiController {
 
     @GetMapping("/broker/{id}")
     public ResponseEntity<GenericResponse<BrokerDto>> getBroker(@PathVariable String id ) throws KafkaAdminApiException {
-        BrokerService brokerService = (BrokerService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.BROKER));
+        BrokerService brokerService = (BrokerService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.BROKER));
         ConnectionDto connection = connectionService.getActiveConnection();
         BrokerDto broker = brokerService.getDetail(connection.getId(), id);
         return new GenericResponse.Builder<BrokerDto>()
@@ -55,7 +59,8 @@ public class ApiController {
 
     @GetMapping("/topic")
     public ResponseEntity<GenericResponse<Collection<Topic>>> getTopics( HttpSession session ) throws KafkaAdminApiException {
-        TopicService topicService = (TopicService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
+        TopicService topicService = (TopicService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
         ConnectionDto connection = connectionService.getActiveConnection();
         return new GenericResponse.Builder<Collection<Topic>>()
                 .data(topicService.getTopics(connection.getId()))
@@ -64,7 +69,8 @@ public class ApiController {
 
     @GetMapping("/topic/{name}")
     public ResponseEntity<GenericResponse<Topic>> getTopic( @PathVariable String name ) throws KafkaAdminApiException {
-        TopicService topicService = (TopicService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
+        TopicService topicService = (TopicService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
         ConnectionDto connection = connectionService.getActiveConnection();
         Topic topic = topicService.getTopic(connection.getId(), name);
         return new GenericResponse.Builder<Topic>()
@@ -75,14 +81,16 @@ public class ApiController {
 
     @PostMapping("/topic")
     public void createTopic(@RequestBody Topic topic) throws KafkaAdminApiException {
-        TopicService topicService = (TopicService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
+        TopicService topicService = (TopicService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
         ConnectionDto connection = connectionService.getActiveConnection();
         topicService.createTopic(connection.getId(),topic);
     }
 
     @DeleteMapping("/topic/{id}")
     public void deleteTopic(@PathVariable String name, HttpSession session ) throws KafkaAdminApiException {
-        TopicService topicService = (TopicService) applicationContext.getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
+        TopicService topicService = (TopicService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
         topicService.deleteTopic(new Request<String>(session).setBody(name));
     }
 
@@ -101,7 +109,8 @@ public class ApiController {
     }
 
     @GetMapping("/consumer-group")
-    public ResponseEntity<GenericResponse<Collection<ConsumerGroup>>> getConsumerGroup(HttpSession session) throws KafkaAdminApiException {
+    public ResponseEntity<GenericResponse<Collection<ConsumerGroup>>> getConsumerGroup(HttpSession session)
+            throws KafkaAdminApiException {
         ConsumerService consumersService = (ConsumerService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONSUMER));
         ConnectionDto connection = connectionService.getActiveConnection();
@@ -110,8 +119,27 @@ public class ApiController {
                 .success(HttpStatus.OK);
     }
 
+    @GetMapping("/metric/{metric}/{entityId}")
+    public ResponseEntity<GenericResponse<MetricChartDto>> getMetrics(@PathVariable MetricEnum metric,
+                                                                      @PathVariable String entityId,
+                                                                      @RequestParam Long start,
+                                                                      @RequestParam Long end,
+                                                                      @RequestParam TimeUnitEnum sampleDuration )
+            throws KafkaAdminApiException, ClusterNotFoundException {
+        MetricChartDto metricChart = metricService.getChart( new MetricChartDto()
+                .setMetricEnum(metric)
+                .setStart(start)
+                .setEnd(end)
+                .setSampleDuration(sampleDuration)
+                .setId(entityId));
+        return new GenericResponse.Builder<MetricChartDto>()
+                .data(metricChart)
+                .success(HttpStatus.OK);
+    }
+
     @GetMapping("/connect")
-    public ResponseEntity<GenericResponse<ConnectionDto>> connect(@RequestParam String id, HttpSession session) throws ClusterNotFoundException {
+    public ResponseEntity<GenericResponse<ConnectionDto>> connect(@RequestParam String id, HttpSession session)
+            throws ClusterNotFoundException {
         ConnectionService connectionService = (ConnectionService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
         ConnectionDto connection =  connectionService.connect( id );
@@ -143,5 +171,7 @@ public class ApiController {
                 .getBean("ConsumerService");
         return consumersService.consume(topic);
     }
+
+
 
 }
