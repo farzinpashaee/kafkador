@@ -3,6 +3,7 @@ package com.csl.kafkador.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
@@ -18,7 +19,7 @@ public class Metric {
     private String entityId;
     private String metricName;
     private String metricValue;
-    private Double numericMetricValue;
+    private BigDecimal numericMetricValue;
     private Date createDateTime;
 
 }

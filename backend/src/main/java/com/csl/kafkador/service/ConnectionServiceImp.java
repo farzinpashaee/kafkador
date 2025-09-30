@@ -28,7 +28,7 @@ public class ConnectionServiceImp implements ConnectionService {
 
     @Override
     public ConnectionDto create(ConnectionDto connection) throws KafkaAdminApiException {
-        ClusterDto clusterDto = clusterService.save(connection.getHost(),connection.getPort());
+        ClusterDto clusterDto = clusterService.save(connection.getName(), connection.getHost(),connection.getPort());
         return DtoMapper.connectionMapper(clusterDto);
     }
 

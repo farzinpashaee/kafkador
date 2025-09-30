@@ -51,10 +51,11 @@ public class ClusterServiceImp implements ClusterService {
 
     @Transactional
     @Override
-    public ClusterDto save(String host, String port) throws KafkaAdminApiException {
+    public ClusterDto save(String name, String host, String port) throws KafkaAdminApiException {
         String clusterId = getClusterId(host,port);
         Cluster cluster = new Cluster();
         cluster.setId(clusterId);
+        cluster.setId(name);
         cluster.setHost(host);
         cluster.setPort(port);
         clusterRepository.save(cluster);
@@ -85,7 +86,7 @@ public class ClusterServiceImp implements ClusterService {
     public ClusterDto getClusterDetails(String id) throws ClusterNotFoundException, KafkaAdminApiException {
         ClusterDto clusterDetails = new ClusterDto();
         Properties properties = KafkaHelper.getConnectionProperties(find(id));
-        try (Admin admin = Admin.create(properties)) {
+        try (Admin admin = Admin.create(properties)) { // TODO: move to connection and not create everytime
             KafkaFuture<String> clusterIdFuture = admin.describeCluster().clusterId();
             KafkaFuture<Collection<Node>> clusterNodesFuture = admin.describeCluster().nodes();
             KafkaFuture<Node> clusterControllerFuture = admin.describeCluster().controller();
