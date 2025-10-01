@@ -1,5 +1,5 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule,DOCUMENT  } from '@angular/common';
+import { Component, inject, DOCUMENT } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet, ActivatedRoute, Router } from '@angular/router';
 import { LocalStorageService } from '../../services/local-storage.service';
 import { ApiService } from '../../services/api.service';

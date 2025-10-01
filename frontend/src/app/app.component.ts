@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, DOCUMENT } from '@angular/core';
 import { RouterModule, RouterOutlet } from '@angular/router';
-import { DOCUMENT } from '@angular/common';
+
 
 @Component({
   selector: 'app-root',
