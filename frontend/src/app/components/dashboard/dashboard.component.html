@@ -1,35 +1,76 @@
 <div class="row align-items-start">
-    <div class="col">
+    <div class="col-4">
       <div class="card">
-        <div class="card-body text-white">
-          <h5 class="card-title">Cluster</h5>
-          <p class="card-text">
-            Brokers: 3 <br/>
-            Controller: 192.168.2.139
-          </p>
+        <div class="card-body text-white d-flex">
+          <div class="flex-grow-1">
+            <h5 class="card-title">Cluster</h5>
+            <p class="card-text">
+              Brokers: 3 <br/>
+              Controller: 192.168.2.139
+            </p>
+          </div>
+          <div class="ms-auto" style="max-width: 30%; height:80px">
+            <ngx-charts-bar-vertical
+              [results]="data"
+              [scheme]="customColorScheme"
+              [xAxis]="false"
+              [gradient]="true"
+              [yAxis]="false" style="width:100%; height:100%;" >
+            </ngx-charts-bar-vertical>
+          </div>
         </div>
       </div>
     </div>
-    <div class="col">
+    <div class="col-4">
       <div class="card">
-        <div class="card-body text-white">
-          <h5 class="card-title">Topics</h5>
-          <p class="card-text">
-            Topics: 232 <br/>
-            Average Msp: 113
-          </p>
+        <div class="card-body text-white d-flex">
+          <div class="flex-grow-1">
+            <h5 class="card-title">Topics</h5>
+            <p class="card-text">
+              Topics: 232 <br/>
+              Average Msp: 113
+            </p>
+          </div>
+          <div class="ms-auto" style="max-width: 30%;: 30%; height:80px">
+            <ngx-charts-bar-vertical
+              [results]="data2"
+              [scheme]="customColorScheme"
+              [xAxis]="false"
+              [gradient]="true"
+              [yAxis]="false" style="height:100%; width:100%;">
+            </ngx-charts-bar-vertical>
+          </div>
         </div>
       </div>
     </div>
-    <div class="col">
+    <div class="col-4">
       <div class="card">
-        <div class="card-body text-white">
-          <h5 class="card-title">Consumers</h5>
-          <p class="card-text">
-            Consumer Groups: 7 <br/>
-            Average Lpc: 11
-          </p>
+        <div class="card-body text-white d-flex">
+          <div class="flex-grow-1">
+            <h5 class="card-title">Consumers</h5>
+            <p class="card-text">
+              Consumer Groups: 7 <br/>
+              Average Lpc: 11
+            </p>
+          </div>
+          <div class="ms-auto" style="max-width: 30%;: 30%; height:80px">
+            <ngx-charts-bar-vertical
+              [results]="data3"
+              [scheme]="customColorScheme"
+              [xAxis]="false"
+              [gradient]="true"
+              [yAxis]="false" style="height:100%; width:100%;">
+            </ngx-charts-bar-vertical>
+          </div>
         </div>
       </div>
     </div>
+</div>
+<div class="row">
+  <div class="col-8">
+
+  </div>
+  <div class="col-4">
+
+  </div>
 </div>
