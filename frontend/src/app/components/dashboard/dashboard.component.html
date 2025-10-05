@@ -66,9 +66,18 @@
       </div>
     </div>
 </div>
-<div class="row">
-  <div class="col-8">
-
+<div class="row mt-5">
+  <div class="col-8" style=" min-height:400px">
+    <ngx-charts-area-chart
+      [results]="data4"
+      [xAxis]="true"
+      [yAxis]="false"
+      [legend]="false"
+      [showXAxisLabel]="false"
+      [showYAxisLabel]="false"
+      [gradient]="true"
+      style="width:100%; height:100%;">
+    </ngx-charts-area-chart>
   </div>
   <div class="col-4">
 

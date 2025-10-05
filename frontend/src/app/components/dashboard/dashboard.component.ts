@@ -14,15 +14,21 @@ export class DashboardComponent {
     { name: 'a2', value: 3000 },
     { name: 'a3', value: 2000 },
     { name: 'a4', value: 3450 },
-    { name: 'a5', value: 2400 }
+    { name: 'a5', value: 2400 },
+   { name: 'a6', value: 3000 },
+   { name: 'a7', value: 1250 },
+   { name: 'a8', value: 2300 }
   ];
 
    data2 = [
       { name: 'a1', value: 100 },
       { name: 'a2', value: 5200 },
       { name: 'a3', value: 1000 },
-      { name: 'a4', value: 1250 },
-      { name: 'a5', value: 2400 }
+      { name: 'a4', value: 500 },
+      { name: 'a5', value: 800 },
+      { name: 'a6', value: 1000 },
+      { name: 'a7', value: 950 },
+      { name: 'a8', value: 2400 }
     ];
 
 
@@ -30,9 +36,41 @@ export class DashboardComponent {
     { name: 'a1', value: 500 },
     { name: 'a2', value: 2000 },
     { name: 'a3', value: 2000 },
-    { name: 'a4', value: 200 },
-    { name: 'a5', value: 2400 }
+    { name: 'a4', value: 2000 },
+    { name: 'a5', value: 3100 },
+    { name: 'a6', value: 1700 },
+    { name: 'a7', value: 200 },
+    { name: 'a8', value: 2400 }
   ];
+
+ data4 = [
+    {
+      "name": "Series A",
+      "series": [
+   { name: 'Sep 1', value: 500 },
+    { name: 'Sep 2', value: 620 },
+    { name: 'Sep 3', value: 800 },
+    { name: 'Sep 4', value: 1200 },
+    { name: 'Sep 5', value: 2700 },
+    { name: 'Sep 6', value: 1700 },
+    { name: 'Sep 7', value: 950 },
+    { name: 'Sep 8', value: 950 },
+    { name: 'Sep 9', value: 1250 },
+    { name: 'Sep 10', value: 1350 },
+    { name: 'Sep 11', value: 1950 },
+    { name: 'Sep 12', value: 2950 },
+    { name: 'Sep 13', value: 1650 },
+    { name: 'Sep 14', value: 1900 },
+    { name: 'Sep 15', value: 2150 },
+    { name: 'Sep 16', value: 1650 },
+    { name: 'Sep 17', value: 1500 },
+    { name: 'Sep 18', value: 1260 },
+    { name: 'Sep 19', value: 1400 },
+    { name: 'Sep 20', value: 1300 }
+      ]
+    }
+  ];
+
 
 
   view = [50, 50];
