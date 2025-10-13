@@ -18,18 +18,21 @@ header {
 :root,
 [data-bs-theme="light"] {
   --app-bg: #ffffff;
-  --app-surface: #555555;
+  --app-surface: #666;
   --app-text: #000000;
   --app-text-muted: #6c757d;
   --app-primary: #0d6efd;
   --app-success: #198754;
   --app-warning: #ffc107;
   --app-danger: #dc3545;
+  --app-card-top-widget-text: #FFF;
+  --app-card-top-widget-border: 0px solid #AAA;
+  --app-card-top-widget-background: #222;
 }
 
 /* Dark mode */
 [data-bs-theme="dark"] {
-  --app-bg: #121212;
+  --app-bg: #222;
   --app-surface: #1e1e1e;
   --app-text: #ffffff;
   --app-text-muted: #a0a0a0;
@@ -37,12 +40,23 @@ header {
   --app-success: #25d366;
   --app-warning: #ffd54f;
   --app-danger: #ff6b6b;
+  --app-card-top-widget-text: #AAA;
+  --app-card-top-widget-border: #333;
+  --app-card-top-widget-background: #222;
 }
 
-.card {
-  background-color: var(--app-surface);
-  color: var(--app-text);
+.card-top-widget {
+  border-color: var(--app-card-top-widget-border);
+  background-color: var(--app-card-top-widget-background);
+  color: var(--app-card-top-widget-text);
 }
+.card-top-widget .card-title{
+  color: var(--app-card-top-widget-text);
+}
+.card-top-widget .card-text {
+  color: var(--app-card-top-widget-text);
+}
+
 
 
 .h-description {

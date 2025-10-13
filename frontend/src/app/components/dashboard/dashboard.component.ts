@@ -71,8 +71,6 @@ export class DashboardComponent {
     }
   ];
 
-
-
   view = [50, 50];
 
   customColorScheme: Color = {

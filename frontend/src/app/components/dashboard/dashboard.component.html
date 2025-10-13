@@ -1,6 +1,6 @@
 <div class="row align-items-start">
-    <div class="col-4">
-      <div class="card">
+    <div class="col-12 col-md-12 col-lg-4">
+      <div class="card card-top-widget">
         <div class="card-body text-white d-flex">
           <div class="flex-grow-1">
             <h5 class="card-title">Cluster</h5>
@@ -21,8 +21,8 @@
         </div>
       </div>
     </div>
-    <div class="col-4">
-      <div class="card">
+    <div class="col-12 col-md-12 col-lg-4">
+      <div class="card card-top-widget">
         <div class="card-body text-white d-flex">
           <div class="flex-grow-1">
             <h5 class="card-title">Topics</h5>
@@ -43,8 +43,8 @@
         </div>
       </div>
     </div>
-    <div class="col-4">
-      <div class="card">
+    <div class="col-12 col-md-12 col-lg-4">
+      <div class="card card-top-widget">
         <div class="card-body text-white d-flex">
           <div class="flex-grow-1">
             <h5 class="card-title">Consumers</h5>
@@ -67,7 +67,7 @@
     </div>
 </div>
 <div class="row mt-5">
-  <div class="col-8" style=" min-height:400px">
+  <div class="col-12 col-md-6 col-lg-8" style=" min-height:400px">
     <ngx-charts-area-chart
       [results]="data4"
       [xAxis]="true"
@@ -79,7 +79,42 @@
       style="width:100%; height:100%;">
     </ngx-charts-area-chart>
   </div>
-  <div class="col-4">
+  <div class="col-12 col-md-6 col-lg-4">
+    <h5>Alerts:</h5>
+    <div class="list-group">
 
+      <a href="#" class="list-group-item list-group-item-action danger" aria-current="true">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1">Broker 3 Unreachable</h6>
+          <small>5 mins ago</small>
+        </div>
+        <small><span class="badge text-bg-danger">High</span> Action Required: Check broker logs or restart process.</small>
+      </a>
+
+      <a href="#" class="list-group-item list-group-item-action">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1">Lag Spike on Consumer Group "payments-consumer"</h6>
+          <small class="text-body-secondary">28 mins ago</small>
+        </div>
+        <small class="text-body-secondary"><span class="badge text-bg-secondary">Medium</span> Check consumer throughput metrics.</small>
+      </a>
+
+      <a href="#" class="list-group-item list-group-item-action">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1">Under-replicated Partitions Detected</h6>
+          <small class="text-body-secondary">1 hour ago</small>
+        </div>
+        <small class="text-body-secondary"><span class="badge text-bg-secondary">Medium</span> Verify ISR count and broker replication health.</small>
+      </a>
+
+      <a href="#" class="list-group-item list-group-item-action">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1">Disk Usage Alert on Broker 2</h6>
+          <small class="text-body-secondary">2 hours ago</small>
+        </div>
+        <small class="text-body-secondary"><span class="badge text-bg-danger">High</span> Free up space or expand volume capacity.</small>
+      </a>
+
+    </div>
   </div>
 </div>
