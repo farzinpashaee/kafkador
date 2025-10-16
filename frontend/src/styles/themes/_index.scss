@@ -1,0 +1,19 @@
+:root,
+[data-bs-theme="light"] {
+  --bs-primary: #00D3D3;
+  --bs-body-bg: #FFF;
+  --bs-body-color: #666;
+
+  --app-active-menu: #00D3D3;
+  --app-inactive-menu: #999;
+}
+
+[data-bs-theme="dark"] {
+  --bs-primary: #00D3D3;
+  --bs-body-bg: #121212;
+  --bs-body-color: #e0e0e0;
+
+  --app-active-menu: #00D3D3;
+  --app-inactive-menu: #888;
+}
+
