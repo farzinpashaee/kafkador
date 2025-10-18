@@ -2,6 +2,7 @@
 @use 'abstracts' as *;
 // Load Bootstrap (compiled with our variables)
 @use 'vendors/bootstrap';
+@use "bootstrap-icons/font/bootstrap-icons.css";
 // Load global themes
 @use 'themes';
 // Load component styles
@@ -14,27 +15,19 @@
       font-weight: normal;
       font-style: normal;
 }
-
 body {
     font-family: Rubik, -apple-system, Arial, sans-serif;
 }
-
 header {
     height: 3em;
 }
 
 .logo {
-  color: #000;
+  color: var(--app-logo-color);
 }
-
 .logo-image-connect {
   width:1.7em;
   margin-top:-0.3em;
-}
-
-.logox {
-    margin-right: 6px!important;
-    width: 24px!important;
 }
 
 .nav-link.active {
@@ -43,6 +36,12 @@ header {
 
 .nav-link {
   color: var(--app-inactive-menu) !important;
+}
+
+.outline-button {
+  color: var(--app-outline-button-color);
+  border: var(--app-outline-button-border);
+  background: var(--app-outline-button-background);
 }
 
 .card-top-widget {
@@ -57,20 +56,9 @@ header {
   color: var(--app-card-top-widget-text);
 }
 
-.h-description {
-  color: #CCC;
-  margin-top: -0.4em;
-  font-size: 0.9em;
-}
-
-.main.container {
-    margin-top: 6em;
-}
-
 .ml-0{
    margin-left: 0em!important;
 }
-
 
 .viewElement{
     display:none;
@@ -80,11 +68,7 @@ header {
     display:none;
 }
 
-.headerDropDownButton{
-    background-color:#000;
-    border: 0px;
-    padding-left: 0.7em;
-}
+
 
 .bg-black {
     background-color:#000;

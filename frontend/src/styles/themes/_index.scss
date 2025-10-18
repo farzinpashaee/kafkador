@@ -1,11 +1,18 @@
 :root,
 [data-bs-theme="light"] {
   --bs-primary: #00D3D3;
-  --bs-body-bg: #FFF;
+  --bs-body-bg: #fff;
   --bs-body-color: #666;
 
   --app-gray-200: #e9ecef;
   --app-gray-300: #dfe2e6;
+
+  --app-logo-color: #000;
+
+  --app-outline-button-color: #353a40;
+  --app-outline-button-border: 1px solid #cfd4da;
+  --app-outline-button-background: #fff;
+
   --app-active-menu: #00D3D3;
   --app-inactive-menu: #999;
 
@@ -25,6 +32,13 @@
 
   --app-gray-200: #e9ecef;
   --app-gray-300: #dfe2e6;
+
+  --app-logo-color: #fff;
+
+  --app-outline-button-color: #cfd4da;
+  --app-outline-button-border: 1px solid #353a40;
+  --app-outline-button-background: #222529;
+
   --app-active-menu: #00D3D3;
   --app-inactive-menu: #888;
 
@@ -33,6 +47,6 @@
   --app-text-muted: #a0a0a0;
 
   --app-card-top-widget-text: #AAA;
-  --app-card-top-widget-border: #333;
-  --app-card-top-widget-background: #222;
+  --app-card-top-widget-border: #353a40;
+  --app-card-top-widget-background: #222529;
 }

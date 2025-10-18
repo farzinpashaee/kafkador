@@ -98,11 +98,11 @@
         <app-breadcrumb></app-breadcrumb>
         <div class="btn-toolbar mb-2 mb-md-0">
           <div class="dropdown">
-            <button id="themeToggle" class="btn btn-sm btn-outline-dark" (click)="toggleTheme()">
+            <button id="themeToggle" class="btn btn-sm outline-button" (click)="toggleTheme()">
               <span *ngIf="!isDark"><i class="bi bi-sun"></i></span>
               <span *ngIf="isDark"><i class="bi bi-moon"></i></span>
             </button>&nbsp;
-            <button class="btn btn-primary btn-sm dropdown-toggle headerDropDownButton" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <button class="btn btn-sm dropdown-toggle outline-button" type="button" data-bs-toggle="dropdown" aria-expanded="false">
               {{connectedHost}}
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
