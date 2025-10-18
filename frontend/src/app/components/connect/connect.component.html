@@ -1,19 +1,17 @@
 <div class="min-vh-100 d-flex align-items-center justify-content-center">
-  <div class="container connectContainer">
+  <div class="container connect-container">
     <div class="row">
-      <h1>
-        <img src="/images/logo-shape-v1.svg" style="width:1.7em; margin-top:-0.3em">
+      <h1 class="logo">
+        <img src="/images/logo-shape-v1.svg" class="logo-image-connect">
         Kafkador
       </h1>
     </div>
-
-    <div class="row text-center ">
+    <div class="row text-center">
       <h4>Connect to Cluster</h4>
       <p class="text-gray-500">
-        Or connect to a new one by <a href="#">Adding New Cluster</a>
+        Or connect to another one by <a href="#">Adding New Cluster</a>
       </p>
     </div>
-
     <div class="row" id="connection">
       <div *ngFor="let conn of connections">
         <div class="card m-1">
@@ -26,6 +24,9 @@
           </div>
         </div>
       </div>
+    </div>
+    <div class="row text-center footer">
+      <p>Version 0.0.0 - © 2025 CodeStreamLab Inc.</p>
     </div>
   </div>
 </div>

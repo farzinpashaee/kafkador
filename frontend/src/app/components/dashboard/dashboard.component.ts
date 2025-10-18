@@ -73,10 +73,27 @@ export class DashboardComponent {
 
   view = [50, 50];
 
-  customColorScheme: Color = {
-    name: 'whiteScheme',
+  cartTopWidgetWhiteScheme: Color = {
+    name: 'cartTopWidgetWhiteScheme',
     selectable: true,
     group: ScaleType.Ordinal,
     domain: ['#FFF']
   };
+
+  mainChartPrimarySchema: Color = {
+    name: 'mainChartPrimarySchema',
+    selectable: true,
+    group: ScaleType.Ordinal,
+    domain: ['#00D3D3']
+  };
+
+  formatXAxis(dateString: string): string {
+    const date = new Date(dateString);
+    if (date.getDate() % 3 === 0) {
+      return `Sep ${date.getDate()}`;
+    }
+    return '';
+  }
+
+
 }
