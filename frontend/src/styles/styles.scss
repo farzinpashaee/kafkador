@@ -29,13 +29,28 @@ header {
   width:1.7em;
   margin-top:-0.3em;
 }
-
+.text-xs{
+  font-size: 0.6em;
+  color: var(--app-text-xs-color);
+}
+.text-s{
+  font-size: 0.8em;
+  color: var(--app-text-x-color);
+}
+.badge-link{
+  color:#fff;
+  font-size:1.3em;
+  text-decoration: none;
+}
 .nav-link.active {
   color: var(--app-active-menu) !important;
 }
-
 .nav-link {
   color: var(--app-inactive-menu) !important;
+}
+
+.dropdown-item{
+  font-size:0.8em;
 }
 
 .outline-button {
@@ -49,6 +64,7 @@ header {
   background-color: var(--app-card-top-widget-background);
   color: var(--app-card-top-widget-text);
 }
+
 .card-top-widget .card-title{
   color: var(--app-card-top-widget-text);
 }

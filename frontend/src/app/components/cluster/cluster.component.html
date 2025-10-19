@@ -4,11 +4,35 @@
   <span class="placeholder col-8"></span>
 </p>
 <div class="view-element" id="clusterDetailsView"  *ngIf="!isLoading">
-  <h6>Controller: <span>{{cluster.controller.host}}</span></h6>
-  <h6>Cluster ID: <span>{{cluster.id}}</span></h6>
+  <div class="row align-items-start">
+    <div class="col-12 col-md-12 col-lg-12">
+      <div class="card card-top-widget">
+        <div class="card-body text-white d-flex">
+          <div class="flex-grow-1">
+            <h5 class="card-title">{{cluster.name}}</h5>
+            <p class="card-text" class="text-s">
+              Brokers: 3 <br/>
+              Controller: {{cluster.controller.host}} <br/>
+              Cluster ID: {{cluster.id}}
+            </p>
+          </div>
+          <div class="ms-auto" style="max-width: 70%; height:120px">
+            <ngx-charts-bar-vertical
+              [results]="data"
+              [scheme]="cartTopWidgetWhiteScheme"
+              [xAxis]="false"
+              [gradient]="true"
+              [yAxis]="false" style="width:100%; height:100%;" >
+            </ngx-charts-bar-vertical>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row mt-4">
     <h5>Brokers</h5>
-    <p class="h-description">List of Brokers that are member of this cluster</p>
+    <p class="text-s">List of Brokers that are member of this cluster</p>
     <div class="table-responsive">
       <table class="table">
         <thead>
@@ -18,15 +42,21 @@
           <th scope="col">Port</th>
           <th scope="col">Size (KB)</th>
           <th scope="col">Hash</th>
+          <th></th>
         </tr>
         </thead>
         <tbody id="clusterBrokers">
           <tr *ngFor="let broker of cluster.brokers">
             <th scope="row">{{broker.id}}</th>
-            <td><a routerLink="/broker/{{broker.id}}" routerLinkActive="active">{{broker.host}}</a></td>
+            <td>
+              <span class="badge bg-dark">
+                <a routerLink="/broker/{{broker.id}}" routerLinkActive="active" class="badge-link">{{broker.host}}</a>
+              </span>
+            </td>
             <td>{{broker.port}}</td>
             <td>{{broker.size}}</td>
             <td>{{broker.hash}}</td>
+            <td><a routerLink="/broker/{{broker.id}}" routerLinkActive="active"><i class="bi bi-three-dots"></i></a></td>
           </tr>
         </tbody>
       </table>

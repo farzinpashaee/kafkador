@@ -1,5 +1,6 @@
 package com.csl.kafkador.service;
 
+import com.csl.kafkador.dto.AdminClusterWrapper;
 import com.csl.kafkador.exception.ClusterNotFoundException;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.dto.ConnectionDto;
@@ -11,7 +12,7 @@ import java.util.Properties;
 
 public interface ConnectionService {
 
-    Admin getAdminClient(String id) throws ClusterNotFoundException;
+    AdminClusterWrapper getAdminClient(String id) throws ClusterNotFoundException;
     ConnectionDto create( ConnectionDto connectionDto ) throws KafkaAdminApiException;
     ConnectionDto connect( String clusterId ) throws ClusterNotFoundException;
     ConnectionDto disconnect() throws ClusterNotFoundException;

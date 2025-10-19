@@ -2,6 +2,7 @@ package com.csl.kafkador.service;
 
 import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.component.SessionHolder;
+import com.csl.kafkador.dto.AdminClusterWrapper;
 import com.csl.kafkador.dto.ClusterDto;
 import com.csl.kafkador.dto.ObserverConfigDto;
 import com.csl.kafkador.exception.ClusterNotFoundException;
@@ -36,12 +37,13 @@ public class ConnectionServiceImp implements ConnectionService {
     @Qualifier("ObserverConfigService")
     private final ConfigService<ObserverConfigDto,ObserverConfigDto.ObserverCluster> configService;
 
-    private HashMap<String, Admin> adminClientMap = new HashMap<>();
+    private HashMap<String, AdminClusterWrapper> adminClientMap = new HashMap<>();
 
-    public Admin getAdminClient(String id) throws ClusterNotFoundException {
+    public AdminClusterWrapper getAdminClient(String id) throws ClusterNotFoundException {
+        AdminClusterWrapper adminClusterWrapper = new AdminClusterWrapper();
         if(adminClientMap.containsKey(id)) {
             try {
-                KafkaFuture<String> clusterIdFuture = adminClientMap.get(id).describeCluster().clusterId();
+                KafkaFuture<String> clusterIdFuture = adminClientMap.get(id).getAdmin().describeCluster().clusterId();
                 clusterIdFuture.get();
                 return adminClientMap.get(id);
             } catch (Exception e){
@@ -53,8 +55,10 @@ public class ConnectionServiceImp implements ConnectionService {
             throw new ClusterNotFoundException("Cluster ID not found!");
         Cluster cluster = clusterOptional.get();
         Admin admin = Admin.create(KafkaHelper.getConnectionProperties(cluster.getHost(), cluster.getPort()));
-        adminClientMap.put(cluster.getId(),admin);
-        return admin;
+        adminClusterWrapper.setAdmin(admin);
+        adminClusterWrapper.setCluster(DtoMapper.clusterMapper(cluster));
+        adminClientMap.put(cluster.getId(),adminClusterWrapper);
+        return adminClusterWrapper;
     }
 
     @Override

@@ -47,7 +47,7 @@ public class BrokerServiceImp implements BrokerService {
         Locale locale = LocaleContextHolder.getLocale();
 
         try{
-            Admin admin = connectionService.getAdminClient(clusterId);
+            Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
             Map<ConfigResource, Config> configMap = admin.describeConfigs(resources)
                     .all()
                     .get();

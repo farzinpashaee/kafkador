@@ -16,12 +16,17 @@
       </thead>
       <tbody >
         <tr *ngFor="let topic of topics">
-          <th scope="row"><a routerLink="/topic/{{topic.name}}" routerLinkActive="active">{{topic.name}}</a></th>
+          <th scope="row">
+            <span class="badge bg-dark">
+              <a routerLink="/topic/{{topic.name}}" routerLinkActive="active" class="badge-link">{{topic.name}}</a>
+            </span>
+          </th>
           <td>{{topic.id}}</td>
           <td>{{topic.partitions}}</td>
           <td>
-            <button type="button" class="btn btn-primary btn-sm produce" data-bs-toggle="modal" data-bs-target="#produce" data-topic-name="${name}">Produce</button>
-            <button type="button" class="btn btn-primary btn-sm ms-1 consume" data-bs-toggle="modal" data-bs-target="#consume" data-topic-name="${name}">Consume</button>
+            <i class="bi bi-box-arrow-up"></i> &nbsp;
+            <i class="bi bi-box-arrow-in-up"></i> &nbsp;
+            <a routerLink="/broker/{{topic.name}}" routerLinkActive="active"><i class="bi bi-three-dots"></i></a>
           </td>
         </tr>
       </tbody>

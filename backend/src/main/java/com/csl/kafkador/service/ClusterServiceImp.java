@@ -83,9 +83,9 @@ public class ClusterServiceImp implements ClusterService {
 
     @Override
     public ClusterDto getClusterDetails(String id) throws ClusterNotFoundException, KafkaAdminApiException {
-        ClusterDto clusterDetails = new ClusterDto();
+        ClusterDto clusterDetails;
         try{
-            Admin admin = connectionService.getAdminClient(id);
+            Admin admin = connectionService.getAdminClient(id).getAdmin();
             KafkaFuture<String> clusterIdFuture = admin.describeCluster().clusterId();
             KafkaFuture<Collection<Node>> clusterNodesFuture = admin.describeCluster().nodes();
             KafkaFuture<Node> clusterControllerFuture = admin.describeCluster().controller();
@@ -94,6 +94,7 @@ public class ClusterServiceImp implements ClusterService {
             List<Integer> brokerIds = nodes.stream().map(Node::id).toList();
             Map<Integer, Long> sizeMap = KafkaHelper.getReplicaSize(admin.describeLogDirs(brokerIds).allDescriptions().get());
 
+            clusterDetails = connectionService.getAdminClient(id).getCluster();
             clusterDetails.setId(clusterIdFuture.get());
             clusterDetails.setBrokers(nodes.stream().map(i -> DtoMapper.clusterNodeMapper(i,sizeMap)).collect(Collectors.toList()));
             clusterDetails.setController(DtoMapper.clusterNodeMapper(clusterControllerFuture.get(),sizeMap));

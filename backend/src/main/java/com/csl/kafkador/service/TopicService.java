@@ -36,7 +36,7 @@ public class TopicService {
     public Collection<Topic> getTopics(String clusterId) throws KafkaAdminApiException {
 
         try {
-            Admin admin = connectionService.getAdminClient(clusterId);
+            Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
             KafkaFuture<Collection<TopicListing>> topicsFuture = admin.listTopics().listings();
             Collection<TopicListing> topicList = topicsFuture.get();
             DescribeTopicsResult describeTopicsResult = admin.describeTopics(topicList.stream().map(i->i.name()).collect(Collectors.toList()));
@@ -53,7 +53,7 @@ public class TopicService {
     public Topic createTopic( String clusterId , Topic topic ) throws KafkaAdminApiException {
 
         try {
-            Admin admin = connectionService.getAdminClient(clusterId);
+            Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
             NewTopic newTopic = new NewTopic(topic.getName(),
                     topic.getPartitions(),
                     topic.getReplicatorFactor());
@@ -94,7 +94,7 @@ public class TopicService {
     public Topic getTopic( String clusterId, String name ) throws KafkaAdminApiException {
 
         try{
-            Admin admin = connectionService.getAdminClient(clusterId);
+            Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
             Topic topic = new Topic();
             Set<String> topicNames = new HashSet<>();
             topicNames.add(name);
@@ -123,7 +123,7 @@ public class TopicService {
         Locale locale = LocaleContextHolder.getLocale();
 
         try {
-            Admin admin = connectionService.getAdminClient(clusterId);
+            Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
             ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, name);
             DescribeConfigsResult describeConfigsResult = admin.describeConfigs(Collections.singleton(configResource));
             describeConfigsResult.all().get().forEach((resource, config) -> {

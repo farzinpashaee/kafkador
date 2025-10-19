@@ -58,7 +58,7 @@ public class ConsumerService {
     public Collection<ConsumerGroup> getConsumersGroup(String clusterId) throws KafkaAdminApiException {
 
         try {
-            Admin admin = connectionService.getAdminClient(clusterId);
+            Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
             KafkaFuture<Collection<ConsumerGroupListing>> consumersFuture = admin.listConsumerGroups().all();
             KafkaFuture<Map<String, ConsumerGroupDescription>> consumerDescribedFuture = admin.describeConsumerGroups(
                     consumersFuture.get().stream().map(i -> i.groupId() ).collect(Collectors.toList())).all();
