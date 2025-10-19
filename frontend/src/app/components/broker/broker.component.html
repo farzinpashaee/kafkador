@@ -22,16 +22,42 @@
   </ul>
 
   <div class="tab-content border border-top-0 p-3" id="profileTabsContent">
-    <form>
-      <div class="mb-3 row">
-        <label for="table-filtering-search" class="col-xs-3 col-sm-auto col-form-label">Search:</label>
-        <div class="col-xs-3 col-sm-auto">
-          <input id="table-filtering-search" class="form-control" type="text" [formControl]="filter" />
+    <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab" tabindex="0">
+      <div class="d-flex justify-content-end align-items-center gap-2">
+        <!-- Search Input -->
+        <div class="flex-grow-0">
+          <input
+            placeholder="Search"
+            id="table-filtering-search"
+            class="form-control"
+            type="text"
+            [formControl]="filter"
+            style="font-size: 0.8em; width: 200px;" />
+        </div>
+        <div class="dropdown">
+          <button
+            class="btn btn-sm dropdown-toggle outline-button"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false">
+            <i class="bi bi-funnel"></i> Filter
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" style="padding-left: 10px;">
+            <li>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="configsVisibleSwitch" (change)="filterSensitive$.next($event.target.checked)">
+                <label class="form-check-label text-s" for="configsVisibleSwitch">Visible</label>
+              </div>
+            </li>
+            <li>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="configsEditableSwitch" (change)="filterEditable$.next($event.target.checked)">
+                <label class="form-check-label text-s" for="configsEditableSwitch">Editable</label>
+              </div>
+            </li>
+          </ul>
         </div>
       </div>
-    </form>
-
-    <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab" tabindex="0">
       <div class="table-responsive">
         <table class="table">
           <thead>
