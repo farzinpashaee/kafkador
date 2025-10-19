@@ -43,8 +43,8 @@ export class BrokerComponent {
 
   documentationMod(index: number){
       this.documentation = `
-        ${this.brokerConfig[index].documentation}
-        <br/><a target="_blank" href="${this.brokerConfig[index].documentationLink}">More Information</a>
+        <p class="text-s">${this.brokerConfig[index].documentation}</p>
+        <a target="_blank" href="${this.brokerConfig[index].documentationLink}">More Information</a>
       `;
   }
 
