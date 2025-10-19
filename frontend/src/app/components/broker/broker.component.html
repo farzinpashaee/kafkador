@@ -44,7 +44,7 @@
           <tbody>
           @for (config of brokerConfig; track config.name; let i = $index) {
             <tr>
-              <th scope="row" class="text-s">{{config.name}} <a class="documentationLink" data-name="${name}" href="#" data-bs-toggle="modal" data-bs-target="#documentationModal" ><i class="bi bi-question-circle opacity-75 cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Check Documentation"></i></a></th>
+              <th scope="row" class="text-s">{{config.name}} <a data-name="${name}" href="#" data-bs-toggle="modal" data-bs-target="#documentationModal" (click)="documentationMod(i)" ><i class="bi bi-question-circle opacity-75 cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Check Documentation"></i></a></th>
               <td class="text-truncate text-s">
                 <span *ngIf="!config.sensitive">{{config.value}}</span>
                 <span *ngIf="config.sensitive">******** <i  class="bi bi-eye-slash text-danger"></i></span>
@@ -62,6 +62,20 @@
     <div class="tab-pane fade" id="logs" role="tabpanel" aria-labelledby="logs-tab" tabindex="0">
       <div class="alert alert-warning" role="alert">
         This Service is Not Enabled!
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="documentationModal" tabindex="-1" aria-labelledby="documentationModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="documentationModalLabel">Documentation</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="documentationBody" [innerHTML]="documentation">
       </div>
     </div>
   </div>

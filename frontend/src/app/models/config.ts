@@ -4,4 +4,6 @@ export class Config {
     source!: string;
     sensitive!: boolean;
     readOnly!: boolean;
+    documentation!: string;
+    documentationLink!: string;
 }

@@ -21,6 +21,7 @@ export class BrokerComponent {
   broker!: Broker;
   brokerConfig!: Config[];
   isLoading: boolean = true;
+  documentation!: string;
   filter = new FormControl('', { nonNullable: true });
 
   constructor(private apiService: ApiService,
@@ -38,6 +39,13 @@ export class BrokerComponent {
         });
     });
 
+  }
+
+  documentationMod(index: number){
+      this.documentation = `
+        ${this.brokerConfig[index].documentation}
+        <br/><a target="_blank" href="${this.brokerConfig[index].documentationLink}">More Information</a>
+      `;
   }
 
   search(text: string): Config[] {
