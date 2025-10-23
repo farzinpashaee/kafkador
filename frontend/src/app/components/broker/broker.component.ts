@@ -5,6 +5,7 @@ import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { startWith, map } from 'rxjs/operators';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { ApiService } from '../../services/api.service';
+import { DocumentationService } from '../../services/documentation.service';
 import { Broker } from '../../models/broker';
 import { Config } from '../../models/config';
 import { GenericResponse } from '../../models/generic-response';
@@ -22,12 +23,13 @@ export class BrokerComponent {
   brokerConfig!: Config[];
   isLoading: boolean = true;
   documentation!: string;
-  filter = new FormControl('', { nonNullable: true });
 
+  filter = new FormControl('', { nonNullable: true });
   filterSensitive$ = new BehaviorSubject<boolean>(false);
   filterEditable$ = new BehaviorSubject<boolean>(false);
 
   constructor(private apiService: ApiService,
+    private documentationService: DocumentationService,
     private route: ActivatedRoute) {}
 
   ngOnInit() {
@@ -53,10 +55,10 @@ export class BrokerComponent {
   }
 
   documentationMod(index: number){
-      this.documentation = `
-        <p class="text-s">${this.brokerConfig[index].documentation}</p>
-        <a target="_blank" href="${this.brokerConfig[index].documentationLink}">More Information</a>
-      `;
+      this.documentation = this.documentationService.createDocumentationHtml(
+                                 this.brokerConfig[index].documentation,
+                                 this.brokerConfig[index].documentationLink
+                               );
   }
 
   search(text: string): Config[] {

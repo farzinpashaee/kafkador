@@ -10,7 +10,6 @@ import { RouterModule, RouterOutlet } from '@angular/router';
 })
 export class AppComponent {
   title = 'Kafkador';
-  baseUrl = 'http://localhost:4200'
-
+  baseUrl = 'http://localhost:4200';
 
 }

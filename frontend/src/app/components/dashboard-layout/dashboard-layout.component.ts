@@ -6,6 +6,7 @@ import { ApiService } from '../../services/api.service';
 import { Connection } from '../../models/connection';
 import { GenericResponse } from '../../models/generic-response';
 import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
+import { Config } from '../../models/config';
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -21,6 +22,7 @@ export class DashboardLayoutComponent {
   router = inject(Router);
   document = inject(DOCUMENT);
   isDark = false;
+  documentation!: string;
 
   constructor(private route: ActivatedRoute,
               private apiService: ApiService,
@@ -52,5 +54,7 @@ export class DashboardLayoutComponent {
       this.document.body.setAttribute('data-bs-theme', theme);
       localStorage.setItem('theme', theme);
   }
+
+
 
 }
