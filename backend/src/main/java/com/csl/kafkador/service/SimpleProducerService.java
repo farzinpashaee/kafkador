@@ -1,17 +1,14 @@
 package com.csl.kafkador.service;
 
 import com.csl.kafkador.component.KafkadorContext;
-import com.csl.kafkador.component.SessionHolder;
 import com.csl.kafkador.config.ApplicationConfig;
-import com.csl.kafkador.dto.Event;
-import com.csl.kafkador.dto.Request;
+import com.csl.kafkador.domain.Event;
 import com.csl.kafkador.exception.KafkadorException;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 

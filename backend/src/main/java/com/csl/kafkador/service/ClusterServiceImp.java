@@ -1,11 +1,11 @@
 package com.csl.kafkador.service;
 
-import com.csl.kafkador.dto.ClusterDto;
-import com.csl.kafkador.dto.ObserverConfigDto;
+import com.csl.kafkador.domain.dto.ClusterDto;
+import com.csl.kafkador.domain.dto.ObserverConfigDto;
 import com.csl.kafkador.exception.ClusterNotFoundException;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
-import com.csl.kafkador.model.Cluster;
+import com.csl.kafkador.domain.model.Cluster;
 import com.csl.kafkador.repository.ClusterRepository;
 import com.csl.kafkador.util.DtoMapper;
 import com.csl.kafkador.util.KafkaHelper;

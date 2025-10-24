@@ -1,13 +1,10 @@
-package com.csl.kafkador.dto;
+package com.csl.kafkador.domain;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.apache.kafka.clients.admin.MemberDescription;
-import org.apache.kafka.common.Node;
 
 import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
 
 @Data
 @Accessors(chain = true)

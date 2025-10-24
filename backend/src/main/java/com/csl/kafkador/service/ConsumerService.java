@@ -2,9 +2,7 @@ package com.csl.kafkador.service;
 
 import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.config.ApplicationConfig;
-import com.csl.kafkador.dto.ConsumerGroup;
-import com.csl.kafkador.dto.Request;
-import com.csl.kafkador.dto.Topic;
+import com.csl.kafkador.domain.ConsumerGroup;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.util.DtoMapper;
@@ -16,14 +14,11 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.KafkaFuture;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;

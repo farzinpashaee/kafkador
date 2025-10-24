@@ -1,13 +1,9 @@
-package com.csl.kafkador.dto;
+package com.csl.kafkador.domain;
 
 import com.csl.kafkador.record.ConfigEntry;
 import lombok.Data;
 import lombok.experimental.Accessors;
-import org.apache.kafka.common.Node;
-import org.apache.kafka.common.TopicPartitionInfo;
-import org.apache.kafka.common.Uuid;
 
-import java.util.Collection;
 import java.util.List;
 
 @Data

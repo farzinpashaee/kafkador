@@ -1,5 +1,6 @@
-package com.csl.kafkador.dto;
+package com.csl.kafkador.domain;
 
+import com.csl.kafkador.domain.dto.BrokerDto;
 import lombok.Data;
 
 import java.util.Collection;

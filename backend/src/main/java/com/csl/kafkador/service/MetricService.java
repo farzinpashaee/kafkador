@@ -1,6 +1,6 @@
 package com.csl.kafkador.service;
 
-import com.csl.kafkador.dto.MetricChartDto;
+import com.csl.kafkador.domain.dto.MetricChartDto;
 
 public interface MetricService {
 

@@ -1,9 +1,7 @@
 package com.csl.kafkador.service;
 
-import com.csl.kafkador.dto.Event;
-import com.csl.kafkador.dto.Request;
+import com.csl.kafkador.domain.Event;
 import com.csl.kafkador.exception.KafkadorException;
-import org.apache.kafka.clients.producer.ProducerRecord;
 
 import java.util.Properties;
 

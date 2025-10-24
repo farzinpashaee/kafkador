@@ -1,6 +1,6 @@
 package com.csl.kafkador.controller;
 
-import com.csl.kafkador.dto.ErrorResponse;
+import com.csl.kafkador.domain.ErrorResponse;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

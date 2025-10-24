@@ -1,7 +1,7 @@
 package com.csl.kafkador.util;
 
-import com.csl.kafkador.dto.ClusterDto;
-import com.csl.kafkador.dto.ConnectionDto;
+import com.csl.kafkador.domain.dto.ClusterDto;
+import com.csl.kafkador.domain.dto.ConnectionDto;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.LogDirDescription;
 import org.apache.kafka.clients.admin.ReplicaInfo;

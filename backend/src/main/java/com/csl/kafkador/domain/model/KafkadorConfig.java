@@ -1,4 +1,4 @@
-package com.csl.kafkador.model;
+package com.csl.kafkador.domain.model;
 
 import jakarta.persistence.*;
 import lombok.Data;

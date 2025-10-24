@@ -1,11 +1,10 @@
 package com.csl.kafkador.service;
 
-import com.csl.kafkador.dto.AdminClusterWrapper;
+import com.csl.kafkador.domain.wrapper.AdminClusterWrapper;
 import com.csl.kafkador.exception.ClusterNotFoundException;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
-import com.csl.kafkador.dto.ConnectionDto;
+import com.csl.kafkador.domain.dto.ConnectionDto;
 import com.csl.kafkador.exception.KafkaAdminApiException;
-import org.apache.kafka.clients.admin.Admin;
 
 import java.util.List;
 import java.util.Properties;

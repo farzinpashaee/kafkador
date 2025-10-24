@@ -1,13 +1,11 @@
 package com.csl.kafkador.service;
 
-import com.csl.kafkador.config.ApplicationConfig;
-import com.csl.kafkador.dto.BrokerDto;
-import com.csl.kafkador.dto.ClusterDetails;
-import com.csl.kafkador.dto.ClusterDto;
-import com.csl.kafkador.dto.ObserverConfigDto;
+import com.csl.kafkador.domain.dto.BrokerDto;
+import com.csl.kafkador.domain.dto.ClusterDto;
+import com.csl.kafkador.domain.dto.ObserverConfigDto;
 import com.csl.kafkador.exception.ClusterNotFoundException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
-import com.csl.kafkador.model.Metric;
+import com.csl.kafkador.domain.model.Metric;
 import com.csl.kafkador.repository.MetricRepository;
 import com.csl.kafkador.util.MetricEnum;
 import lombok.RequiredArgsConstructor;

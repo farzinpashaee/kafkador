@@ -2,7 +2,7 @@ package com.csl.kafkador.config;
 
 
 import com.csl.kafkador.component.KafkadorContext;
-import com.csl.kafkador.dto.ConnectionDto;
+import com.csl.kafkador.domain.dto.ConnectionDto;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;

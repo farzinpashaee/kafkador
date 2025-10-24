@@ -1,4 +1,4 @@
-package com.csl.kafkador.dto;
+package com.csl.kafkador.domain.dto;
 
 import com.csl.kafkador.record.ConfigEntry;
 import lombok.Data;

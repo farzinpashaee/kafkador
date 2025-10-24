@@ -1,8 +1,8 @@
 package com.csl.kafkador.service;
 
-import com.csl.kafkador.dto.ObserverConfigDto;
+import com.csl.kafkador.domain.dto.ObserverConfigDto;
 import com.csl.kafkador.exception.KafkadorConfigNotFoundException;
-import com.csl.kafkador.model.KafkadorConfig;
+import com.csl.kafkador.domain.model.KafkadorConfig;
 import com.csl.kafkador.repository.KafkadorConfigRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

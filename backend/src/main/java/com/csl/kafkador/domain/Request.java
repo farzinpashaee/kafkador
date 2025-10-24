@@ -1,4 +1,4 @@
-package com.csl.kafkador.dto;
+package com.csl.kafkador.domain;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.Data;

@@ -1,11 +1,10 @@
-package com.csl.kafkador.dto;
+package com.csl.kafkador.domain.dto;
 
-import com.csl.kafkador.model.Metric;
+import com.csl.kafkador.domain.model.Metric;
 import com.csl.kafkador.util.MetricEnum;
 import com.csl.kafkador.util.TimeUnitEnum;
 import lombok.Data;
 import lombok.experimental.Accessors;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

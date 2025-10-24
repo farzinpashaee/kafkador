@@ -1,10 +1,9 @@
-package com.csl.kafkador.dto;
+package com.csl.kafkador.domain.wrapper;
 
-import com.csl.kafkador.model.Cluster;
+import com.csl.kafkador.domain.dto.ClusterDto;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.apache.kafka.clients.admin.Admin;
-import org.hibernate.annotations.Check;
 
 @Data
 @Accessors(chain = true)

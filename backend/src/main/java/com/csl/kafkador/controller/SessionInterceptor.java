@@ -2,7 +2,7 @@ package com.csl.kafkador.controller;
 
 import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
-import com.csl.kafkador.dto.ConnectionDto;
+import com.csl.kafkador.domain.dto.ConnectionDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;

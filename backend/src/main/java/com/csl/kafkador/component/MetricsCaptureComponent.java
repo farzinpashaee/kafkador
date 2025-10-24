@@ -1,7 +1,7 @@
 package com.csl.kafkador.component;
 
 import com.csl.kafkador.config.ApplicationConfig;
-import com.csl.kafkador.dto.ObserverConfigDto;
+import com.csl.kafkador.domain.dto.ObserverConfigDto;
 import com.csl.kafkador.exception.KafkadorConfigNotFoundException;
 import com.csl.kafkador.service.ConfigService;
 import com.csl.kafkador.service.ObserverService;

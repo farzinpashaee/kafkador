@@ -1,7 +1,10 @@
 package com.csl.kafkador.util;
 
-import com.csl.kafkador.dto.*;
-import com.csl.kafkador.model.Cluster;
+import com.csl.kafkador.domain.*;
+import com.csl.kafkador.domain.dto.BrokerDto;
+import com.csl.kafkador.domain.dto.ClusterDto;
+import com.csl.kafkador.domain.dto.ConnectionDto;
+import com.csl.kafkador.domain.model.Cluster;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.TopicDescription;
@@ -14,7 +17,7 @@ import java.util.stream.Collectors;
 
 public class DtoMapper {
 
-    public static ClusterDto clusterMapper( Cluster cluster ){
+    public static ClusterDto clusterMapper(Cluster cluster ){
         return new ClusterDto()
                 .setId(cluster.getId())
                 .setHost(cluster.getHost())
@@ -22,7 +25,7 @@ public class DtoMapper {
                 .setName(cluster.getName());
     }
 
-    public static ConnectionDto connectionMapper( ClusterDto cluster ){
+    public static ConnectionDto connectionMapper(ClusterDto cluster ){
         return new ConnectionDto()
                 .setId(cluster.getId())
                 .setHost(cluster.getHost())

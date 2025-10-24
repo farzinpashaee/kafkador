@@ -1,7 +1,6 @@
 package com.csl.kafkador.service;
 
-import com.csl.kafkador.config.ApplicationConfig;
-import com.csl.kafkador.dto.ObserverConfigDto;
+import com.csl.kafkador.domain.dto.ObserverConfigDto;
 import org.springframework.stereotype.Service;
 
 @Service

@@ -1,6 +1,6 @@
 package com.csl.kafkador.controller;
 
-import com.csl.kafkador.dto.*;
+import com.csl.kafkador.domain.*;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.service.TopicService;
 import jakarta.servlet.http.HttpServletRequest;
