@@ -172,6 +172,12 @@ public class ApiController {
         return consumersService.consume(topic);
     }
 
-
+    @GetMapping(value = "/acl")
+    public void acl() throws ClusterNotFoundException {
+        AclServiceImp aclService = (AclServiceImp) applicationContext
+                .getBean("AclService");
+        ConnectionDto connection = connectionService.getActiveConnection();
+        aclService.getAclBindings(connection.getId());
+    }
 
 }
