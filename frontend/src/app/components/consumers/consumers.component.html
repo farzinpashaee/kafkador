@@ -4,6 +4,31 @@
   <span class="placeholder col-8"></span>
 </p>
 <div class="row" *ngIf="!isLoading">
+  <div class="row align-items-start">
+    <div class="col-12 col-md-12 col-lg-12">
+      <div class="card card-top-widget">
+        <div class="card-body text-white d-flex">
+          <div class="flex-grow-1">
+            <h5 class="card-title">Consumers</h5>
+            <p class="card-text" class="text-s">
+              Consumer Groups: 7 <br/>
+              Average Lpc: 11
+            </p>
+          </div>
+          <div class="ms-auto" style="max-width: 70%; height:120px">
+            <ngx-charts-bar-vertical
+              [results]="data"
+              [scheme]="cartTopWidgetWhiteScheme"
+              [xAxis]="false"
+              [gradient]="true"
+              [yAxis]="false" style="width:100%; height:100%;" >
+            </ngx-charts-bar-vertical>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row mt-4">
     <h4>Consumer Groups</h4>
     <div class="table-responsive">
