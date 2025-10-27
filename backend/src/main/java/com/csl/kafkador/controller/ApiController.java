@@ -4,6 +4,7 @@ import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.domain.*;
 import com.csl.kafkador.domain.dto.*;
+import com.csl.kafkador.exception.AlertNotFoundException;
 import com.csl.kafkador.exception.ClusterNotFoundException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.exception.KafkadorException;
@@ -167,6 +168,15 @@ public class ApiController {
                 .getBean("AlertService");
         return new GenericResponse.Builder<List<AlertDto>>()
                 .data(alertService.getAlerts(Pageable.ofSize(5)))
+                .success(HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/alert/{id}")
+    public ResponseEntity<GenericResponse<AlertDto>> getAlert(@PathVariable Integer id) throws AlertNotFoundException {
+        AlertService alertService = (AlertService) applicationContext
+                .getBean("AlertService");
+        return new GenericResponse.Builder<AlertDto>()
+                .data(alertService.getAlert(id))
                 .success(HttpStatus.OK);
     }
 
