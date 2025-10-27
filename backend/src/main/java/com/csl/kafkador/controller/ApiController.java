@@ -3,19 +3,19 @@ package com.csl.kafkador.controller;
 import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.domain.*;
-import com.csl.kafkador.domain.dto.BrokerDto;
-import com.csl.kafkador.domain.dto.ClusterDto;
-import com.csl.kafkador.domain.dto.MetricChartDto;
+import com.csl.kafkador.domain.dto.*;
 import com.csl.kafkador.exception.ClusterNotFoundException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.exception.KafkadorException;
-import com.csl.kafkador.domain.dto.ConnectionDto;
+import com.csl.kafkador.repository.AlertRepository;
 import com.csl.kafkador.service.*;
+import com.csl.kafkador.service.alert.AlertService;
 import com.csl.kafkador.util.MetricEnum;
 import com.csl.kafkador.util.TimeUnitEnum;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -157,6 +157,16 @@ public class ApiController {
         connectionService.disconnect();
         return new GenericResponse.Builder<Void>()
                 .data(null)
+                .success(HttpStatus.OK);
+    }
+
+
+    @GetMapping(value = "/alert")
+    public ResponseEntity<GenericResponse<List<AlertDto>>> getAlerts() throws KafkadorException {
+        AlertService alertService = (AlertService) applicationContext
+                .getBean("AlertService");
+        return new GenericResponse.Builder<List<AlertDto>>()
+                .data(alertService.getAlerts(Pageable.ofSize(5)))
                 .success(HttpStatus.OK);
     }
 

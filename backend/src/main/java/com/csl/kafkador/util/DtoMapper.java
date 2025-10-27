@@ -1,9 +1,11 @@
 package com.csl.kafkador.util;
 
 import com.csl.kafkador.domain.*;
+import com.csl.kafkador.domain.dto.AlertDto;
 import com.csl.kafkador.domain.dto.BrokerDto;
 import com.csl.kafkador.domain.dto.ClusterDto;
 import com.csl.kafkador.domain.dto.ConnectionDto;
+import com.csl.kafkador.domain.model.Alert;
 import com.csl.kafkador.domain.model.Cluster;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
@@ -31,6 +33,15 @@ public class DtoMapper {
                 .setHost(cluster.getHost())
                 .setPort(cluster.getPort())
                 .setName(cluster.getName());
+    }
+
+    public static AlertDto alertMapper( Alert alert ){
+        return new AlertDto()
+                .setClusterId(alert.getClusterId())
+                .setTitle(alert.getTitle())
+                .setDescription(alert.getDescription())
+                .setSeverity(alert.getSeverity())
+                .setCreationDateTime(alert.getCreationDateTime());
     }
 
     public static ConnectionDto connectionMapper( Cluster cluster ){

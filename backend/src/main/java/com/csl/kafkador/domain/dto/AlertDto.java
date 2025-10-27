@@ -13,6 +13,7 @@ public class AlertDto {
     private Date creationDateTime;
     private String title;
     private String description;
+    private String clusterId;
     private AlertSeverity severity;
 
 }
