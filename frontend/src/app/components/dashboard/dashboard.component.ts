@@ -1,5 +1,8 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Alert } from '../../models/alert';
+import { GenericResponse } from '../../models/generic-response';
+import { ApiService } from '../../services/api.service';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 
 @Component({
@@ -9,6 +12,21 @@ import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
   styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent {
+
+  alerts!: Alert[];
+  alertsLoading: boolean = true;
+
+  constructor(private apiService: ApiService) {}
+
+  ngOnInit() {
+    this.apiService.getAlerts().subscribe((res: GenericResponse<Alert[]>) => {
+      this.alerts = res.data;
+      this.alertsLoading = false;
+    });
+  }
+
+
+
   data = [
     { name: 'a1', value: 5000 },
     { name: 'a2', value: 3000 },

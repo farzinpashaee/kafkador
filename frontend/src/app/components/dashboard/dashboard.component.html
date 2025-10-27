@@ -84,14 +84,15 @@
   <div class="col-12 col-md-6 col-lg-4">
     <h5><i class="bi bi-bell"></i>&nbsp; Alerts:</h5>
     <div class="list-group">
-
+      @for (alert of alerts; track alert.title; let i = $index) {
       <a href="#" class="list-group-item list-group-item-action danger" aria-current="true">
         <div class="d-flex w-100 justify-content-between">
-          <h6 class="mb-1">Broker 3 Unreachable</h6>
+          <h6 class="mb-1">{{alert.title}}</h6>
           <small>5 mins ago</small>
         </div>
         <small><span class="badge text-bg-danger">High</span> Action Required: Check broker logs or restart process.</small>
       </a>
+      }
 
       <a href="#" class="list-group-item list-group-item-action">
         <div class="d-flex w-100 justify-content-between">

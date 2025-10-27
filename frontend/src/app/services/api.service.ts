@@ -5,6 +5,7 @@ import { catchError } from 'rxjs/operators';
 import { Cluster } from '../models/cluster';
 import { Connection } from '../models/connection';
 import { Broker } from '../models/broker';
+import { Alert } from '../models/alert';
 import { Topic } from '../models/topic';
 import { ConsumerGroup } from '../models/consumer-group';
 import { GenericResponse } from '../models/generic-response';
@@ -28,6 +29,10 @@ export class ApiService {
 
   public getConnections(): Observable<GenericResponse<Connection[]>> {
     return this.http.get<GenericResponse<Connection[]>>(`${ApiService.ApiBaseUrl}/connection`,{ withCredentials: true });
+  }
+
+  public getAlerts(): Observable<GenericResponse<Alert[]>> {
+    return this.http.get<GenericResponse<Alert[]>>(`${ApiService.ApiBaseUrl}/alert`,{ withCredentials: true });
   }
 
   public getTopics(): Observable<GenericResponse<Topic[]>> {
