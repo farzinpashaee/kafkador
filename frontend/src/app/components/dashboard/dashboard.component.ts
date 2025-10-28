@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Alert } from '../../models/alert';
 import { GenericResponse } from '../../models/generic-response';
 import { ApiService } from '../../services/api.service';
+import { DateTimeService } from '../../services/date-time.service';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 
 @Component({
@@ -16,11 +17,15 @@ export class DashboardComponent {
   alerts!: Alert[];
   alertsLoading: boolean = true;
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService,
+    private dateTimeService: DateTimeService) {}
 
   ngOnInit() {
     this.apiService.getAlerts().subscribe((res: GenericResponse<Alert[]>) => {
-      this.alerts = res.data;
+      this.alerts = res.data.map(alert => ({
+                                    ...alert,
+                                    formattedTime: this.dateTimeService.formatDateTimeFromNow(alert.creationDateTime)
+                                  }));
       this.alertsLoading = false;
     });
   }

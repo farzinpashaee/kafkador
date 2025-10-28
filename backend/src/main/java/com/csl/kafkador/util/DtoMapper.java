@@ -41,6 +41,7 @@ public class DtoMapper {
                 .setTitle(alert.getTitle())
                 .setDescription(alert.getDescription())
                 .setSeverity(alert.getSeverity())
+                .setAction(alert.getAction())
                 .setCreationDateTime(alert.getCreationDateTime());
     }
 

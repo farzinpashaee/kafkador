@@ -14,6 +14,7 @@ public class AlertDto {
     private String title;
     private String description;
     private String clusterId;
+    private String action;
     private AlertSeverity severity;
 
 }

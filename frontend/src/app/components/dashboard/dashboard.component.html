@@ -87,36 +87,12 @@
       @for (alert of alerts; track alert.title; let i = $index) {
       <a href="#" class="list-group-item list-group-item-action danger" aria-current="true">
         <div class="d-flex w-100 justify-content-between">
-          <h6 class="mb-1">{{alert.title}}</h6>
-          <small>5 mins ago</small>
+          <h6 class="mb-1">{{alert.description}}</h6>
+          <small>{{alert.formattedTime}}</small>
         </div>
-        <small><span class="badge text-bg-danger">High</span> Action Required: Check broker logs or restart process.</small>
+        <small><span class="badge text-bg-danger">High</span> Action Required: {{alert.action}}</small>
       </a>
       }
-
-      <a href="#" class="list-group-item list-group-item-action">
-        <div class="d-flex w-100 justify-content-between">
-          <h6 class="mb-1">Lag Spike on Consumer Group "payments-consumer"</h6>
-          <small class="text-body-secondary">28 mins ago</small>
-        </div>
-        <small class="text-body-secondary"><span class="badge text-bg-secondary">Medium</span> Check consumer throughput metrics.</small>
-      </a>
-
-      <a href="#" class="list-group-item list-group-item-action">
-        <div class="d-flex w-100 justify-content-between">
-          <h6 class="mb-1">Under-replicated Partitions Detected</h6>
-          <small class="text-body-secondary">1 hour ago</small>
-        </div>
-        <small class="text-body-secondary"><span class="badge text-bg-secondary">Medium</span> Verify ISR count and broker replication health.</small>
-      </a>
-
-      <a href="#" class="list-group-item list-group-item-action">
-        <div class="d-flex w-100 justify-content-between">
-          <h6 class="mb-1">Disk Usage Alert on Broker 2</h6>
-          <small class="text-body-secondary">2 hours ago</small>
-        </div>
-        <small class="text-body-secondary"><span class="badge text-bg-danger">High</span> Free up space or expand volume capacity.</small>
-      </a>
 
     </div>
   </div>

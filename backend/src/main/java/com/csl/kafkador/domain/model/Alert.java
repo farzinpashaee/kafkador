@@ -18,6 +18,7 @@ public class Alert {
     private String title;
     private String clusterId;
     private String description;
+    private String action;
     private AlertSeverity severity;
     private Date creationDateTime;
 
