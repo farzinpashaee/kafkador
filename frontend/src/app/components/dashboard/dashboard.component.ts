@@ -1,6 +1,9 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Alert } from '../../models/alert';
+import { Cluster } from '../../models/cluster';
+import { Topic } from '../../models/topic';
+import { ConsumerGroup } from '../../models/consumer-group';
 import { GenericResponse } from '../../models/generic-response';
 import { ApiService } from '../../services/api.service';
 import { DateTimeService } from '../../services/date-time.service';
@@ -15,12 +18,34 @@ import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 export class DashboardComponent {
 
   alerts!: Alert[];
+  cluster!: Cluster;
+  topics!: Topic[];
+  consumerGroups!: ConsumerGroup[];
   alertsLoading: boolean = true;
+  clusterLoading: boolean = true;
+  topicLoading: boolean = true;
+  consumerGroupLoading: boolean = true;
 
   constructor(private apiService: ApiService,
     private dateTimeService: DateTimeService) {}
 
   ngOnInit() {
+
+    this.apiService.getClusterDetails().subscribe((res: GenericResponse<Cluster>) => {
+      this.cluster = res.data;
+      this.clusterLoading = false;
+    });
+
+    this.apiService.getTopics().subscribe((res: GenericResponse<Topic[]>) => {
+      this.topics = res.data;
+      this.topicLoading = false;
+    });
+
+    this.apiService.getConsumerGroups().subscribe((res: GenericResponse<ConsumerGroup[]>) => {
+      this.consumerGroups = res.data;
+      this.consumerGroupLoading = false;
+    });
+
     this.apiService.getAlerts().subscribe((res: GenericResponse<Alert[]>) => {
       this.alerts = res.data.map(alert => ({
                                     ...alert,

@@ -37,6 +37,7 @@ public class ApiController {
     private final MetricService metricService;
 
 
+
     @GetMapping("/cluster")
     public ResponseEntity<GenericResponse<ClusterDto>> getCluster() throws KafkaAdminApiException, ClusterNotFoundException {
         ClusterService clusterService = (ClusterService) applicationContext
