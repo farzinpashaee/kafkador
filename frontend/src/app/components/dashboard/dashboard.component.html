@@ -2,7 +2,8 @@
     <div class="col-12 col-md-12 col-lg-4">
       <div class="card card-top-widget">
         <div class="card-body text-white d-flex">
-          <div class="flex-grow-1">
+          <div class="spinner-border" role="status" *ngIf="clusterLoading"></div>
+          <div class="flex-grow-1"  *ngIf="!clusterLoading">
             <h5 class="card-title">Cluster - {{cluster.name}}</h5>
             <p class="card-text">
               Brokers: {{cluster.brokers.length}} <br/>
@@ -24,7 +25,8 @@
     <div class="col-12 col-md-12 col-lg-4">
       <div class="card card-top-widget">
         <div class="card-body text-white d-flex">
-          <div class="flex-grow-1">
+          <div class="spinner-border" role="status" *ngIf="topicLoading"></div>
+          <div class="flex-grow-1"  *ngIf="!topicLoading">
             <h5 class="card-title">Topics</h5>
             <p class="card-text">
               Topics: {{topics.length}} <br/>
@@ -46,7 +48,8 @@
     <div class="col-12 col-md-12 col-lg-4">
       <div class="card card-top-widget">
         <div class="card-body text-white d-flex">
-          <div class="flex-grow-1">
+          <div class="spinner-border" role="status" *ngIf="consumerGroupLoading"></div>
+          <div class="flex-grow-1"  *ngIf="!consumerGroupLoading">
             <h5 class="card-title">Consumers</h5>
             <p class="card-text">
               Consumer Groups: {{consumerGroups.length}} <br/>
