@@ -13,6 +13,7 @@ public class KafkadorConfig {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    private String clusterId;
     private String configKey;
     @Column(length = 2000)
     private String configValue;

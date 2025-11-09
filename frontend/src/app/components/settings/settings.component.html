@@ -14,15 +14,48 @@
         Cluster
       </button>
     </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="schema-Registry-tab" data-bs-toggle="tab"
+              data-bs-target="#schema-Registry" type="button" role="tab"
+              aria-controls="schema-Registry" aria-selected="false">
+        Schema Registry
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="ksqldb-tab" data-bs-toggle="tab"
+              data-bs-target="#ksqldb" type="button" role="tab"
+              aria-controls="ksqldb" aria-selected="false">
+        KsqlDB
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="connectors-tab" data-bs-toggle="tab"
+              data-bs-target="#connectors" type="button" role="tab"
+              aria-controls="connectors" aria-selected="false">
+        Connectors
+      </button>
+    </li>
   </ul>
 
   <div class="tab-content border border-top-0 p-3" id="profileTabsContent">
     <div class="tab-pane fade show active" id="generic" role="tabpanel" aria-labelledby="generic-tab" tabindex="0">
-      generic
+      Generic
     </div>
 
     <div class="tab-pane fade" id="cluster" role="tabpanel" aria-labelledby="cluster-tab" tabindex="0">
       <h6>Observer Settings</h6>
+    </div>
+
+    <div class="tab-pane fade" id="schema-Registry" role="tabpanel" aria-labelledby="cluster-tab" tabindex="0">
+      <h6>Schema Registry Settings</h6>
+    </div>
+
+    <div class="tab-pane fade" id="ksqldb" role="tabpanel" aria-labelledby="cluster-tab" tabindex="0">
+      <h6>KsqlDB Settings</h6>
+    </div>
+
+    <div class="tab-pane fade" id="connectors" role="tabpanel" aria-labelledby="cluster-tab" tabindex="0">
+      <h6>Connectors Settings</h6>
     </div>
   </div>
 </div>
