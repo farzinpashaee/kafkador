@@ -2,16 +2,13 @@ package com.csl.kafkador.component;
 
 import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.domain.dto.ObserverConfigDto;
-import com.csl.kafkador.exception.KafkadorConfigNotFoundException;
-import com.csl.kafkador.service.ConfigService;
-import com.csl.kafkador.service.ObserverService;
+import com.csl.kafkador.service.config.KafkadorConfigService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.TaskScheduler;
-import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ExecutorService;
@@ -25,7 +22,7 @@ public class MetricsCaptureComponent {
     private final ExecutorService executorService;
     private final ApplicationContext applicationContext;
     @Qualifier("ObserverKafkadorConfigService")
-    private final ConfigService<ObserverConfigDto,ObserverConfigDto.ObserverCluster> configService;
+    private final KafkadorConfigService<ObserverConfigDto,ObserverConfigDto> kafkadorConfigService;
 
     @PostConstruct
     public void init(){

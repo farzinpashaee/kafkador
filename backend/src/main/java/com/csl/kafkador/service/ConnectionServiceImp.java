@@ -10,6 +10,7 @@ import com.csl.kafkador.domain.dto.ConnectionDto;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.domain.model.Cluster;
 import com.csl.kafkador.repository.ClusterRepository;
+import com.csl.kafkador.service.config.KafkadorConfigService;
 import com.csl.kafkador.util.DtoMapper;
 import com.csl.kafkador.util.KafkaHelper;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,7 @@ public class ConnectionServiceImp implements ConnectionService {
     private final ClusterRepository clusterRepository;
     private final SessionHolder sessionHolder;
     @Qualifier("ObserverConfigService")
-    private final ConfigService<ObserverConfigDto,ObserverConfigDto.ObserverCluster> configService;
+    private final KafkadorConfigService<ObserverConfigDto,ObserverConfigDto> kafkadorConfigService;
 
     private HashMap<String, AdminClusterWrapper> adminClientMap = new HashMap<>();
 
@@ -73,11 +74,11 @@ public class ConnectionServiceImp implements ConnectionService {
             cluster.setName(connection.getName());
             clusterRepository.save(cluster);
 
-            ObserverConfigDto.ObserverCluster observerCluster = new ObserverConfigDto.ObserverCluster();
-            observerCluster.setClusterId(clusterId);
-            observerCluster.setEnabled(true);
-            observerCluster.setObservers(ObserverConfigDto.defaultObserverConfig());
-            configService.save(observerCluster);
+//            ObserverConfigDto.ObserverCluster observerCluster = new ObserverConfigDto.ObserverCluster();
+//            observerCluster.setClusterId(clusterId);
+//            observerCluster.setEnabled(true);
+//            observerCluster.setObservers(ObserverConfigDto.defaultObserverConfig());
+//            kafkadorConfigService.save(observerCluster);
             return connection.setId(clusterId);
         } catch (Exception e) {
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());

@@ -13,15 +13,9 @@ import java.util.List;
 public class ObserverConfigDto implements Serializable {
 
     private Boolean enabled = true;
-    private List<ObserverCluster> observerClusters = new ArrayList<>();
-
-    @Data
-    public static class ObserverCluster {
-        String clusterId;
-        Boolean enabled = false;
-        Integer retentionPeriod = 30;
-        List<Observer> observers;
-    }
+    private String clusterId;
+    private Integer retentionPeriod = 30;
+    private List<Observer> observers;
 
     @Data
     public static class Observer {

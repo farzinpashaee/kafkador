@@ -7,6 +7,7 @@ import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.domain.model.Cluster;
 import com.csl.kafkador.repository.ClusterRepository;
+import com.csl.kafkador.service.config.KafkadorConfigService;
 import com.csl.kafkador.util.DtoMapper;
 import com.csl.kafkador.util.KafkaHelper;
 import jakarta.transaction.Transactional;
@@ -29,7 +30,7 @@ public class ClusterServiceImp implements ClusterService {
     private final ClusterRepository clusterRepository;
     private final ConnectionService connectionService;
     @Qualifier("ObserverKafkadorConfigService")
-    private final ConfigService<ObserverConfigDto,ObserverConfigDto.ObserverCluster> configService;
+    private final KafkadorConfigService<ObserverConfigDto,ObserverConfigDto> kafkadorConfigService;
 
     @Override
     public ClusterDto find(String id) throws ClusterNotFoundException {
@@ -59,11 +60,11 @@ public class ClusterServiceImp implements ClusterService {
         cluster.setPort(port);
         clusterRepository.save(cluster);
 
-        ObserverConfigDto.ObserverCluster observerCluster = new ObserverConfigDto.ObserverCluster();
-        observerCluster.setClusterId(clusterId);
-        observerCluster.setEnabled(true);
-        observerCluster.setObservers(ObserverConfigDto.defaultObserverConfig());
-        configService.save(observerCluster);
+//        ObserverConfigDto observerCluster = new ObserverConfigDto();
+//        observerCluster.setClusterId(clusterId);
+//        observerCluster.setEnabled(true);
+//        observerCluster.setObservers(ObserverConfigDto.defaultObserverConfig());
+//        kafkadorConfigService.save(observerCluster);
         return DtoMapper.clusterMapper(cluster);
     }
 

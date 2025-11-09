@@ -1,4 +1,4 @@
-package com.csl.kafkador.service;
+package com.csl.kafkador.service.config;
 
 import com.csl.kafkador.domain.dto.ObserverConfigDto;
 import com.csl.kafkador.exception.KafkadorConfigNotFoundException;
@@ -10,18 +10,20 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 
 @Service("ObserverConfigService")
 @RequiredArgsConstructor
-public class ObserverConfigServiceImp implements ConfigService<ObserverConfigDto,ObserverConfigDto.ObserverCluster> {
+public class ObserverKafkadorConfigServiceImp implements KafkadorConfigService<ObserverConfigDto,ObserverConfigDto> {
 
     ObjectMapper objectMapper = new ObjectMapper();
     private final KafkadorConfigRepository kafkadorConfigRepository;
+    private final static String KEY = "kafkador.observer";
 
     @Override
-    public ObserverConfigDto get(String key) throws KafkadorConfigNotFoundException {
-        Optional<KafkadorConfig> kafkadorConfigOptional = kafkadorConfigRepository.findByConfigKey(key);
+    public ObserverConfigDto get(String key, String clusterId) throws KafkadorConfigNotFoundException {
+        Optional<KafkadorConfig> kafkadorConfigOptional = kafkadorConfigRepository.findByConfigKeyAndClusterId(key,clusterId);
         if(kafkadorConfigOptional.isPresent()){
             try {
                 return objectMapper.readValue(kafkadorConfigOptional.get().getConfigValue(), ObserverConfigDto.class);
@@ -34,47 +36,35 @@ public class ObserverConfigServiceImp implements ConfigService<ObserverConfigDto
     }
 
     @Override
-    public ObserverConfigDto save(ObserverConfigDto.ObserverCluster observerCluster) {
+    public ObserverConfigDto save(ObserverConfigDto observerConfig, String clusterId) {
         try {
-            String key = "kafkador.observer";
             Date now = new Date();
             KafkadorConfig kafkadorConfig;
-            ObserverConfigDto observerConfig;
 
-            Optional<KafkadorConfig> kafkadorConfigOptional = kafkadorConfigRepository.findByConfigKey(key);
+            Optional<KafkadorConfig> kafkadorConfigOptional = kafkadorConfigRepository.findByConfigKeyAndClusterId(KEY,clusterId);
             if(kafkadorConfigOptional.isPresent()){
                 kafkadorConfig = kafkadorConfigOptional.get();
                 observerConfig = objectMapper
                         .readValue(kafkadorConfigOptional.get().getConfigValue(), ObserverConfigDto.class);
-                Optional<ObserverConfigDto.ObserverCluster> observerClusterOptional = observerConfig.getObserverClusters()
-                        .stream()
-                        .filter( i -> i.getClusterId().equals(observerCluster.getClusterId()) )
-                        .findFirst();
-                if(observerClusterOptional.isPresent()){
-                    // update exiting config record and cluster
-                    observerConfig.getObserverClusters().add(observerCluster);
-                } else {
-                    // update exiting config record and adding new cluster
-                    kafkadorConfig.setCreateDateTime(now);
-                    observerConfig = new ObserverConfigDto();
-                    observerConfig.getObserverClusters().add(observerCluster);
-                }
             } else {
-                // adding new config record and new cluster
-                observerConfig = new ObserverConfigDto();
-                observerConfig.getObserverClusters().add(observerCluster);
                 kafkadorConfig = new KafkadorConfig();
+                kafkadorConfig.setCreateDateTime(now);
             }
 
-
-            kafkadorConfig.setConfigKey(key);
+            kafkadorConfig.setConfigKey(KEY);
             kafkadorConfig.setConfigValue(objectMapper.writeValueAsString(observerConfig));
             kafkadorConfig.setProfile("default");
             kafkadorConfig.setUpdateDateTime(now);
+            kafkadorConfig.setClusterId(clusterId);
             kafkadorConfigRepository.save(kafkadorConfig);
             return observerConfig;
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public Map<String, KafkadorConfig> get(String clusterId) {
+        return null;
     }
 }
