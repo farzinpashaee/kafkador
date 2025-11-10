@@ -34,10 +34,11 @@ public class KafkadorContext {
     }
 
     public static enum Service {
-        CONNECTION("Connection", "ConnectionService"),
+        CONNECTION("connection", "ConnectionService"),
         TOPIC("topic", "TopicService"),
         CLUSTER("cluster", "ClusterService"),
         BROKER("broker", "BrokerService"),
+        SCHEMA_REGISTRY("schema-registry", "SchemaRegistryService"),
         CONSUMER("consumer", "ConsumerService"),
         PRODUCER("producer", "ProducerService");
 

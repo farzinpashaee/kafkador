@@ -4,13 +4,10 @@ import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.domain.*;
 import com.csl.kafkador.domain.dto.*;
-import com.csl.kafkador.exception.AlertNotFoundException;
-import com.csl.kafkador.exception.ClusterNotFoundException;
-import com.csl.kafkador.exception.KafkaAdminApiException;
-import com.csl.kafkador.exception.KafkadorException;
-import com.csl.kafkador.repository.AlertRepository;
+import com.csl.kafkador.exception.*;
 import com.csl.kafkador.service.*;
 import com.csl.kafkador.service.alert.AlertService;
+import com.csl.kafkador.service.registry.SchemaRegistryService;
 import com.csl.kafkador.util.MetricEnum;
 import com.csl.kafkador.util.TimeUnitEnum;
 import jakarta.servlet.http.HttpSession;
@@ -201,6 +198,17 @@ public class ApiController {
                 .getBean("AclService");
         ConnectionDto connection = connectionService.getActiveConnection();
         aclService.getAclBindings(connection.getId());
+    }
+
+
+    @GetMapping(value = "/schema-registry/subject")
+    public ResponseEntity<GenericResponse<List<String>>> getSubjects() throws KafkadorConfigNotFoundException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        SchemaRegistryService schemaRegistryService = (SchemaRegistryService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.SCHEMA_REGISTRY));
+        return new GenericResponse.Builder<List<String>>()
+                .data(schemaRegistryService.getSubjects(connection.getId()))
+                .success(HttpStatus.OK);
     }
 
 }

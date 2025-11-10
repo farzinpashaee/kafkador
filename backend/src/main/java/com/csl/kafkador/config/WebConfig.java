@@ -1,7 +1,7 @@
 package com.csl.kafkador.config;
 
 import com.csl.kafkador.interceptor.ResourceInterceptor;
-import com.csl.kafkador.controller.SessionInterceptor;
+import com.csl.kafkador.interceptor.SessionInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,7 +25,9 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor( new ResourceInterceptor(applicationConfig.getUrl()) )
                 .excludePathPatterns("/assets/**","/css/**","/js/**");
         registry.addInterceptor( new SessionInterceptor() )
-                .excludePathPatterns("/assets/**","/css/**","/js/**","/connect","/api/connection","/api/connect");
+                .excludePathPatterns("/assets/**","/css/**","/js/**",
+                        "/connect","/api/connect","/api/connect/**",
+                        "/api/connection","/api/connection/**");
         registry.addInterceptor(localeChangeInterceptor());
     }
 

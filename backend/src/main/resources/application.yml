@@ -20,7 +20,7 @@ kafkador:
         frequency: "*/10 * * * * *"
   services:
     connection:
-      implementation: "ConnectionServiceImp"
+      implementation: "ConnectionService"
   connections:
     - id: 1
       name: connection-1
