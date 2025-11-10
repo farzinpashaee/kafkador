@@ -25,7 +25,7 @@ public class SchemaRegistryServiceImp implements SchemaRegistryService {
     public List<String> getSubjects(String clusterId) throws KafkadorConfigNotFoundException {
         String url = kafkadorConfigService.get("kafkador.schema-registry.url",clusterId);
         ResponseEntity<List<String>> response = restTemplate.exchange(
-                url,
+                url + "/subjects",
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<List<String>>() {}

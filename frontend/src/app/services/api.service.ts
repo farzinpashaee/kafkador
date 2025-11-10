@@ -47,6 +47,12 @@ export class ApiService {
     return this.http.get<GenericResponse<ConsumerGroup[]>>(`${ApiService.ApiBaseUrl}/consumer-group`,{ withCredentials: true });
   }
 
+  public getSchemaSubjects(): Observable<GenericResponse<string[]>> {
+    return this.http.get<GenericResponse<string[]>>(`${ApiService.ApiBaseUrl}/schema-registry/subject`,{ withCredentials: true });
+  }
+
+
+
   public connect(id:string): Observable<GenericResponse<Connection>> {
     let params = new HttpParams();
     params = params.set('id', id);

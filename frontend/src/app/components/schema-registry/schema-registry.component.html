@@ -1,3 +1,36 @@
-<div class="alert alert-warning" role="alert">
-  This Service is Not Enabled!
+<p class="placeholder-glow" *ngIf="isLoading">
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-8"></span>
+</p>
+<div class="view-element" *ngIf="!isLoading">
+  <div class="row mt-4">
+    <div class="alert alert-warning d-flex" role="alert">
+      <div class="me-auto">
+        Schema Registry configuration is not set!
+      </div>
+      <button type="button" class="btn btn-sm btn-warning ms-auto">Config Now</button>
+    </div>
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+        <tr>
+          <th scope="col">Subject Name</th>
+        </tr>
+        </thead>
+        <tbody >
+        <tr *ngFor="let subject of subjects">
+          <th scope="row">
+              <span class="badge bg-dark">
+                <a routerLink="/subject/{{subject}}" routerLinkActive="active" class="badge-link">{{subject}}</a>
+              </span>
+          </th>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
+
+
+
