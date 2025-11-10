@@ -56,7 +56,7 @@
 git clone https://github.com/your-org/kafkador.git
 cd kafkador
 ./mvnw spring-boot:run
-
+```
 ---
 ## Versions
 ### v1
