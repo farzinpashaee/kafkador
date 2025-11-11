@@ -8,6 +8,7 @@ import com.csl.kafkador.exception.*;
 import com.csl.kafkador.service.*;
 import com.csl.kafkador.service.alert.AlertService;
 import com.csl.kafkador.service.registry.SchemaRegistryService;
+import com.csl.kafkador.service.search.SearchService;
 import com.csl.kafkador.util.MetricEnum;
 import com.csl.kafkador.util.TimeUnitEnum;
 import jakarta.servlet.http.HttpSession;
@@ -208,6 +209,15 @@ public class ApiController {
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.SCHEMA_REGISTRY));
         return new GenericResponse.Builder<List<String>>()
                 .data(schemaRegistryService.getSubjects(connection.getId()))
+                .success(HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/search")
+    public ResponseEntity<GenericResponse<List<SearchResult>>> getAlert(@RequestParam String query) throws AlertNotFoundException {
+        SearchService searchService = (SearchService) applicationContext
+                .getBean("SearchService");
+        return new GenericResponse.Builder<List<SearchResult>>()
+                .data(searchService.search(query))
                 .success(HttpStatus.OK);
     }
 

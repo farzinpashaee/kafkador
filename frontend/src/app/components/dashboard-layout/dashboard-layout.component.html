@@ -1,8 +1,16 @@
-<header class="navbar sticky-top bg-dark flex-md-nowrap p-0 shadow" data-bs-theme="dark">
+<header style="background-color:#181818" class="navbar sticky-top flex-md-nowrap p-0 shadow" data-bs-theme="dark">
   <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6 text-white bg-black" href="#">
     <img src="/images/logo-shape-v1.svg" style="width:1.7em; margin-top:-0.3em"> Kafkador
   </a>
+  <div>
+    <div style="margin-right:10px">
+    <input type="text" class="form-control form-control-sm"
+           style = "height:1em;"
+           id="search" placeholder="Search" (input)="onSearchInputChange($event)">
+    </div>
+  </div>
   <ul class="navbar-nav flex-row d-md-none">
+    <li>ccccccccccc</li>
     <li class="nav-item text-nowrap">
       <button class="nav-link px-3 text-white" type="button" data-bs-toggle="collapse"
               data-bs-target="#navbarSearch" aria-controls="navbarSearch" aria-expanded="false"
@@ -94,7 +102,20 @@
       </div>
     </div>
     <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content min-vh-100">
-      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+      <div *ngIf="isSearching">
+        <div style="margin-top:1em; display:flex; justify-content:space-between; align-items:center;">
+          <span>Searching "{{searchQuery}}"</span>
+          <i class="bi bi-x-lg" style="cursor:pointer;" (click)="isSearching = false"></i>
+        </div>
+        <div>
+          <p class="placeholder-glow">
+            <span class="placeholder col-12"></span>
+            <span class="placeholder col-12"></span>
+            <span class="placeholder col-8"></span>
+          </p>
+        </div>
+      </div>
+      <div *ngIf="!isSearching" class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <app-breadcrumb></app-breadcrumb>
         <div class="btn-toolbar mb-2 mb-md-0">
           <div class="dropdown">
@@ -112,7 +133,7 @@
           </div>
         </div>
       </div>
-      <div class="row">
+      <div *ngIf="!isSearching" class="row">
         <router-outlet></router-outlet>
       </div>
     </main>

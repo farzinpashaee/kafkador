@@ -12,7 +12,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 
 @Slf4j
-@Service("SchemaRegistryService")
+@Service("IntegrationService")
 @RequiredArgsConstructor
 public class IntegrationServiceImp implements IntegrationService {
 

@@ -24,6 +24,10 @@ export class DashboardLayoutComponent {
   isDark = false;
   documentation!: string;
 
+  isSearching = false;
+  isSearchLoading = false;
+  searchQuery: string = "";
+
   constructor(private route: ActivatedRoute,
               private apiService: ApiService,
               private localStorageService: LocalStorageService) {}
@@ -55,6 +59,11 @@ export class DashboardLayoutComponent {
       localStorage.setItem('theme', theme);
   }
 
+  onSearchInputChange (event: Event) {
+    this.isSearching = true;
+    const value = (event.target as HTMLInputElement).value;
+    this.searchQuery = value;
+  }
 
 
 }
