@@ -108,11 +108,14 @@
           <i class="bi bi-x-lg" style="cursor:pointer;" (click)="isSearching = false"></i>
         </div>
         <div>
-          <p class="placeholder-glow">
+          <p class="placeholder-glow" *ngIf="isSearchLoading">
             <span class="placeholder col-12"></span>
             <span class="placeholder col-12"></span>
             <span class="placeholder col-8"></span>
           </p>
+          <div *ngFor="let result of searchResults">
+            <a  [routerLink]="[result.route]" (click)="isSearching = false">{{result.title}}</a>
+          </div>
         </div>
       </div>
       <div *ngIf="!isSearching" class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">

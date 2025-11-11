@@ -1,12 +1,15 @@
 import { Component, inject, DOCUMENT } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
 import { RouterModule, RouterOutlet, ActivatedRoute, Router } from '@angular/router';
 import { LocalStorageService } from '../../services/local-storage.service';
 import { ApiService } from '../../services/api.service';
 import { Connection } from '../../models/connection';
 import { GenericResponse } from '../../models/generic-response';
-import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
+import { SearchResult } from '../../models/search-result';
 import { Config } from '../../models/config';
+import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
+
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -27,10 +30,14 @@ export class DashboardLayoutComponent {
   isSearching = false;
   isSearchLoading = false;
   searchQuery: string = "";
+  searchResults!: SearchResult[];
 
   constructor(private route: ActivatedRoute,
               private apiService: ApiService,
               private localStorageService: LocalStorageService) {}
+
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
 
   ngOnInit() {
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -42,6 +49,22 @@ export class DashboardLayoutComponent {
       this.activeConnection = activeConnectionFromStorage as Connection;
       this.connectedHost = this.activeConnection.host;
     }
+
+    this.searchSubject
+          .pipe(
+            debounceTime(500),              // wait 400ms after typing stops
+            distinctUntilChanged(),          // only emit if value changed
+            switchMap(query => {
+              this.isSearching = true;
+              this.isSearchLoading = true;
+              return this.apiService.search(query);
+            }),
+            takeUntil(this.destroy$)
+          )
+          .subscribe((res: GenericResponse<SearchResult[]>) => {
+            this.searchResults = res.data;
+            this.isSearchLoading = false;
+          });
   }
 
   disconnect(){
@@ -60,10 +83,14 @@ export class DashboardLayoutComponent {
   }
 
   onSearchInputChange (event: Event) {
-    this.isSearching = true;
     const value = (event.target as HTMLInputElement).value;
     this.searchQuery = value;
+    this.searchSubject.next(value); // trigger the stream
   }
 
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
 }

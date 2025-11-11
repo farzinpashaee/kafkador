@@ -7,6 +7,7 @@ import { Connection } from '../models/connection';
 import { Broker } from '../models/broker';
 import { Alert } from '../models/alert';
 import { Topic } from '../models/topic';
+import { SearchResult } from '../models/search-result';
 import { ConsumerGroup } from '../models/consumer-group';
 import { GenericResponse } from '../models/generic-response';
 
@@ -51,6 +52,9 @@ export class ApiService {
     return this.http.get<GenericResponse<string[]>>(`${ApiService.ApiBaseUrl}/schema-registry/subject`,{ withCredentials: true });
   }
 
+  public search(query:string): Observable<GenericResponse<SearchResult[]>> {
+    return this.http.get<GenericResponse<SearchResult[]>>(`${ApiService.ApiBaseUrl}/search?query=${query}`,{ withCredentials: true });
+  }
 
 
   public connect(id:string): Observable<GenericResponse<Connection>> {
