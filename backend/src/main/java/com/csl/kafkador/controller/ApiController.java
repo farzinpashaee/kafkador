@@ -221,4 +221,11 @@ public class ApiController {
                 .success(HttpStatus.OK);
     }
 
+    @PostMapping(value = "/apm/metric/ingest")
+    public ResponseEntity<GenericResponse<String>> ingest(@RequestBody ApmMetricIngestDto apmMetricIngest) throws AlertNotFoundException {
+        System.out.println(apmMetricIngest);
+        return new GenericResponse.Builder<String>()
+                .data("OK")
+                .success(HttpStatus.OK);
+    }
 }

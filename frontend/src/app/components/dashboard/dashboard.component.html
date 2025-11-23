@@ -4,8 +4,8 @@
         <div class="card-body text-white d-flex">
           <div class="spinner-border" role="status" *ngIf="clusterLoading"></div>
           <div class="flex-grow-1"  *ngIf="!clusterLoading">
-            <h5 class="card-title">Cluster - {{cluster.name}}</h5>
-            <p class="card-text">
+            <h5 class="card-title">Cluster ({{cluster.name}})</h5>
+            <p class="card-text text-s">
               Brokers: {{cluster.brokers.length}} <br/>
               Controller: {{cluster.controller.host}}
             </p>
@@ -28,7 +28,7 @@
           <div class="spinner-border" role="status" *ngIf="topicLoading"></div>
           <div class="flex-grow-1"  *ngIf="!topicLoading">
             <h5 class="card-title">Topics</h5>
-            <p class="card-text">
+            <p class="card-text text-s">
               Topics: {{topics.length}} <br/>
               Average Msp: 113
             </p>
@@ -51,7 +51,7 @@
           <div class="spinner-border" role="status" *ngIf="consumerGroupLoading"></div>
           <div class="flex-grow-1"  *ngIf="!consumerGroupLoading">
             <h5 class="card-title">Consumers</h5>
-            <p class="card-text">
+            <p class="card-text text-s">
               Consumer Groups: {{consumerGroups.length}} <br/>
               Average Lpc: 11
             </p>

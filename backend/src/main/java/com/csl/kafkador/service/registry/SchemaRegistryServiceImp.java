@@ -12,10 +12,10 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Map;
-
 @Slf4j
 @Service("SchemaRegistryService")
 @RequiredArgsConstructor
+
 public class SchemaRegistryServiceImp implements SchemaRegistryService {
 
     private final RestTemplate restTemplate;
