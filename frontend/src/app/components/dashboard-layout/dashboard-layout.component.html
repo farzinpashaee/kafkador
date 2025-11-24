@@ -6,7 +6,7 @@
     <div style="margin-right:10px">
     <input type="text" class="form-control form-control-sm"
            style = "height:1em;"
-           id="search" placeholder="Search" (input)="onSearchInputChange($event)">
+           id="search" placeholder="Search" [(ngModel)]="searchQuery" (input)="onSearchInputChange($event)">
     </div>
   </div>
   <ul class="navbar-nav flex-row d-md-none">
@@ -113,9 +113,17 @@
             <span class="placeholder col-12"></span>
             <span class="placeholder col-8"></span>
           </p>
-          <div *ngFor="let result of searchResults">
-            <a  [routerLink]="[result.route]" (click)="isSearching = false">{{result.title}}</a>
-          </div>
+          <table class="table">
+            <tbody>
+            <tr  *ngFor="let result of searchResults" (click)="goTo(result.route)" style="cursor: pointer;">
+              <td>
+                  <i *ngIf="result.icon" [ngClass]="result.icon"></i>&nbsp;
+                  <span>{{result.title}}</span>
+                  <p class="text-s mb-0" style="m-" *ngIf="result.description">{{result.description}}</p>
+              </td>
+            </tr>
+            </tbody>
+          </table>
         </div>
       </div>
       <div *ngIf="!isSearching" class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">

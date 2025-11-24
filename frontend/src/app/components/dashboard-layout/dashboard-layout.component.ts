@@ -1,5 +1,6 @@
 import { Component, inject, DOCUMENT } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
 import { RouterModule, RouterOutlet, ActivatedRoute, Router } from '@angular/router';
 import { LocalStorageService } from '../../services/local-storage.service';
@@ -14,7 +15,7 @@ import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.comp
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterModule, CommonModule, BreadcrumbComponent],
+  imports: [RouterOutlet, RouterModule, CommonModule, BreadcrumbComponent,FormsModule],
   templateUrl: './dashboard-layout.component.html',
   styleUrl: './dashboard-layout.component.scss'
 })
@@ -75,7 +76,6 @@ export class DashboardLayoutComponent {
   }
 
   toggleTheme() {
-      console.log("xxxxxxxxxxxxxxx");
       this.isDark = !this.isDark;
       const theme = this.isDark ? 'dark' : 'light';
       this.document.body.setAttribute('data-bs-theme', theme);
@@ -91,6 +91,12 @@ export class DashboardLayoutComponent {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  goTo(route: string) {
+    this.isSearching = false;
+    this.searchQuery = "";
+    this.router.navigate([route]);
   }
 
 }

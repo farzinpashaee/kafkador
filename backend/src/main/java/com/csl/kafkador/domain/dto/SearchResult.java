@@ -12,5 +12,7 @@ public class SearchResult {
     private String title;
     private String tags;
     private String route;
+    private String description;
+    private String icon;
 
 }
