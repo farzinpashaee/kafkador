@@ -16,7 +16,7 @@ public class RestExceptionController {
         error.setStatus(HttpStatus.UNAUTHORIZED.value());
         error.setMessage(ex.getMessage());
         error.setTimestamp(System.currentTimeMillis());
-        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
 
 }

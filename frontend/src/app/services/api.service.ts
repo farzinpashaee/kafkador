@@ -32,6 +32,10 @@ export class ApiService {
     return this.http.get<GenericResponse<Connection[]>>(`${ApiService.ApiBaseUrl}/connection`,{ withCredentials: true });
   }
 
+  public addConnection(connection:Connection): Observable<GenericResponse<Connection>> {
+    return this.http.post<GenericResponse<Connection>>(`${ApiService.ApiBaseUrl}/connection`,connection,{ withCredentials: true });
+  }
+
   public getAlerts(): Observable<GenericResponse<Alert[]>> {
     return this.http.get<GenericResponse<Alert[]>>(`${ApiService.ApiBaseUrl}/alert`,{ withCredentials: true });
   }
