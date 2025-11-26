@@ -21,8 +21,17 @@ public class SessionInterceptor implements HandlerInterceptor {
 
 
         HttpSession session = request.getSession();
-        if(session.getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString()) == null)
-            throw new ConnectionSessionExpiredException("No Active Connection Found!", "/connect");
+        if(session.getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString()) == null){
+            String path = request.getRequestURI();
+            if (path.startsWith("/api/")) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"error\":\"SESSION_EXPIRED\"}");
+                return false;
+            } else {
+                throw new ConnectionSessionExpiredException("No Active Connection Found!", "/connect");
+            }
+        }
 
         return true;
     }

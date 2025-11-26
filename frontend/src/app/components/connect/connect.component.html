@@ -6,10 +6,10 @@
         Kafkador
       </h1>
     </div>
-    <div class="row text-center">
-      <h4>Connect to Cluster</h4>
+    <div class="row text-center mt-2">
+      <h5>Connect to Cluster</h5>
       <p class="text-gray-500">
-        Or connect to another one by <a href="#" data-bs-toggle="modal" data-bs-target="#addClusterModal">Adding New Cluster</a>
+        Or add another one by <a href="#" (click)="clearForm()" data-bs-toggle="modal" data-bs-target="#addClusterModal">Adding New Cluster</a>
       </p>
     </div>
     <div class="row" id="connection">
@@ -26,7 +26,7 @@
       </div>
     </div>
     <div class="row text-center footer">
-      <p>Version 0.0.0 - © 2025 CodeStreamLab Inc.</p>
+      <p>Version 0.0.0 - © 2025 <a target="_blank" href="https://codestreamlab.com">CodeStreamLab Inc.</a></p>
     </div>
   </div>
 </div>
@@ -36,29 +36,25 @@
 <div class="modal fade" id="addClusterModal" tabindex="-1" aria-labelledby="addClusterModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Add New Cluster</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
       <div class="modal-body">
 
         <div class="mb-3">
-          <label for="name" class="form-label">Name</label>
+          <label for="name" class="form-label">Cluster Name:</label>
           <input [(ngModel)]="newConnection.name" type="text" class="form-control" id="name" placeholder="Cluster Name">
         </div>
         <div class="mb-3">
-          <label for="host" class="form-label">Host</label>
+          <label for="host" class="form-label">Host Address:</label>
           <input [(ngModel)]="newConnection.host" type="text" class="form-control" id="host" placeholder="e.g. 127.0.0.1">
         </div>
         <div class="mb-3">
-          <label for="port" class="form-label">Port</label>
+          <label for="port" class="form-label">Port Number:</label>
           <input [(ngModel)]="newConnection.port" type="text" class="form-control" id="port" placeholder="e.g. 9092">
         </div>
 
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" (click)="addConnection()"><i class="bi bi-floppy"></i>&nbsp; Save Cluster</button>
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="addConnection()">Connect & Save</button>
       </div>
     </div>
   </div>

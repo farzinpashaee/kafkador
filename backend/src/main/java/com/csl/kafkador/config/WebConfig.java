@@ -25,7 +25,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor( new ResourceInterceptor(applicationConfig.getUrl()) )
                 .excludePathPatterns("/assets/**","/css/**","/js/**");
         registry.addInterceptor( new SessionInterceptor() )
-                .excludePathPatterns("/assets/**","/css/**","/js/**",
+                .excludePathPatterns("/assets/**","/css/**","/js/**", "/error",
                         "/connect","/api/connect","/api/connect/**","/api/apm/**",
                         "/api/connection","/api/connection/**");
         registry.addInterceptor(localeChangeInterceptor());

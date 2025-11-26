@@ -167,3 +167,7 @@ span.placeholder{
   padding: .75rem 1rem;
 }
 
+::placeholder {
+  opacity: 0.3!important;      /* ensure full visibility */
+}
+

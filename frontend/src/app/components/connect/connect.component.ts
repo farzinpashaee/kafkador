@@ -47,4 +47,8 @@ export class ConnectComponent  {
     });
   }
 
+  clearForm(){
+      this.newConnection = { id:'', name: '', host: '', port: '' };
+  }
+
 }
