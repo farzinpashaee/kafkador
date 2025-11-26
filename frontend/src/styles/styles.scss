@@ -171,3 +171,8 @@ span.placeholder{
   opacity: 0.3!important;      /* ensure full visibility */
 }
 
+.modal-backdrop.show {
+  backdrop-filter: blur(5px)!important;      /* Blurs everything behind */
+  -webkit-backdrop-filter: blur(5px)!important;
+  opacity: 0.8 !important;
+}
