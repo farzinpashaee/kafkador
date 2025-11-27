@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpErrorResponse,HttpResponse   } from '@angular/common/http';
 import { throwError, Observable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Cluster } from '../models/cluster';
@@ -32,8 +32,9 @@ export class ApiService {
     return this.http.get<GenericResponse<Connection[]>>(`${ApiService.ApiBaseUrl}/connection`,{ withCredentials: true });
   }
 
-  public addConnection(connection:Connection): Observable<GenericResponse<Connection>> {
-    return this.http.post<GenericResponse<Connection>>(`${ApiService.ApiBaseUrl}/connection`,connection,{ withCredentials: true });
+  public addConnection(connection:Connection): Observable<HttpResponse<GenericResponse<Connection>>> {
+    return this.http.post<GenericResponse<Connection>>(`${ApiService.ApiBaseUrl}/connection`,connection,
+      { withCredentials: true ,observe: 'response' });
   }
 
   public getAlerts(): Observable<GenericResponse<Alert[]>> {
