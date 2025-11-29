@@ -41,6 +41,7 @@
       </div>
       <div *ngIf="errors.get('getConnections')" class="alert alert-danger" role="alert">
         {{ errors.get('getConnections')?.message }}
+        <button type="button" class="btn btn-outline-danger btn-sm float-end mt-4" (click)="getConnections()">Retry</button>
       </div>
     </div>
     <div class="row text-center footer">

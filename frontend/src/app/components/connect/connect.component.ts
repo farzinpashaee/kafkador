@@ -34,16 +34,21 @@ export class ConnectComponent  {
 
   ngOnInit() {
     this.newConnection = { id:'', name: '', host: '', port: '' };
+    this.getConnections();
+  }
+
+  getConnections(){
+    this.errors.delete("getConnections");
     this.loadings.set('getConnections',true);
     this.apiService.getConnections().subscribe({ next: (res: HttpResponse<GenericResponse<Connection[]>>) => {
-        this.connections = res.body?.data ?? [];
-        this.loadings.set('getConnections',false);
-      },
-      error: (err) => {
-        this.errors.set("getConnections",{code:'500',message:err.message});
-        this.loadings.set('getConnections',false);
-      }
-    });
+            this.connections = res.body?.data ?? [];
+          this.loadings.set('getConnections',false);
+        },
+        error: (err) => {
+          this.errors.set("getConnections",{code:'500',message:err.message});
+          this.loadings.set('getConnections',false);
+        }
+      });
   }
 
   connect(id:string){
