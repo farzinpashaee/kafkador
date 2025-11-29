@@ -28,8 +28,9 @@ export class ApiService {
     return this.http.get<GenericResponse<Broker>>(`${ApiService.ApiBaseUrl}/broker/${id}`,{ withCredentials: true });
   }
 
-  public getConnections(): Observable<GenericResponse<Connection[]>> {
-    return this.http.get<GenericResponse<Connection[]>>(`${ApiService.ApiBaseUrl}/connection`,{ withCredentials: true });
+  public getConnections(): Observable<HttpResponse<GenericResponse<Connection[]>>> {
+    return this.http.get<GenericResponse<Connection[]>>(`${ApiService.ApiBaseUrl}/connection`,
+      { withCredentials: true, observe: 'response' });
   }
 
   public addConnection(connection:Connection): Observable<HttpResponse<GenericResponse<Connection>>> {

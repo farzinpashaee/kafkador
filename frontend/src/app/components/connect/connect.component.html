@@ -18,11 +18,29 @@
           <div class="card-body">
             <h5>{{ conn.name }}</h5>
             <span class="text-gray-500">{{ conn.host }}:{{ conn.port }}</span>
-            <button class="btn btn-primary connect float-end" type="button" (click)="connect(conn.id)">
-              Connect
-            </button>
+            <div class="btn-group connect float-end">
+              <button type="button" class="btn btn-primary" type="button" (click)="connect(conn.id)">
+                Connect
+              </button>
+              <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"
+                      data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="visually-hidden">Toggle Dropdown</span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#"><i class="bi bi-pencil"></i> Edit</a></li>
+                <li><a class="dropdown-item" href="#"><i class="bi bi-trash3"></i> Delete</a></li>
+              </ul>
+            </div>
           </div>
         </div>
+      </div>
+      <div *ngIf="loadings.get('getConnections')" class="text-center">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+      <div *ngIf="errors.get('getConnections')" class="alert alert-danger" role="alert">
+        {{ errors.get('getConnections')?.message }}
       </div>
     </div>
     <div class="row text-center footer">
@@ -51,14 +69,15 @@
           <input required [(ngModel)]="newConnection.port" type="number" class="form-control" id="port" placeholder="e.g. 9092">
         </div>
 
-        <div *ngIf="newConnectionError" [innerHTML]="newConnectionError" class="alert alert-danger" role="alert">
+        <div *ngIf="errors.get('addConnection')" class="alert alert-danger" role="alert">
+          {{ errors.get('addConnection')?.message }}
         </div>
 
       </div>
       <div class="modal-footer">
-        <button *ngIf="!newConnectionLoading" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-        <button *ngIf="!newConnectionLoading" type="button" class="btn btn-primary" (click)="addConnection()">Connect & Save</button>
-        <div *ngIf="newConnectionLoading">
+        <button *ngIf="!loadings.get('addConnection')" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button *ngIf="!loadings.get('addConnection')" type="button" class="btn btn-primary" (click)="addConnection()">Connect & Save</button>
+        <div *ngIf="loadings.get('addConnection')">
           <div class="spinner-border spinner-border-sm" role="status">
             <span class="visually-hidden">Loading...</span>
           </div> Connecting...&nbsp;

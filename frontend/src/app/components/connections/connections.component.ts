@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute,RouterModule } from '@angular/router';
+import { HttpResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../services/api.service';
 import { GenericResponse } from '../../models/generic-response';
@@ -20,8 +21,8 @@ export class ConnectionsComponent {
   constructor(private apiService: ApiService) {}
 
   ngOnInit() {
-    this.apiService.getConnections().subscribe((res: GenericResponse<Connection[]>) => {
-      this.connections = res.data;
+    this.apiService.getConnections().subscribe((res: HttpResponse<GenericResponse<Connection[]>>) => {
+      //this.connections = res.data;
       this.isLoading = false;
     });
   }
