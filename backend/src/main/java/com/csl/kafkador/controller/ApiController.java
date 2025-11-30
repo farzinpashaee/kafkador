@@ -101,6 +101,11 @@ public class ApiController {
         return connectionService.create(connection);
     }
 
+    @DeleteMapping("/connection/{id}")
+    public void createConnection(@PathVariable String id) throws KafkaAdminApiException {
+        connectionService.delete(id);
+    }
+
     @GetMapping("/connection")
     public ResponseEntity<GenericResponse<List<ConnectionDto>>> getConnections(HttpSession session) {
         ConnectionService connectionService = (ConnectionService) applicationContext

@@ -23,10 +23,11 @@ export class ConnectComponent  {
   connections: Connection[] = [];
   connection!: Connection;
   newConnection!: Connection;
+  deletedConnection!: Connection;
   baseUrl = environment.baseUrl;
   router = inject(Router);
   errors: Map<string, Error> = new Map();
-  loadings: Map<string, boolean> = new Map();
+  flags: Map<string, boolean> = new Map();
 
   constructor(private apiService: ApiService,
     private localStorageService: LocalStorageService,
@@ -34,19 +35,24 @@ export class ConnectComponent  {
 
   ngOnInit() {
     this.newConnection = { id:'', name: '', host: '', port: '' };
+    this.deletedConnection = { id:'', name: '', host: '', port: '' };
     this.getConnections();
   }
 
   getConnections(){
     this.errors.delete("getConnections");
-    this.loadings.set('getConnections',true);
+    this.flags.set('getConnectionsLoading',true);
+    this.flags.set('getConnectionsEmpty',true);
     this.apiService.getConnections().subscribe({ next: (res: HttpResponse<GenericResponse<Connection[]>>) => {
-            this.connections = res.body?.data ?? [];
-          this.loadings.set('getConnections',false);
+          this.connections = res.body?.data ?? [];
+          if(this.connections.length>0){
+             this.flags.set('getConnectionsEmpty',false);
+          }
+          this.flags.set('getConnectionsLoading',false);
         },
         error: (err) => {
           this.errors.set("getConnections",{code:'500',message:err.message});
-          this.loadings.set('getConnections',false);
+          this.flags.set('getConnectionsLoading',false);
         }
       });
   }
@@ -62,21 +68,20 @@ export class ConnectComponent  {
   addConnection(){
     const errors = this.validationService.validateRequiredFields(this.newConnection, ['name', 'host', 'port']);
     if (errors.length > 0) {
-      console.log("------------------")
       this.errors.set("addConnection",{code:'400',message:errors[0]});
       return;
     } else {
       this.errors.delete('addConnection');
     }
-    this.loadings.set('addConnection',true);
+    this.flags.set('addConnectionLoading',true);
     this.apiService.addConnection(this.newConnection).subscribe({
       next: (res: HttpResponse<GenericResponse<Connection>>) => {
         this.connections.push(this.newConnection);
-        this.loadings.set('addConnection',false);
+        this.flags.set('addConnectionLoading',false);
       },
       error: (err) => {
         this.errors.set("addConnection",{code:'500',message:err.message});
-        this.loadings.set('addConnection',false);
+        this.flags.set('addConnectionLoading',false);
       }
     });
   }
@@ -84,6 +89,25 @@ export class ConnectComponent  {
   clearForm(){
       this.newConnection = { id:'', name: '', host: '', port: '' };
       this.errors.delete('addConnection');
+  }
+
+  openDeleteDialog(connection: Connection) {
+    this.errors.delete('deleteConnection');
+    this.deletedConnection = connection;
+  }
+
+  deleteConnection() {
+    if (!this.deletedConnection) return;
+    this.flags.set('deleteConnectionLoading',true);
+    this.apiService.deleteConnection(this.deletedConnection.id).subscribe({
+        next: (res: HttpResponse<void>) => {
+          this.flags.set('deleteConnectionLoading',false);
+        },
+        error: (err) => {
+          this.errors.set("deleteConnection",{code:'500',message:err.message});
+          this.flags.set('deleteConnectionLoading',false);
+        }
+      });
   }
 
 }

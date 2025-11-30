@@ -62,6 +62,12 @@ public class ConnectionServiceImp implements ConnectionService {
     }
 
     @Override
+    public void delete(String id) throws KafkaAdminApiException {
+
+    }
+
+
+    @Override
     public ConnectionDto create(ConnectionDto connection) throws KafkaAdminApiException {
         try{
             Admin admin = Admin.create(KafkaHelper.getConnectionProperties(connection.getHost(), connection.getPort()));

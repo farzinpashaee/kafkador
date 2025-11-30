@@ -1,8 +1,6 @@
 package com.csl.kafkador.domain.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
@@ -11,7 +9,9 @@ import lombok.Data;
 public class Cluster {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+    private String clusterId;
     private String host;
     private String port;
     private String name;

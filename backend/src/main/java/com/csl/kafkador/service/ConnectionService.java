@@ -13,6 +13,7 @@ public interface ConnectionService {
 
     AdminClusterWrapper getAdminClient(String id) throws ClusterNotFoundException;
     ConnectionDto create( ConnectionDto connectionDto ) throws KafkaAdminApiException;
+    void delete( String id ) throws KafkaAdminApiException;
     ConnectionDto connect( String clusterId ) throws ClusterNotFoundException;
     ConnectionDto disconnect() throws ClusterNotFoundException;
     List<ConnectionDto> getConnections();

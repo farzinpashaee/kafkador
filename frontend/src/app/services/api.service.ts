@@ -38,6 +38,11 @@ export class ApiService {
       { withCredentials: true ,observe: 'response' });
   }
 
+  public deleteConnection(id:string): Observable<HttpResponse<void>> {
+    return this.http.delete<void>(`${ApiService.ApiBaseUrl}/connection/`+id,
+      { withCredentials: true ,observe: 'response' });
+  }
+
   public getAlerts(): Observable<GenericResponse<Alert[]>> {
     return this.http.get<GenericResponse<Alert[]>>(`${ApiService.ApiBaseUrl}/alert`,{ withCredentials: true });
   }
