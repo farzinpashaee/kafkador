@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import { ApiService } from '../../services/api.service';
 import { ValidationService } from '../../services/validation.service';
 import { LocalStorageService } from '../../services/local-storage.service';
+import { CommonService } from '../../services/common.service';
 import { GenericResponse } from '../../models/generic-response';
 import { Connection } from '../../models/connection';
 import { Error } from '../../models/error';
@@ -31,22 +32,23 @@ export class ConnectComponent  {
 
   constructor(private apiService: ApiService,
     private localStorageService: LocalStorageService,
+    private commonService: CommonService,
     private validationService: ValidationService) {}
 
   ngOnInit() {
-    this.newConnection = { id:'', name: '', host: '', port: '' };
-    this.deletedConnection = { id:'', name: '', host: '', port: '' };
+    this.newConnection = { id:'', clusterId:'', name: '', host: '', port: '9092' };
+    this.deletedConnection = { id:'', clusterId:'', name: '', host: '', port: '' };
+    this.flags.set('getConnectionsEmpty',false);
     this.getConnections();
   }
 
   getConnections(){
     this.errors.delete("getConnections");
     this.flags.set('getConnectionsLoading',true);
-    this.flags.set('getConnectionsEmpty',true);
     this.apiService.getConnections().subscribe({ next: (res: HttpResponse<GenericResponse<Connection[]>>) => {
           this.connections = res.body?.data ?? [];
-          if(this.connections.length>0){
-             this.flags.set('getConnectionsEmpty',false);
+          if(this.connections.length==0){
+             this.flags.set('getConnectionsEmpty',true);
           }
           this.flags.set('getConnectionsLoading',false);
         },
@@ -78,6 +80,8 @@ export class ConnectComponent  {
       next: (res: HttpResponse<GenericResponse<Connection>>) => {
         this.connections.push(this.newConnection);
         this.flags.set('addConnectionLoading',false);
+        this.flags.set('getConnectionsEmpty',false);
+        this.commonService.closeModal('addClusterModal');
       },
       error: (err) => {
         this.errors.set("addConnection",{code:'500',message:err.message});
@@ -87,7 +91,7 @@ export class ConnectComponent  {
   }
 
   clearForm(){
-      this.newConnection = { id:'', name: '', host: '', port: '' };
+      this.newConnection = { id:'', clusterId:'', name: '', host: '', port: '' };
       this.errors.delete('addConnection');
   }
 
@@ -101,7 +105,9 @@ export class ConnectComponent  {
     this.flags.set('deleteConnectionLoading',true);
     this.apiService.deleteConnection(this.deletedConnection.id).subscribe({
         next: (res: HttpResponse<void>) => {
+          this.connections = this.connections.filter(c => c.id !== this.deletedConnection.id);
           this.flags.set('deleteConnectionLoading',false);
+          this.commonService.closeModal('deleteClusterModal');
         },
         error: (err) => {
           this.errors.set("deleteConnection",{code:'500',message:err.message});

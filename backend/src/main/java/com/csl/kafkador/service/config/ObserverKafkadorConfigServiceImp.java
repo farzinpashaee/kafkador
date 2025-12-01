@@ -1,7 +1,7 @@
 package com.csl.kafkador.service.config;
 
 import com.csl.kafkador.domain.dto.ObserverConfigDto;
-import com.csl.kafkador.exception.KafkadorConfigNotFoundException;
+import com.csl.kafkador.exception.ConfigNotFoundException;
 import com.csl.kafkador.domain.model.KafkadorConfig;
 import com.csl.kafkador.repository.KafkadorConfigRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,7 +22,7 @@ public class ObserverKafkadorConfigServiceImp implements KafkadorConfigService<O
     private final static String KEY = "kafkador.observer";
 
     @Override
-    public ObserverConfigDto get(String key, String clusterId) throws KafkadorConfigNotFoundException {
+    public ObserverConfigDto get(String key, String clusterId) throws ConfigNotFoundException {
         Optional<KafkadorConfig> kafkadorConfigOptional = kafkadorConfigRepository.findByConfigKeyAndClusterId(key,clusterId);
         if(kafkadorConfigOptional.isPresent()){
             try {
@@ -31,7 +31,7 @@ public class ObserverKafkadorConfigServiceImp implements KafkadorConfigService<O
                 throw new RuntimeException(e);
             }
         } else {
-            throw new KafkadorConfigNotFoundException("Kafkador Config with given key not found!");
+            throw new ConfigNotFoundException("Kafkador Config with given key not found!");
         }
     }
 

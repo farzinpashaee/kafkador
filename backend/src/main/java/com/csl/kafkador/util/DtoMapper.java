@@ -22,6 +22,7 @@ public class DtoMapper {
     public static ClusterDto clusterMapper(Cluster cluster ){
         return new ClusterDto()
                 .setId(cluster.getId())
+                .setClusterId(cluster.getClusterId())
                 .setHost(cluster.getHost())
                 .setPort(cluster.getPort())
                 .setName(cluster.getName());
@@ -30,6 +31,7 @@ public class DtoMapper {
     public static ConnectionDto connectionMapper(ClusterDto cluster ){
         return new ConnectionDto()
                 .setId(cluster.getId())
+                .setClusterId(cluster.getClusterId())
                 .setHost(cluster.getHost())
                 .setPort(cluster.getPort())
                 .setName(cluster.getName());
@@ -48,6 +50,7 @@ public class DtoMapper {
     public static ConnectionDto connectionMapper( Cluster cluster ){
         return new ConnectionDto()
                 .setId(cluster.getId())
+                .setClusterId(cluster.getClusterId())
                 .setHost(cluster.getHost())
                 .setPort(cluster.getPort())
                 .setName(cluster.getName());

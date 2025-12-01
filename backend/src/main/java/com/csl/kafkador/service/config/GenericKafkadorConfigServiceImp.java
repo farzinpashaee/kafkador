@@ -1,7 +1,7 @@
 package com.csl.kafkador.service.config;
 
 import com.csl.kafkador.domain.model.KafkadorConfig;
-import com.csl.kafkador.exception.KafkadorConfigNotFoundException;
+import com.csl.kafkador.exception.ConfigNotFoundException;
 import com.csl.kafkador.repository.KafkadorConfigRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,12 +25,12 @@ public class GenericKafkadorConfigServiceImp implements KafkadorConfigService<St
     private final KafkadorConfigRepository kafkadorConfigRepository;
 
     @Override
-    public String get(String key, String clusterId) throws KafkadorConfigNotFoundException {
+    public String get(String key, String clusterId) throws ConfigNotFoundException {
         Optional<KafkadorConfig> kafkadorConfigOptional = kafkadorConfigRepository.findByConfigKeyAndClusterId(key,clusterId);
         if(kafkadorConfigOptional.isPresent()){
             return kafkadorConfigOptional.get().getConfigValue();
         } else {
-            throw new KafkadorConfigNotFoundException("Kafkador Config with given key not found!");
+            throw new ConfigNotFoundException("Kafkador Config with given key not found!");
         }
     }
 

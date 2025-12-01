@@ -54,17 +54,11 @@ public class ClusterServiceImp implements ClusterService {
     public ClusterDto save(String name, String host, String port) throws KafkaAdminApiException {
         String clusterId = getClusterId(host,port);
         Cluster cluster = new Cluster();
-        cluster.setId(clusterId);
-        cluster.setId(name);
+        cluster.setClusterId(clusterId);
+        cluster.setName(name);
         cluster.setHost(host);
         cluster.setPort(port);
         clusterRepository.save(cluster);
-
-//        ObserverConfigDto observerCluster = new ObserverConfigDto();
-//        observerCluster.setClusterId(clusterId);
-//        observerCluster.setEnabled(true);
-//        observerCluster.setObservers(ObserverConfigDto.defaultObserverConfig());
-//        kafkadorConfigService.save(observerCluster);
         return DtoMapper.clusterMapper(cluster);
     }
 
@@ -96,7 +90,7 @@ public class ClusterServiceImp implements ClusterService {
             Map<Integer, Long> sizeMap = KafkaHelper.getReplicaSize(admin.describeLogDirs(brokerIds).allDescriptions().get());
 
             clusterDetails = connectionService.getAdminClient(id).getCluster();
-            clusterDetails.setId(clusterIdFuture.get());
+            clusterDetails.setClusterId(clusterIdFuture.get());
             clusterDetails.setBrokers(nodes.stream().map(i -> DtoMapper.clusterNodeMapper(i,sizeMap)).collect(Collectors.toList()));
             clusterDetails.setController(DtoMapper.clusterNodeMapper(clusterControllerFuture.get(),sizeMap));
         } catch (ConnectionSessionExpiredException e){

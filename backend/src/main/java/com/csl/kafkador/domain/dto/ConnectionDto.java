@@ -9,7 +9,8 @@ import java.io.Serializable;
 @Accessors(chain = true)
 public class ConnectionDto implements Serializable {
 
-    private String id;
+    private Integer id;
+    private String clusterId;
     private String host;
     private String port;
     private String name;

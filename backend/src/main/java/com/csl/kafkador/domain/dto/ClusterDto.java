@@ -9,7 +9,8 @@ import java.util.Collection;
 @Accessors(chain = true)
 public class ClusterDto {
 
-    private String id;
+    private Integer id;
+    private String clusterId;
     private String host;
     private String port;
     private String name;

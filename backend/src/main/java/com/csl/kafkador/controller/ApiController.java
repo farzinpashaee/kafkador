@@ -41,7 +41,7 @@ public class ApiController {
         ClusterService clusterService = (ClusterService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CLUSTER));
         ConnectionDto connection = connectionService.getActiveConnection();
-        ClusterDto cluster = clusterService.getClusterDetails(connection.getId());
+        ClusterDto cluster = clusterService.getClusterDetails(connection.getClusterId());
         return new GenericResponse.Builder<ClusterDto>()
                 .data(cluster)
                 .success(HttpStatus.OK);
@@ -53,7 +53,7 @@ public class ApiController {
         BrokerService brokerService = (BrokerService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.BROKER));
         ConnectionDto connection = connectionService.getActiveConnection();
-        BrokerDto broker = brokerService.getDetail(connection.getId(), id);
+        BrokerDto broker = brokerService.getDetail(connection.getClusterId(), id);
         return new GenericResponse.Builder<BrokerDto>()
                 .data(broker)
                 .success(HttpStatus.OK);
@@ -65,7 +65,7 @@ public class ApiController {
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
         ConnectionDto connection = connectionService.getActiveConnection();
         return new GenericResponse.Builder<Collection<Topic>>()
-                .data(topicService.getTopics(connection.getId()))
+                .data(topicService.getTopics(connection.getClusterId()))
                 .success(HttpStatus.OK);
     }
 
@@ -74,7 +74,7 @@ public class ApiController {
         TopicService topicService = (TopicService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
         ConnectionDto connection = connectionService.getActiveConnection();
-        Topic topic = topicService.getTopic(connection.getId(), name);
+        Topic topic = topicService.getTopic(connection.getClusterId(), name);
         return new GenericResponse.Builder<Topic>()
                 .data(topic)
                 .success(HttpStatus.OK);
@@ -86,7 +86,7 @@ public class ApiController {
         TopicService topicService = (TopicService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
         ConnectionDto connection = connectionService.getActiveConnection();
-        topicService.createTopic(connection.getId(),topic);
+        topicService.createTopic(connection.getClusterId(),topic);
     }
 
     @DeleteMapping("/topic/{id}")
@@ -97,12 +97,12 @@ public class ApiController {
     }
 
     @PostMapping("/connection")
-    public ConnectionDto createConnection(@RequestBody ConnectionDto connection) throws KafkaAdminApiException {
+    public ConnectionDto createConnection(@RequestBody ConnectionDto connection) throws KafkaAdminApiException, DuplicatedClusterException {
         return connectionService.create(connection);
     }
 
     @DeleteMapping("/connection/{id}")
-    public void createConnection(@PathVariable String id) throws KafkaAdminApiException {
+    public void createConnection(@PathVariable String id) throws ClusterNotFoundException {
         connectionService.delete(id);
     }
 
@@ -122,7 +122,7 @@ public class ApiController {
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONSUMER));
         ConnectionDto connection = connectionService.getActiveConnection();
         return new GenericResponse.Builder<Collection<ConsumerGroup>>()
-                .data(consumersService.getConsumersGroup(connection.getId()))
+                .data(consumersService.getConsumersGroup(connection.getClusterId()))
                 .success(HttpStatus.OK);
     }
 
@@ -203,17 +203,17 @@ public class ApiController {
         AclServiceImp aclService = (AclServiceImp) applicationContext
                 .getBean("AclService");
         ConnectionDto connection = connectionService.getActiveConnection();
-        aclService.getAclBindings(connection.getId());
+        aclService.getAclBindings(connection.getClusterId());
     }
 
 
     @GetMapping(value = "/schema-registry/subject")
-    public ResponseEntity<GenericResponse<List<String>>> getSubjects() throws KafkadorConfigNotFoundException {
+    public ResponseEntity<GenericResponse<List<String>>> getSubjects() throws ConfigNotFoundException {
         ConnectionDto connection = connectionService.getActiveConnection();
         SchemaRegistryService schemaRegistryService = (SchemaRegistryService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.SCHEMA_REGISTRY));
         return new GenericResponse.Builder<List<String>>()
-                .data(schemaRegistryService.getSubjects(connection.getId()))
+                .data(schemaRegistryService.getSubjects(connection.getClusterId()))
                 .success(HttpStatus.OK);
     }
 
