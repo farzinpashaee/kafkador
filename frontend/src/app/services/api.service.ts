@@ -78,8 +78,8 @@ export class ApiService {
       );
   }
 
-  public disconnect(): Observable<GenericResponse<Connection>> {
-    return this.http.get<GenericResponse<Connection>>(`${ApiService.ApiBaseUrl}/disconnect`,{withCredentials: true });
+  public disconnect(): Observable<HttpResponse<GenericResponse<Connection>>> {
+    return this.http.get<GenericResponse<Connection>>(`${ApiService.ApiBaseUrl}/disconnect`,{withCredentials: true, observe: 'response' });
   }
 
 }

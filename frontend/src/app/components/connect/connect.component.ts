@@ -81,7 +81,7 @@ export class ConnectComponent  {
         this.connections.push(this.newConnection);
         this.flags.set('addConnectionLoading',false);
         this.flags.set('getConnectionsEmpty',false);
-        this.commonService.closeModal('addClusterModal');
+        this.commonService.hideModal('addClusterModal');
       },
       error: (err) => {
         this.errors.set("addConnection",{code:'500',message:err.message});
@@ -107,7 +107,7 @@ export class ConnectComponent  {
         next: (res: HttpResponse<void>) => {
           this.connections = this.connections.filter(c => c.id !== this.deletedConnection.id);
           this.flags.set('deleteConnectionLoading',false);
-          this.commonService.closeModal('deleteClusterModal');
+          this.commonService.hideModal('deleteClusterModal');
         },
         error: (err) => {
           this.errors.set("deleteConnection",{code:'500',message:err.message});

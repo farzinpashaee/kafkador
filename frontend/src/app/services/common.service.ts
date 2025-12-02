@@ -7,8 +7,19 @@ declare var bootstrap: any;
 })
 export class CommonService {
 
-  closeModal(id:string) {
+  hideModal(id:string) {
     const el = document.getElementById(id);
+    const modal = bootstrap.Modal.getInstance(el);
+    modal?.hide();
+  }
+
+  showCommonModal() {
+    const el = document.getElementById('commonModal');
+    (bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el)).show();
+  }
+
+  hideCommonModal() {
+    const el = document.getElementById('commonModal');
     const modal = bootstrap.Modal.getInstance(el);
     modal?.hide();
   }

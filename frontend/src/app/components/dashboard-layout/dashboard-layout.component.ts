@@ -1,10 +1,12 @@
 import { Component, inject, DOCUMENT } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpResponse } from '@angular/common/http';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
 import { RouterModule, RouterOutlet, ActivatedRoute, Router } from '@angular/router';
 import { LocalStorageService } from '../../services/local-storage.service';
 import { ApiService } from '../../services/api.service';
+import { CommonService } from '../../services/common.service';
 import { Connection } from '../../models/connection';
 import { GenericResponse } from '../../models/generic-response';
 import { SearchResult } from '../../models/search-result';
@@ -27,6 +29,7 @@ export class DashboardLayoutComponent {
   document = inject(DOCUMENT);
   isDark = false;
   documentation!: string;
+  commonModalBody!: string;
 
   isSearching = false;
   isSearchLoading = false;
@@ -35,6 +38,7 @@ export class DashboardLayoutComponent {
 
   constructor(private route: ActivatedRoute,
               private apiService: ApiService,
+              private commonService: CommonService,
               private localStorageService: LocalStorageService) {}
 
   private searchSubject = new Subject<string>();
@@ -69,23 +73,33 @@ export class DashboardLayoutComponent {
   }
 
   disconnect(){
-    this.apiService.disconnect().subscribe((res: GenericResponse<Connection>) => {
-      this.localStorageService.removeItem('activeConnection');
-      this.router.navigate(['/connect']);
+    this.commonModalBody=`<div class="spinner-border spinner-border-sm" role="status">
+                                      <span class="visually-hidden">Loading...</span>
+                                    </div>&nbsp; Disconnecting...`;;
+    this.commonService.showCommonModal();
+    this.apiService.disconnect().subscribe({
+      next: (res: HttpResponse<GenericResponse<Connection>>) => {
+        this.localStorageService.removeItem('activeConnection');
+        this.router.navigate(['/connect']);
+      },
+      error: (err) => {
+        this.commonService.hideCommonModal();
+        this.router.navigate(['/connect']);
+      }
     });
   }
 
   toggleTheme() {
-      this.isDark = !this.isDark;
-      const theme = this.isDark ? 'dark' : 'light';
-      this.document.body.setAttribute('data-bs-theme', theme);
-      localStorage.setItem('theme', theme);
+    this.isDark = !this.isDark;
+    const theme = this.isDark ? 'dark' : 'light';
+    this.document.body.setAttribute('data-bs-theme', theme);
+    localStorage.setItem('theme', theme);
   }
 
   onSearchInputChange (event: Event) {
     const value = (event.target as HTMLInputElement).value;
     this.searchQuery = value;
-    this.searchSubject.next(value); // trigger the stream
+    this.searchSubject.next(value);
   }
 
   ngOnDestroy() {
