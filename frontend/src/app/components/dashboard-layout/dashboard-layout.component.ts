@@ -75,18 +75,20 @@ export class DashboardLayoutComponent {
   disconnect(){
     this.commonModalBody=`<div class="spinner-border spinner-border-sm" role="status">
                                       <span class="visually-hidden">Loading...</span>
-                                    </div>&nbsp; Disconnecting...`;;
+                                    </div>&nbsp; Disconnecting...`;
     this.commonService.showCommonModal();
-    this.apiService.disconnect().subscribe({
-      next: (res: HttpResponse<GenericResponse<Connection>>) => {
+    setTimeout(() => {this.apiService.disconnect().subscribe({
+      next: async (res: HttpResponse<GenericResponse<Connection>>) => {
         this.localStorageService.removeItem('activeConnection');
+        this.commonService.hideCommonModal();
         this.router.navigate(['/connect']);
       },
-      error: (err) => {
+      error: async (err) => {
         this.commonService.hideCommonModal();
         this.router.navigate(['/connect']);
       }
     });
+    },1000);
   }
 
   toggleTheme() {
