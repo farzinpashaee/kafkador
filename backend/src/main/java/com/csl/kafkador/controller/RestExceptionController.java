@@ -2,6 +2,7 @@ package com.csl.kafkador.controller;
 
 import com.csl.kafkador.domain.ErrorResponse;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
+import com.csl.kafkador.exception.DuplicatedClusterException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -17,6 +18,15 @@ public class RestExceptionController {
         error.setMessage(ex.getMessage());
         error.setTimestamp(System.currentTimeMillis());
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(DuplicatedClusterException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicatedClusterException(DuplicatedClusterException ex) {
+        ErrorResponse error = new ErrorResponse();
+        error.setStatus(HttpStatus.BAD_REQUEST.value());
+        error.setMessage(ex.getMessage());
+        error.setTimestamp(System.currentTimeMillis());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
 }

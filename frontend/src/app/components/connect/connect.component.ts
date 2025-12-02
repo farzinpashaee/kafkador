@@ -1,7 +1,7 @@
 import { Component, inject  } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { HttpResponse } from '@angular/common/http';
+import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../services/api.service';
@@ -52,8 +52,8 @@ export class ConnectComponent  {
           }
           this.flags.set('getConnectionsLoading',false);
         },
-        error: (err) => {
-          this.errors.set("getConnections",{code:'500',message:err.message});
+        error: (err:HttpErrorResponse) => {
+          this.errors.set("getConnections",{code:'500',message:err.error.message});
           this.flags.set('getConnectionsLoading',false);
         }
       });
@@ -83,8 +83,8 @@ export class ConnectComponent  {
         this.flags.set('getConnectionsEmpty',false);
         this.commonService.hideModal('addClusterModal');
       },
-      error: (err) => {
-        this.errors.set("addConnection",{code:'500',message:err.message});
+      error: (err:HttpErrorResponse) => {
+        this.errors.set("addConnection",{code:'500',message:err.error.message});
         this.flags.set('addConnectionLoading',false);
       }
     });
@@ -109,8 +109,8 @@ export class ConnectComponent  {
           this.flags.set('deleteConnectionLoading',false);
           this.commonService.hideModal('deleteClusterModal');
         },
-        error: (err) => {
-          this.errors.set("deleteConnection",{code:'500',message:err.message});
+        error: (err:HttpErrorResponse) => {
+          this.errors.set("deleteConnection",{code:'500',message:err.error.message});
           this.flags.set('deleteConnectionLoading',false);
         }
       });
