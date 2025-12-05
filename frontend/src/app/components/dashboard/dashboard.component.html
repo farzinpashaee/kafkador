@@ -2,8 +2,8 @@
     <div class="col-12 col-md-12 col-lg-4">
       <div class="card card-top-widget">
         <div class="card-body text-white d-flex">
-          <div class="spinner-border" role="status" *ngIf="clusterLoading"></div>
-          <div class="flex-grow-1"  *ngIf="!clusterLoading">
+          <div class="spinner-border" role="status" *ngIf="flags.get('getClusterLoading')"></div>
+          <div class="flex-grow-1"  *ngIf="!flags.get('getClusterLoading')">
             <h5 class="card-title">Cluster ({{cluster.name}})</h5>
             <p class="card-text text-s">
               Brokers: {{cluster.brokers.length}} <br/>
@@ -25,8 +25,8 @@
     <div class="col-12 col-md-12 col-lg-4">
       <div class="card card-top-widget">
         <div class="card-body text-white d-flex">
-          <div class="spinner-border" role="status" *ngIf="topicLoading"></div>
-          <div class="flex-grow-1"  *ngIf="!topicLoading">
+          <div class="spinner-border" role="status" *ngIf="flags.get('getTopicLoading')"></div>
+          <div class="flex-grow-1"  *ngIf="!flags.get('getTopicLoading')">
             <h5 class="card-title">Topics</h5>
             <p class="card-text text-s">
               Topics: {{topics.length}} <br/>
@@ -48,8 +48,8 @@
     <div class="col-12 col-md-12 col-lg-4">
       <div class="card card-top-widget">
         <div class="card-body text-white d-flex">
-          <div class="spinner-border" role="status" *ngIf="consumerGroupLoading"></div>
-          <div class="flex-grow-1"  *ngIf="!consumerGroupLoading">
+          <div class="spinner-border" role="status" *ngIf="flags.get('getConsumerGroupLoading')"></div>
+          <div class="flex-grow-1"  *ngIf="!flags.get('getConsumerGroupLoading')">
             <h5 class="card-title">Consumers</h5>
             <p class="card-text text-s">
               Consumer Groups: {{consumerGroups.length}} <br/>
@@ -69,34 +69,76 @@
       </div>
     </div>
 </div>
-<div class="row mt-5">
-  <div class="col-12 col-md-6 col-lg-8" style=" min-height:400px">
+<div class="row mt-4">
+  <div class="col-12 col-md-6 col-lg-8" style="min-height:250px">
+    <h6><i class="bi bi-bar-chart-fill"></i>&nbsp; Average Msp</h6>
     <ngx-charts-area-chart
       [results]="data4"
       [scheme]="mainChartPrimarySchema"
       [xAxis]="true"
-      [yAxis]="false"
+      [yAxis]="true"
       [legend]="false"
       [showXAxisLabel]="false"
+      [curve]="curve"
       [showYAxisLabel]="false"
       [gradient]="true"
+      [yScaleMax]="maxWithPadding"
       [xAxisTickFormatting]="formatXAxis"
       style="width:100%; height:100%;">
     </ngx-charts-area-chart>
   </div>
   <div class="col-12 col-md-6 col-lg-4">
-    <h5><i class="bi bi-bell"></i>&nbsp; Alerts:</h5>
-    <div class="list-group">
+    <h6><i class="bi bi-bell"></i>&nbsp; Alerts</h6>
+    <div class="spinner-border" role="status" *ngIf="flags.get('getAlertLoading')"></div>
+    <div class="list-group" *ngIf="!flags.get('getAlertLoading')">
       @for (alert of alerts; track alert.title; let i = $index) {
       <a href="#" class="list-group-item list-group-item-action danger" aria-current="true">
-        <div class="d-flex w-100 justify-content-between">
-          <h6 class="mb-1">{{alert.description}}</h6>
-          <small>{{alert.formattedTime}}</small>
+        <div>
+          <p style="font-size:0.8em" class="mb-0">
+            <span style="border-radius:1em" *ngIf="alert.severity==='LOW'" class="badge text-bg-dark">{{alert.severity}}</span>
+            <span style="border-radius:1em" *ngIf="alert.severity==='MEDIUM'" class="badge text-bg-warning">{{alert.severity}}</span>
+            <span style="border-radius:1em" *ngIf="alert.severity==='HIGH'" class="badge text-bg-danger">{{alert.severity}}</span>
+            {{alert.description}}
+          </p>
+          <small style="font-size:0.7em">{{alert.formattedTime}}</small>
         </div>
-        <small><span class="badge text-bg-danger">High</span> Action Required: {{alert.action}}</small>
       </a>
       }
+    </div>
+  </div>
+</div>
 
+<div class="row mt-4">
+  <div class="spinner-border" role="status" *ngIf="flags.get('getBrokerLoading')"></div>
+  <div  *ngIf="!flags.get('getBrokerLoading')">
+    <h6><i class="bi bi-view-stacked"></i>&nbsp; Brokers</h6>
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+        <tr>
+          <th scope="col">id</th>
+          <th scope="col">Host</th>
+          <th scope="col">Port</th>
+          <th scope="col">Size (KB)</th>
+          <th scope="col">Hash</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody id="clusterBrokers">
+        <tr *ngFor="let broker of cluster.brokers">
+          <th scope="row">{{broker.id}}</th>
+          <td>
+              <span class="badge bg-dark">
+                <a routerLink="/broker/{{broker.id}}" routerLinkActive="active" class="badge-link">{{broker.host}}</a>
+              </span>
+          </td>
+          <td>{{broker.port}}</td>
+          <td>{{broker.size}}</td>
+          <td>{{broker.hash}}</td>
+          <td><a routerLink="/broker/{{broker.id}}" routerLinkActive="active"><i class="bi bi-three-dots"></i></a></td>
+        </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>

@@ -3,15 +3,18 @@ import { CommonModule } from '@angular/common';
 import { Alert } from '../../models/alert';
 import { Cluster } from '../../models/cluster';
 import { Topic } from '../../models/topic';
+import { RouterModule } from '@angular/router';
 import { ConsumerGroup } from '../../models/consumer-group';
 import { GenericResponse } from '../../models/generic-response';
 import { ApiService } from '../../services/api.service';
+import { CommonService } from '../../services/common.service';
 import { DateTimeService } from '../../services/date-time.service';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
+import * as shape from 'd3-shape';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule,NgxChartsModule],
+  imports: [CommonModule,RouterModule,NgxChartsModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -21,40 +24,51 @@ export class DashboardComponent {
   cluster!: Cluster;
   topics!: Topic[];
   consumerGroups!: ConsumerGroup[];
-  alertsLoading: boolean = true;
-  clusterLoading: boolean = true;
-  topicLoading: boolean = true;
-  consumerGroupLoading: boolean = true;
+  errors: Map<string, Error> = new Map();
+  flags: Map<string, boolean> = new Map();
+  maxWithPadding: number = 0;
+  curve = shape.curveMonotoneX;
+  data4: {
+    name: string;
+    series: { name: string; value: number; }[];
+  }[] = [];
+
 
   constructor(private apiService: ApiService,
+    private commonService: CommonService,
     private dateTimeService: DateTimeService) {}
 
   ngOnInit() {
-
+    this.flags.set('getAlertLoading',true);
+    this.flags.set('getClusterLoading',true);
+    this.flags.set('getTopicLoading',true);
+    this.flags.set('getConsumerGroupLoading',true);
+    this.flags.set('getBrokerLoading',true);
     this.apiService.getClusterDetails().subscribe((res: GenericResponse<Cluster>) => {
       this.cluster = res.data;
-      this.clusterLoading = false;
+      this.flags.set('getClusterLoading',false);
+      this.flags.set('getBrokerLoading',false);
     });
-
     this.apiService.getTopics().subscribe((res: GenericResponse<Topic[]>) => {
       this.topics = res.data;
-      this.topicLoading = false;
+      this.flags.set('getTopicLoading',false);
     });
-
     this.apiService.getConsumerGroups().subscribe((res: GenericResponse<ConsumerGroup[]>) => {
       this.consumerGroups = res.data;
-      this.consumerGroupLoading = false;
+      this.flags.set('getConsumerGroupLoading',false);
     });
-
     this.apiService.getAlerts().subscribe((res: GenericResponse<Alert[]>) => {
       this.alerts = res.data.map(alert => ({
                                     ...alert,
                                     formattedTime: this.dateTimeService.formatDateTimeFromNow(alert.creationDateTime)
                                   }));
-      this.alertsLoading = false;
+      this.flags.set('getAlertLoading',false);
     });
-  }
 
+    this.data4 = this.commonService.generateRandomChartData("MPS",12);
+    this.maxWithPadding = this.commonService.getMaxWithPadding(this.data4);
+
+  }
 
 
   data = [
@@ -91,34 +105,6 @@ export class DashboardComponent {
     { name: 'a8', value: 2400 }
   ];
 
- data4 = [
-    {
-      "name": "Series A",
-      "series": [
-   { name: 'Sep 1', value: 500 },
-    { name: 'Sep 2', value: 620 },
-    { name: 'Sep 3', value: 800 },
-    { name: 'Sep 4', value: 1200 },
-    { name: 'Sep 5', value: 2700 },
-    { name: 'Sep 6', value: 1700 },
-    { name: 'Sep 7', value: 950 },
-    { name: 'Sep 8', value: 950 },
-    { name: 'Sep 9', value: 1250 },
-    { name: 'Sep 10', value: 1350 },
-    { name: 'Sep 11', value: 1950 },
-    { name: 'Sep 12', value: 2950 },
-    { name: 'Sep 13', value: 1650 },
-    { name: 'Sep 14', value: 1900 },
-    { name: 'Sep 15', value: 2150 },
-    { name: 'Sep 16', value: 1650 },
-    { name: 'Sep 17', value: 1500 },
-    { name: 'Sep 18', value: 1260 },
-    { name: 'Sep 19', value: 1400 },
-    { name: 'Sep 20', value: 1300 }
-      ]
-    }
-  ];
-
   view = [50, 50];
 
   cartTopWidgetWhiteScheme: Color = {
@@ -131,8 +117,8 @@ export class DashboardComponent {
   mainChartPrimarySchema: Color = {
     name: 'mainChartPrimarySchema',
     selectable: true,
-    group: ScaleType.Ordinal,
-    domain: ['#00D3D3']
+    group: ScaleType.Linear,
+    domain: ['#444'] // start, end
   };
 
   formatXAxis(dateString: string): string {

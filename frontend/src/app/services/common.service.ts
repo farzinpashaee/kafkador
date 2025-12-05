@@ -30,4 +30,40 @@ export class CommonService {
     }
   }
 
+  generateRandomChartData(seriesName: string, n: number) {
+    const series = [];
+
+    const today = new Date();
+
+    for (let i = 0; i < n; i++) {
+      const date = new Date(today);  // clone
+      date.setDate(today.getDate() + i);  // increment days
+
+      const formattedDate = date.toLocaleDateString('en-US', {
+        month: 'short',   // Jan, Feb, Mar
+        day: 'numeric'    // 1, 2, 3...
+      });
+
+      const randomValue = Math.floor(Math.random() * 20) + 40;
+
+      series.push({
+        name: formattedDate,  // e.g. "Nov 30"
+        value: randomValue
+      });
+    }
+
+    return [
+      {
+        name: seriesName,
+        series: series
+      }
+    ];
+  }
+
+  getMaxWithPadding(data: any[]): number {
+    const allValues = data[0].series.map((p: any) => p.value);
+    const max = Math.max(...allValues);
+    return max * 1.30;  // +15% padding
+  }
+
 }
