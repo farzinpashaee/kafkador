@@ -27,7 +27,8 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor( new SessionInterceptor() )
                 .excludePathPatterns("/assets/**","/css/**","/js/**", "/error",  "/api/disconnect", "/api/disconnect/**",
                         "/connect","/api/connect","/api/connect/**","/api/apm/**",
-                        "/api/connection","/api/connection/**");
+                        "/api/connection","/api/connection/**",
+                        "/kafkador-h2","/kafkador-h2/**");
         registry.addInterceptor(localeChangeInterceptor());
     }
 
