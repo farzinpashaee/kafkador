@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute,RouterModule } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { GenericResponse } from '../../models/generic-response';
+import { SchemaRegistry } from '../../models/schema-registry';
 
 @Component({
   selector: 'app-schema-registry',
@@ -12,15 +13,15 @@ import { GenericResponse } from '../../models/generic-response';
 })
 export class SchemaRegistryComponent {
 
-  subjects!: string[];
+  schemaRegistry!: SchemaRegistry;
   isLoading: boolean = true;
 
   constructor(private apiService: ApiService,
     private route: ActivatedRoute) {}
 
   ngOnInit() {
-    this.apiService.getSchemaSubjects().subscribe((res: GenericResponse<string[]>) => {
-      this.subjects = res.data;
+    this.apiService.getSchemaSubjects().subscribe((res: GenericResponse<SchemaRegistry>) => {
+      this.schemaRegistry = res.data;
       this.isLoading = false;
     });
   }

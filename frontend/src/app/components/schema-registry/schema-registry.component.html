@@ -5,13 +5,13 @@
 </p>
 <div class="view-element" *ngIf="!isLoading">
   <div class="row mt-4">
-    <div class="alert alert-warning d-flex" role="alert">
+    <div class="alert alert-warning d-flex" role="alert" *ngIf="!schemaRegistry.configured">
       <div class="me-auto">
         Schema Registry configuration is not set!
       </div>
       <button type="button" class="btn btn-sm btn-warning ms-auto">Config Now</button>
     </div>
-    <div class="table-responsive">
+    <div class="table-responsive" *ngIf="schemaRegistry.configured">
       <table class="table">
         <thead>
         <tr>
@@ -19,10 +19,10 @@
         </tr>
         </thead>
         <tbody >
-        <tr *ngFor="let subject of subjects">
+        <tr *ngFor="let schema of schemaRegistry.subjects">
           <th scope="row">
               <span class="badge bg-dark">
-                <a routerLink="/subject/{{subject}}" routerLinkActive="active" class="badge-link">{{subject}}</a>
+                <a routerLink="/subject/{{schema.name}}" routerLinkActive="active" class="badge-link">{{schema.name}}</a>
               </span>
           </th>
         </tr>

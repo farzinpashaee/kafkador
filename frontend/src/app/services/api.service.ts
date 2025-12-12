@@ -10,6 +10,7 @@ import { Topic } from '../models/topic';
 import { SearchResult } from '../models/search-result';
 import { ConsumerGroup } from '../models/consumer-group';
 import { GenericResponse } from '../models/generic-response';
+import { SchemaRegistry } from '../models/schema-registry';
 
 @Injectable({
   providedIn: 'root'
@@ -59,8 +60,8 @@ export class ApiService {
     return this.http.get<GenericResponse<ConsumerGroup[]>>(`${ApiService.ApiBaseUrl}/consumer-group`,{ withCredentials: true });
   }
 
-  public getSchemaSubjects(): Observable<GenericResponse<string[]>> {
-    return this.http.get<GenericResponse<string[]>>(`${ApiService.ApiBaseUrl}/schema-registry/subject`,{ withCredentials: true });
+  public getSchemaSubjects(): Observable<GenericResponse<SchemaRegistry>> {
+    return this.http.get<GenericResponse<SchemaRegistry>>(`${ApiService.ApiBaseUrl}/schema-registry/subject`,{ withCredentials: true });
   }
 
   public search(query:string): Observable<GenericResponse<SearchResult[]>> {
