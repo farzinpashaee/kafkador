@@ -12,7 +12,7 @@
 	<artifactId>kafkador</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Kafkador</name>
-	<description>Codestreamlab Kafka Dashboard</description>
+	<description>Kafkador Dashboard</description>
 	<url/>
 	<licenses>
 		<license/>
