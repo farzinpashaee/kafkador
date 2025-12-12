@@ -103,6 +103,7 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-body">
+        <h6 class="text-danger" ><i class="bi bi-x-circle"></i> &nbsp;Connection Delete</h6>
         Are you sure you want to delete connection to '{{deletedConnection.name}}'?
         <div *ngIf="errors.get('deleteConnection')" class="alert alert-danger" role="alert">
           {{ errors.get('deleteConnection')?.message }}
