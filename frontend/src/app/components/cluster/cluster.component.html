@@ -16,13 +16,13 @@
               Cluster ID: {{cluster.id}}
             </p>
           </div>
-          <div class="ms-auto" style="max-width: 70%; height:120px">
+          <div class="ms-auto chart-container-medium">
             <ngx-charts-bar-vertical
               [results]="data"
               [scheme]="cartTopWidgetWhiteScheme"
               [xAxis]="false"
               [gradient]="true"
-              [yAxis]="false" style="width:100%; height:100%;" >
+              [yAxis]="false" class="chart-full-size" >
             </ngx-charts-bar-vertical>
           </div>
         </div>

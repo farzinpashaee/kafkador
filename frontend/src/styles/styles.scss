@@ -176,3 +176,68 @@ span.placeholder{
   -webkit-backdrop-filter: blur(5px)!important;
   opacity: 0.8 !important;
 }
+
+/* Utility classes extracted from inline styles */
+.header-dark {
+  background-color: #181818;
+}
+
+.logo-image {
+  width: 1.7em;
+  margin-top: -0.3em;
+}
+
+.search-input-small {
+  font-size: 0.8em;
+  width: 200px;
+}
+
+.dropdown-menu-padded {
+  padding-left: 10px;
+}
+
+.search-container {
+  margin-right: 10px;
+}
+
+.search-input-compact {
+  height: 1em;
+}
+
+.chart-container-small {
+  max-width: 30%;
+  height: 80px;
+}
+
+.chart-container-medium {
+  max-width: 70%;
+  height: 120px;
+}
+
+.chart-full-size {
+  width: 100%;
+  height: 100%;
+}
+
+.chart-column-min {
+  min-height: 250px;
+}
+
+.alert-text {
+  font-size: 0.8em;
+}
+
+.alert-time {
+  font-size: 0.7em;
+}
+
+.badge-rounded {
+  border-radius: 1em;
+}
+
+.search-header {
+  margin-top: 1em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

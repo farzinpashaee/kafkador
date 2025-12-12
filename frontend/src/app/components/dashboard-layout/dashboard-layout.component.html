@@ -1,11 +1,10 @@
-<header style="background-color:#181818" class="navbar sticky-top flex-md-nowrap p-0 shadow" data-bs-theme="dark">
+<header class="navbar sticky-top flex-md-nowrap p-0 shadow header-dark" data-bs-theme="dark">
   <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6 text-white bg-black" href="#">
-    <img src="/images/logo-shape-v1.svg" style="width:1.7em; margin-top:-0.3em"> Kafkador
+    <img src="/images/logo-shape-v1.svg" class="logo-image"> Kafkador
   </a>
   <div>
-    <div style="margin-right:10px">
-    <input type="text" class="form-control form-control-sm"
-           style = "height:1em;"
+    <div class="search-container">
+    <input type="text" class="form-control form-control-sm search-input-compact"
            id="search" placeholder="Search" [(ngModel)]="searchQuery" (input)="onSearchInputChange($event)">
     </div>
   </div>
@@ -103,9 +102,9 @@
     </div>
     <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content min-vh-100">
       <div *ngIf="isSearching">
-        <div style="margin-top:1em; display:flex; justify-content:space-between; align-items:center;">
+        <div class="search-header">
           <span>Searching "{{searchQuery}}"</span>
-          <i class="bi bi-x-lg" style="cursor:pointer;" (click)="isSearching = false"></i>
+          <i class="bi bi-x-lg cursor-pointer" (click)="isSearching = false"></i>
         </div>
         <div>
           <p class="placeholder-glow" *ngIf="isSearchLoading">
@@ -115,11 +114,11 @@
           </p>
           <table class="table">
             <tbody>
-            <tr  *ngFor="let result of searchResults" (click)="goTo(result.route)" style="cursor: pointer;">
+            <tr  *ngFor="let result of searchResults" (click)="goTo(result.route)" class="cursor-pointer">
               <td>
                   <i *ngIf="result.icon" [ngClass]="result.icon"></i>&nbsp;
                   <span>{{result.title}}</span>
-                  <p class="text-s mb-0" style="m-" *ngIf="result.description">{{result.description}}</p>
+                  <p class="text-s mb-0" *ngIf="result.description">{{result.description}}</p>
               </td>
             </tr>
             </tbody>
@@ -138,8 +137,8 @@
               {{connectedHost}}
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" style="cursor:pointer;" routerLink="/connections" routerLinkActive="active"><i class="bi bi-hdd-network"></i><span class="m-2">Connections</span></a></li>
-              <li><a class="dropdown-item" style="cursor:pointer;" (click)="disconnect()" ><i class="bi bi-power"></i><span class="m-2">Disconnect</span></a></li>
+              <li><a class="dropdown-item cursor-pointer" routerLink="/connections" routerLinkActive="active"><i class="bi bi-hdd-network"></i><span class="m-2">Connections</span></a></li>
+              <li><a class="dropdown-item cursor-pointer" (click)="disconnect()" ><i class="bi bi-power"></i><span class="m-2">Disconnect</span></a></li>
             </ul>
           </div>
         </div>
