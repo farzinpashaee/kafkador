@@ -70,7 +70,7 @@
           <tbody>
           @for (config of topicConfig; track config.name; let i = $index) {
           <tr>
-            <th scope="row" class="text-s">{{config.name}} <a class="documentationLink" href="#" data-bs-toggle="modal" data-bs-target="#documentationModal" (click)="documentationMod(i)"><i class="bi bi-question-circle opacity-75 cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Check Documentation"></i></a></th>
+            <th scope="row" class="text-s">{{config.name}} &nbsp;<a *ngIf="config.documentation" class="documentationLink" href="#" data-bs-toggle="modal" data-bs-target="#documentationModal" (click)="documentationMod(i)"><i class="bi bi-question-circle opacity-75 cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Check Documentation"></i></a></th>
             <td class="text-truncate text-s">
               <span *ngIf="!config.sensitive">{{config.value}}</span>
               <span *ngIf="config.sensitive">******** <i  class="bi bi-eye-slash text-danger"></i></span>
