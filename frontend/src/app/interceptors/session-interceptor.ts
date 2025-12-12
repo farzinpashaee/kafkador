@@ -9,7 +9,7 @@ export const SessionInterceptor: HttpInterceptorFn = (req, next) => {
 
     return next(req).pipe(
       catchError(error => {
-        if (error.status === 400) {
+        if (error.status === 401) {
           console.warn('⚠ Unauthorized - redirecting to ConnectComponent...');
           router.navigate(['/connect']);
         }
