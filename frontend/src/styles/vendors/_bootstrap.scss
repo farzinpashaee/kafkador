@@ -1,0 +1,15 @@
+// 1️⃣ Load Bootstrap functions first
+@use "bootstrap/scss/functions" as *;
+
+// 2️⃣ Import your overrides BEFORE Bootstrap loads variables
+@use "../abstracts/variables" as vars;
+
+// 3️⃣ Now import the full Bootstrap bundle (it will include variables, mixins, maps, etc.)
+@use "bootstrap/scss/bootstrap" with (
+  $primary: vars.$primary,
+  $secondary: vars.$secondary,
+  $success: vars.$success,
+  $danger: vars.$danger,
+  $warning: vars.$warning,
+  $info: vars.$info
+);

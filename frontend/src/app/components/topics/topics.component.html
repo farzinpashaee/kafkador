@@ -1,0 +1,61 @@
+<p class="placeholder-glow" *ngIf="isLoading">
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-8"></span>
+</p>
+<div class="view-element" *ngIf="!isLoading">
+  <div class="row align-items-start">
+    <div class="col-12 col-md-12 col-lg-12">
+      <div class="card card-top-widget">
+        <div class="card-body text-white d-flex">
+          <div class="flex-grow-1">
+            <h5 class="card-title">Topics</h5>
+            <p class="card-text" class="text-s">
+              Topics: {{topics.length}} <br/>
+              Average Msp: 110 <br/>
+            </p>
+          </div>
+          <div class="ms-auto chart-container-medium">
+            <ngx-charts-bar-vertical
+              [results]="data"
+              [scheme]="cartTopWidgetWhiteScheme"
+              [xAxis]="false"
+              [gradient]="true"
+              [yAxis]="false" class="chart-full-size" >
+            </ngx-charts-bar-vertical>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row mt-4">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">ID</th>
+          <th scope="col">Partitions</th>
+          <th scope="col"></th>
+        </tr>
+        </thead>
+        <tbody >
+          <tr *ngFor="let topic of topics">
+            <th scope="row">
+              <span class="badge bg-dark">
+                <a routerLink="/topic/{{topic.name}}" routerLinkActive="active" class="badge-link">{{topic.name}}</a>
+              </span>
+            </th>
+            <td>{{topic.id}}</td>
+            <td>{{topic.partitions}}</td>
+            <td>
+              <i class="bi bi-box-arrow-up"></i> &nbsp;
+              <i class="bi bi-box-arrow-in-up"></i> &nbsp;
+              <a routerLink="/broker/{{topic.name}}" routerLinkActive="active"><i class="bi bi-three-dots"></i></a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

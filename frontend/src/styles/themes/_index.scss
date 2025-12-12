@@ -1,0 +1,58 @@
+:root,
+[data-bs-theme="light"] {
+  --bs-primary: #00D3D3;
+  --bs-body-bg: #fff;
+  --bs-body-color: #666;
+
+  --app-gray-200: #e9ecef;
+  --app-gray-300: #dfe2e6;
+
+  --app-text-xs-color: #aeb5bd;
+  --app-text-x-color: #aeb5bd;
+
+  --app-logo-color: #000;
+
+  --app-outline-button-color: #353a40;
+  --app-outline-button-border: 1px solid #cfd4da;
+  --app-outline-button-background: #fff;
+
+  --app-active-menu: #00D3D3;
+  --app-inactive-menu: #999;
+
+  --app-surface: #666;
+  --app-text: #000000;
+  --app-text-muted: #6c757d;
+
+  --app-card-top-widget-text: #FFF;
+  --app-card-top-widget-border: 0px solid #AAA;
+  --app-card-top-widget-background: #222;
+}
+
+[data-bs-theme="dark"] {
+  --bs-primary: #00D3D3;
+  --bs-body-bg: #121212;
+  --bs-body-color: #e0e0e0;
+
+  --app-gray-200: #e9ecef;
+  --app-gray-300: #dfe2e6;
+
+  --app-text-xs-color: #aeb5bd;
+  --app-text-x-color: #aeb5bd;
+
+  --app-logo-color: #fff;
+
+  --app-outline-button-color: #cfd4da;
+  --app-outline-button-border: 1px solid #353a40;
+  --app-outline-button-background: #222529;
+
+  --app-active-menu: #00D3D3;
+  --app-inactive-menu: #888;
+
+  --app-surface: #1e1e1e;
+  --app-text: #ffffff;
+  --app-text-muted: #a0a0a0;
+
+  --app-card-top-widget-text: #AAA;
+  --app-card-top-widget-border: #353a40;
+  --app-card-top-widget-background: #222529;
+}

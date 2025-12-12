@@ -1,0 +1,243 @@
+// Load global abstract styles (variables, mixins)
+@use 'abstracts' as *;
+// Load Bootstrap (compiled with our variables)
+@use 'vendors/bootstrap';
+@use "bootstrap-icons/font/bootstrap-icons.css";
+// Load global themes
+@use 'themes';
+// Load component styles
+@use 'components';
+
+@font-face {
+      font-family: 'Rubik';
+      src: url('../assets/fonts/Rubik-Regular.woff2') format('woff2'),
+           url('../assets/fonts/Rubik-Regular.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+}
+body {
+    font-family: Rubik, -apple-system, Arial, sans-serif;
+}
+header {
+    height: 3em;
+}
+
+.logo {
+  color: var(--app-logo-color);
+}
+.logo-image-connect {
+  width:1.7em;
+  margin-top:-0.3em;
+}
+.text-xs{
+  font-size: 0.6em;
+  color: var(--app-text-xs-color);
+}
+.text-s{
+  font-size: 0.8em;
+  color: var(--app-text-x-color);
+}
+.badge-link{
+  color:#fff;
+  font-size:1.3em;
+  text-decoration: none;
+}
+.nav-link.active {
+  color: var(--app-active-menu) !important;
+}
+.nav-link {
+  color: var(--app-inactive-menu) !important;
+}
+
+.dropdown-item{
+  font-size:0.8em;
+}
+
+.outline-button {
+  color: var(--app-outline-button-color);
+  border: var(--app-outline-button-border);
+  background: var(--app-outline-button-background);
+}
+
+.card-top-widget {
+  border-color: var(--app-card-top-widget-border);
+  background-color: var(--app-card-top-widget-background);
+  color: var(--app-card-top-widget-text);
+}
+
+.card-top-widget .card-title{
+  color: var(--app-card-top-widget-text);
+}
+.card-top-widget .card-text {
+  color: var(--app-card-top-widget-text);
+}
+
+.ml-0{
+   margin-left: 0em!important;
+}
+
+.viewElement{
+    display:none;
+}
+
+.loadingPlaceholder{
+    display:none;
+}
+
+
+
+.bg-black {
+    background-color:#000;
+}
+
+.text-gray-500 {
+    color: #adb5bd
+}
+
+.green-circle {
+    height: 0.7em;
+    width: 0.7em;
+    background-color: #479f76;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+
+span.placeholder{
+    height: 0.6em;
+    min-height: 0.6em;
+}
+
+.bi {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+}
+
+.text-truncate {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 30em;
+}
+
+.cursor-pointer{
+    cursor: pointer;
+}
+
+.opacity-15 {
+    opacity: .15 !important;
+}
+
+/* Sidebar */
+@media (min-width: 768px) {
+  .sidebar .offcanvas-lg {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 48px;
+  }
+  .navbar-search {
+    display: block;
+  }
+}
+
+.sidebar .nav-link {
+  color: #555;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.sidebar .nav-link.active {
+  color: #0d6efd;
+}
+
+.sidebar-heading {
+  font-size: .75rem;
+}
+
+/* Navbar */
+.navbar-brand {
+  padding-top: .75rem;
+  padding-bottom: .75rem;
+  background-color: rgba(0, 0, 0, .25);
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
+}
+
+.navbar .form-control {
+  padding: .75rem 1rem;
+}
+
+::placeholder {
+  opacity: 0.3!important;      /* ensure full visibility */
+}
+
+.modal-backdrop.show {
+  backdrop-filter: blur(5px)!important;      /* Blurs everything behind */
+  -webkit-backdrop-filter: blur(5px)!important;
+  opacity: 0.8 !important;
+}
+
+/* Utility classes extracted from inline styles */
+.header-dark {
+  background-color: #181818;
+}
+
+.logo-image {
+  width: 1.7em;
+  margin-top: -0.3em;
+}
+
+.search-input-small {
+  font-size: 0.8em;
+  width: 200px;
+}
+
+.dropdown-menu-padded {
+  padding-left: 10px;
+}
+
+.search-container {
+  margin-right: 10px;
+}
+
+.search-input-compact {
+  height: 1em;
+}
+
+.chart-container-small {
+  max-width: 30%;
+  height: 80px;
+}
+
+.chart-container-medium {
+  max-width: 70%;
+  height: 120px;
+}
+
+.chart-full-size {
+  width: 100%;
+  height: 100%;
+}
+
+.chart-column-min {
+  min-height: 250px;
+}
+
+.alert-text {
+  font-size: 0.8em;
+}
+
+.alert-time {
+  font-size: 0.7em;
+}
+
+.badge-rounded {
+  border-radius: 1em;
+}
+
+.search-header {
+  margin-top: 1em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

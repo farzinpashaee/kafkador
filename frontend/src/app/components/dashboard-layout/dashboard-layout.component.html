@@ -1,0 +1,173 @@
+<header class="navbar sticky-top flex-md-nowrap p-0 shadow header-dark" data-bs-theme="dark">
+  <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6 text-white bg-black" href="#">
+    <img src="/images/logo-shape-v1.svg" class="logo-image"> Kafkador
+  </a>
+  <div>
+    <div class="search-container">
+    <input type="text" class="form-control form-control-sm search-input-compact"
+           id="search" placeholder="Search" [(ngModel)]="searchQuery" (input)="onSearchInputChange($event)">
+    </div>
+  </div>
+  <ul class="navbar-nav flex-row d-md-none">
+    <li>ccccccccccc</li>
+    <li class="nav-item text-nowrap">
+      <button class="nav-link px-3 text-white" type="button" data-bs-toggle="collapse"
+              data-bs-target="#navbarSearch" aria-controls="navbarSearch" aria-expanded="false"
+              aria-label="Toggle search">
+        <i class="bi bi-search"></i>
+      </button>
+    </li>
+    <li class="nav-item text-nowrap">
+      <button class="nav-link px-3 text-white" type="button" data-bs-toggle="offcanvas"
+              data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false"
+              aria-label="Toggle navigation">
+        <i class="bi bi-list"></i>
+      </button>
+    </li>
+  </ul>
+  <div id="navbarSearch" class="navbar-search w-100 collapse"><input class="form-control w-100 rounded-0 border-0" aria-label="Search"></div>
+</header>
+<div class="container-fluid">
+  <div class="row">
+    <div class="sidebar border border-right col-md-3 col-lg-2 p-0 bg-body-tertiary">
+      <div class="offcanvas-md offcanvas-end bg-body-tertiary" tabindex="-1" id="sidebarMenu"
+           aria-labelledby="sidebarMenuLabel">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title" id="sidebarMenuLabel">Main Menu</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarMenu"
+                  aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body d-md-flex flex-column p-0 pt-lg-3 overflow-y-auto">
+          <ul class="nav flex-column">
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2 active" aria-current="page" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="isSearching = false">
+                <i class="bi bi-columns-gap"></i> Dashboard
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2" aria-current="page" routerLink="/cluster" routerLinkActive="active" (click)="isSearching = false">
+                <i class="bi bi-diagram-3"></i> Cluster
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2" routerLink="/topics" routerLinkActive="active" (click)="isSearching = false">
+                <i class="bi bi-chat-square-text"></i> Topics
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2"  routerLink="/consumers" routerLinkActive="active" (click)="isSearching = false">
+                <i class="bi bi-journal-arrow-down"></i> Consumers
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2" routerLink="/access-control" routerLinkActive="active" (click)="isSearching = false">
+                <i class="bi bi-shield-lock"></i> Access Control
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2" routerLink="/streams" routerLinkActive="active" (click)="isSearching = false">
+                <i class="bi bi-grid-3x2-gap"></i> Streams
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2"  routerLink="/ksqldb" routerLinkActive="active" (click)="isSearching = false">
+                <i class="bi bi-database"></i> KsqlDB
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2"  routerLink="/connectors" routerLinkActive="active" (click)="isSearching = false">
+                <i class="bi bi-box-arrow-in-right"></i> Connectors
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2"  routerLink="/schema-registry" routerLinkActive="active" (click)="isSearching = false">
+                <i class="bi bi-layers"></i> Schema Registry
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center gap-2" routerLink="/connections" routerLinkActive="active" (click)="isSearching = false">
+                <i class="bi bi-hdd-network"></i> Connections
+              </a>
+            </li>
+          </ul>
+          <hr class="my-3">
+          <ul class="nav flex-column mb-auto">
+            <li class="nav-item"><a class="nav-link d-flex align-items-center gap-2" routerLink="/settings" routerLinkActive="active" (click)="isSearching = false">
+              <i class="bi bi-gear"></i> Settings
+            </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content min-vh-100">
+      <div *ngIf="isSearching">
+        <div class="search-header">
+          <span>Searching "{{searchQuery}}"</span>
+          <i class="bi bi-x-lg cursor-pointer" (click)="isSearching = false"></i>
+        </div>
+        <div>
+          <p class="placeholder-glow" *ngIf="isSearchLoading">
+            <span class="placeholder col-12"></span>
+            <span class="placeholder col-12"></span>
+            <span class="placeholder col-8"></span>
+          </p>
+          <table class="table">
+            <tbody>
+            <tr  *ngFor="let result of searchResults" (click)="goTo(result.route)" class="cursor-pointer">
+              <td>
+                  <i *ngIf="result.icon" [ngClass]="result.icon"></i>&nbsp;
+                  <span>{{result.title}}</span>
+                  <p class="text-s mb-0" *ngIf="result.description">{{result.description}}</p>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div *ngIf="!isSearching" class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <app-breadcrumb></app-breadcrumb>
+        <div class="btn-toolbar mb-2 mb-md-0">
+          <div class="dropdown">
+            <button id="themeToggle" class="btn btn-sm outline-button" (click)="toggleTheme()">
+              <span *ngIf="!isDark"><i class="bi bi-sun"></i></span>
+              <span *ngIf="isDark"><i class="bi bi-moon"></i></span>
+            </button>&nbsp;
+            <button class="btn btn-sm dropdown-toggle outline-button" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              {{connectedHost}}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item cursor-pointer" routerLink="/connections" routerLinkActive="active"><i class="bi bi-hdd-network"></i><span class="m-2">Connections</span></a></li>
+              <li><a class="dropdown-item cursor-pointer" (click)="disconnect()" ><i class="bi bi-power"></i><span class="m-2">Disconnect</span></a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="!isSearching" class="row">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="modal fade" id="documentationModal" tabindex="-1" aria-labelledby="documentationModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="documentationModalLabel">Documentation</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="documentationBody" [innerHTML]="documentation">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="commonModal" tabindex="-1" aria-labelledby="commonModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body" id="commonModalBody" [innerHTML]="commonModalBody" >
+      </div>
+    </div>
+  </div>
+</div>

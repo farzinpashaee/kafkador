@@ -1,0 +1,54 @@
+kafkador:
+  url: http://localhost:8080/
+  connectionServiceImplementation:
+  observerService: # TODO: move to database enable per cluster. the config record must create when the cluster record created
+    enabled: false
+    retentionPeriod: 30 # in days
+    observers:
+      - id: Cluster
+        enabled: true
+        log: true
+        frequency: "*/10 * * * * *"
+      - id: Broker
+        enabled: false
+        frequency: "*/10 * * * * *"
+      - id: Topic
+        enabled: false
+        frequency: "*/10 * * * * *"
+      - id: Consumer
+        enabled: false
+        frequency: "*/10 * * * * *"
+  services:
+    connection:
+      implementation: "ConnectionService"
+  connections:
+    - id: 1
+      name: connection-1
+      host: 192.168.2.139
+      port: 9092
+    - id: 2
+      name: connection-2
+      host: 192.168.2.139
+      port: 9095
+
+spring:
+  application:
+    name: dashboard
+  messages:
+    basename: i18n/messages
+  datasource:
+    url: jdbc:h2:file:./data/kafkadordb
+    driverClassName: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: always
+    timeout:
+      seconds: 365d # TODO: update
+  h2:
+    console:
+      enabled: true
+      path: /kafkador-h2

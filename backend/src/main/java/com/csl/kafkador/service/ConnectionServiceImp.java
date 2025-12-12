@@ -1,0 +1,150 @@
+package com.csl.kafkador.service;
+
+import com.csl.kafkador.component.KafkadorContext;
+import com.csl.kafkador.component.SessionHolder;
+import com.csl.kafkador.domain.wrapper.AdminClusterWrapper;
+import com.csl.kafkador.domain.dto.ObserverConfigDto;
+import com.csl.kafkador.exception.ClusterNotFoundException;
+import com.csl.kafkador.exception.ConnectionSessionExpiredException;
+import com.csl.kafkador.domain.dto.ConnectionDto;
+import com.csl.kafkador.exception.DuplicatedClusterException;
+import com.csl.kafkador.exception.KafkaAdminApiException;
+import com.csl.kafkador.domain.model.Cluster;
+import com.csl.kafkador.repository.ClusterRepository;
+import com.csl.kafkador.service.config.KafkadorConfigService;
+import com.csl.kafkador.util.DtoMapper;
+import com.csl.kafkador.util.KafkaHelper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.admin.Admin;
+import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.common.KafkaFuture;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service("ConnectionService")
+@RequiredArgsConstructor
+public class ConnectionServiceImp implements ConnectionService {
+
+    private final ClusterRepository clusterRepository;
+    private final SessionHolder sessionHolder;
+    @Qualifier("ObserverConfigService")
+    private final KafkadorConfigService<ObserverConfigDto,ObserverConfigDto> kafkadorConfigService;
+
+    private HashMap<String, AdminClusterWrapper> adminClientMap = new HashMap<>();
+
+    public AdminClusterWrapper getAdminClient(String clusterId) throws ClusterNotFoundException {
+        AdminClusterWrapper adminClusterWrapper = new AdminClusterWrapper();
+        if(adminClientMap.containsKey(clusterId)) {
+            try {
+                KafkaFuture<String> clusterIdFuture = adminClientMap.get(clusterId).getAdmin().describeCluster().clusterId();
+                clusterIdFuture.get();
+                return adminClientMap.get(clusterId);
+            } catch (Exception e){
+                log.warn("Admin disconnected! Trying to reconnect... - " + e.getMessage());
+            }
+        }
+        Optional<Cluster> clusterOptional = clusterRepository.findByClusterId(clusterId);
+        if(!clusterOptional.isPresent())
+            throw new ClusterNotFoundException("Cluster ID not found!");
+        Cluster cluster = clusterOptional.get();
+        Admin admin = Admin.create(KafkaHelper.getConnectionProperties(cluster.getHost(), cluster.getPort()));
+        adminClusterWrapper.setAdmin(admin);
+        adminClusterWrapper.setCluster(DtoMapper.clusterMapper(cluster));
+        adminClientMap.put(cluster.getClusterId(),adminClusterWrapper);
+        return adminClusterWrapper;
+    }
+
+    @Override
+    public void delete(String id) throws ClusterNotFoundException {
+        Optional<Cluster> clusterOptional = clusterRepository.findById(id);
+        if(clusterOptional.isPresent()){
+            clusterRepository.delete(clusterOptional.get());
+        } else {
+            throw new ClusterNotFoundException("Connection to cluster with given ID not found!");
+        }
+    }
+
+
+    @Override
+    public ConnectionDto create(ConnectionDto connection) throws KafkaAdminApiException, DuplicatedClusterException {
+        Admin admin = null;
+        Optional<Cluster> clusterOptional = clusterRepository.findByHostAndPort(connection.getHost(), connection.getPort());
+        if(clusterOptional.isPresent()) throw new DuplicatedClusterException("There is a cluster created with this ip and port number!");
+
+        try{
+            admin = Admin.create(KafkaHelper.getConnectionProperties(connection.getHost(), connection.getPort()));
+            KafkaFuture<String> clusterIdFuture = admin.describeCluster().clusterId();
+            String clusterId = clusterIdFuture.get();
+            Cluster cluster = new Cluster();
+            cluster.setHost(connection.getHost());
+            cluster.setPort(connection.getPort());
+            cluster.setClusterId(clusterId);
+            cluster.setName(connection.getName());
+            clusterRepository.save(cluster);
+            connection.setClusterId(clusterId);
+            connection.setId(cluster.getId());
+            return connection;
+        } catch (Exception e) {
+            throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
+        } finally {
+            if(admin!=null) admin.close();
+        }
+    }
+
+    @Override
+    public ConnectionDto connect(String id) throws ClusterNotFoundException {
+        Optional<Cluster> clusterOptional = clusterRepository.findById(id);
+        if(!clusterOptional.isPresent())
+            throw new ClusterNotFoundException("Connection with given cluster ID not found!");
+        ConnectionDto connection = DtoMapper.connectionMapper(clusterOptional.get());
+        sessionHolder.getSession().setAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString(),connection);
+        return connection;
+    }
+
+    @Override
+    public ConnectionDto disconnect() throws ClusterNotFoundException {
+        ConnectionDto connection = (ConnectionDto) sessionHolder.getSession().getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString());
+        sessionHolder.getSession().setAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString(),null);
+        return connection;
+    }
+
+    @Override
+    public List<ConnectionDto> getConnections() {
+        return clusterRepository.findAll().stream()
+                .map( i -> DtoMapper.connectionMapper(i) )
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ConnectionDto getActiveConnection() throws ConnectionSessionExpiredException {
+        ConnectionDto connection = (ConnectionDto) sessionHolder.getSession().getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString());
+        if( connection == null ) throw new ConnectionSessionExpiredException("No Active connection found!","/connect");
+        return connection;
+    }
+
+    @Override
+    public Properties getActiveConnectionProperties() throws ConnectionSessionExpiredException {
+        ConnectionDto connection = getActiveConnection();
+        String bootstrapServers = connection.getHost() + ":" + connection.getPort() ;
+        Properties properties = new Properties();
+        properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        return properties;
+    }
+
+    @Override
+    public Properties getConnectionProperties(String host, String port) {
+        String bootstrapServers = host + ":" + port ;
+        Properties properties = new Properties();
+        properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        return properties;
+    }
+
+}

@@ -1,0 +1,59 @@
+<p class="placeholder-glow" *ngIf="isLoading">
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-8"></span>
+</p>
+<div class="row" *ngIf="!isLoading">
+  <div class="row align-items-start">
+    <div class="col-12 col-md-12 col-lg-12">
+      <div class="card card-top-widget">
+        <div class="card-body text-white d-flex">
+          <div class="flex-grow-1">
+            <h5 class="card-title">Consumers</h5>
+            <p class="card-text" class="text-s">
+              Consumer Groups: {{consumerGroups.length}} <br/>
+              Average Lpc: 11
+            </p>
+          </div>
+          <div class="ms-auto chart-container-medium">
+            <ngx-charts-bar-vertical
+              [results]="data"
+              [scheme]="cartTopWidgetWhiteScheme"
+              [xAxis]="false"
+              [gradient]="true"
+              [yAxis]="false" class="chart-full-size" >
+            </ngx-charts-bar-vertical>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <h4>Consumer Groups</h4>
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Type</th>
+          <th scope="col">Coordinator</th>
+          <th scope="col">Simple Consumer Group</th>
+          <th scope="col">Partition Assignor</th>
+          <th scope="col">Group State</th>
+        </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let consumerGroup of consumerGroups">
+            <th scope="row">{{consumerGroup.id}}</th>
+            <td>{{consumerGroup.type}}</td>
+            <td>{{consumerGroup.coordinator}}</td>
+            <td></td>
+            <td>{{consumerGroup.partitionAssignor}}</td>
+            <td>{{consumerGroup.groupState}}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>

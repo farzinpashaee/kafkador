@@ -4,7 +4,6 @@
 
 > 🔧 Compatible with **JDK 17+**  
 > ☕️ Built with **Spring Boot**
-
 ---
 
 ## 📸 Features
@@ -57,3 +56,12 @@
 git clone https://github.com/your-org/kafkador.git
 cd kafkador
 ./mvnw spring-boot:run
+```
+---
+## Versions
+### v1
+- Dashboard
+- Cluster
+- Brokers
+- Topics
+- Consumers

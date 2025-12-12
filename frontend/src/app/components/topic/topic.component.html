@@ -1,0 +1,106 @@
+<p class="placeholder-glow" *ngIf="isLoading">
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-8"></span>
+</p>
+<div class="row"  *ngIf="!isLoading">
+  <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="details-tab" data-bs-toggle="tab"
+              data-bs-target="#details" type="button" role="tab"
+              aria-controls="details" aria-selected="false">
+        <i class="bi bi-file-earmark-text"></i> Details
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="configurations-tab" data-bs-toggle="tab"
+              data-bs-target="#configurations" type="button" role="tab"
+              aria-controls="configurations" aria-selected="true">
+        Configurations
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content border border-top-0 p-3" id="profileTabsContent">
+    <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="projects-tab" tabindex="0">
+      <div class="alert alert-warning" role="alert">
+        This Service is Not Enabled!
+      </div>
+    </div>
+    <div class="tab-pane fade" id="configurations" role="tabpanel" aria-labelledby="overview-tab" tabindex="0">
+      <div class="d-flex justify-content-end align-items-center gap-2">
+        <div class="flex-grow-0">
+          <input
+            placeholder="Search"
+            id="table-filtering-search"
+            class="form-control"
+            type="text"
+            [formControl]="filter"
+            class="search-input-small" />
+        </div>
+        <div class="dropdown">
+          <button
+            class="btn btn-sm dropdown-toggle outline-button"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false">
+            <i class="bi bi-funnel"></i> Filter
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-padded">
+            <li>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="configsVisibleSwitch" (change)="filterSensitive$.next($event.target.checked)">
+                <label class="form-check-label text-s" for="configsVisibleSwitch">Visible</label>
+              </div>
+            </li>
+            <li>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="configsEditableSwitch" (change)="filterEditable$.next($event.target.checked)">
+                <label class="form-check-label text-s" for="configsEditableSwitch">Editable</label>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col" class="text-truncate">Value</th>
+            <th scope="col" class="text-center"></th>
+          </tr>
+          </thead>
+          <tbody>
+          @for (config of topicConfig; track config.name; let i = $index) {
+          <tr>
+            <th scope="row" class="text-s">{{config.name}} &nbsp;<a *ngIf="config.documentation" class="documentationLink" href="#" data-bs-toggle="modal" data-bs-target="#documentationModal" (click)="documentationMod(i)"><i class="bi bi-question-circle opacity-75 cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Check Documentation"></i></a></th>
+            <td class="text-truncate text-s">
+              <span *ngIf="!config.sensitive">{{config.value}}</span>
+              <span *ngIf="config.sensitive">******** <i  class="bi bi-eye-slash text-danger"></i></span>
+            </td>
+            <td class="text-center">
+              <i *ngIf="!config.readOnly" class="bi bi-pencil-square opacity-75 cursor-pointer"></i>
+            </td>
+          </tr>
+          }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="documentationModal" tabindex="-1" aria-labelledby="documentationModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="documentationModalLabel">Documentation</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="documentationBody" [innerHTML]="documentation">
+      </div>
+    </div>
+  </div>
+</div>
