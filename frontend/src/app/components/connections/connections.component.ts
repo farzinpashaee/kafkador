@@ -22,7 +22,7 @@ export class ConnectionsComponent {
 
   ngOnInit() {
     this.apiService.getConnections().subscribe((res: HttpResponse<GenericResponse<Connection[]>>) => {
-      //this.connections = res.data;
+      this.connections = res.body?.data ?? [];
       this.isLoading = false;
     });
   }
