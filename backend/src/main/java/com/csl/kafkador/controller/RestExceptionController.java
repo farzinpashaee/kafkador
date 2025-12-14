@@ -20,7 +20,7 @@ public class RestExceptionController {
         error.setMessage(ex.getMessage());
         error.setTimestamp(System.currentTimeMillis());
         return new GenericResponse.Builder<Void>()
-                .error(String.valueOf(HttpStatus.UNAUTHORIZED.value()))
+                .code(String.valueOf(HttpStatus.UNAUTHORIZED.value()))
                 .message(ex.getMessage())
                 .failed(HttpStatus.UNAUTHORIZED);
     }
@@ -28,7 +28,7 @@ public class RestExceptionController {
     @ExceptionHandler(DuplicatedClusterException.class)
     public ResponseEntity<GenericResponse<Void>> handleDuplicatedClusterException(DuplicatedClusterException ex) {
         return new GenericResponse.Builder<Void>()
-                .error(String.valueOf(HttpStatus.BAD_REQUEST.value()))
+                .code(String.valueOf(HttpStatus.BAD_REQUEST.value()))
                 .message(ex.getMessage())
                 .failed(HttpStatus.BAD_REQUEST);
     }
@@ -36,9 +36,17 @@ public class RestExceptionController {
     @ExceptionHandler(ConfigurationRequiredException.class)
     public ResponseEntity<GenericResponse<Void>> handleConfigurationRequired(ConfigurationRequiredException ex) {
         return new GenericResponse.Builder<Void>()
-                .error(String.valueOf(HttpStatus.PRECONDITION_REQUIRED.value()))
+                .code(String.valueOf(HttpStatus.PRECONDITION_REQUIRED.value()))
                 .message(ex.getMessage())
                 .failed(HttpStatus.PRECONDITION_REQUIRED);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<GenericResponse<Void>> anyOtherException(Exception ex) {
+        return new GenericResponse.Builder<Void>()
+                .code(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()))
+                .message(ex.getMessage())
+                .failed(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }

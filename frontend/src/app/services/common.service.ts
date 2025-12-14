@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Error } from '../models/error';
 
 declare var bootstrap: any;
 
@@ -28,6 +29,16 @@ export class CommonService {
     if (this.commonModal) {
       this.commonModal.hide();
     }
+  }
+
+  prepareError(error: Error | null | undefined, code: string, message: string) {
+    if (!error) {
+      error = new Error();
+      error.code = code;
+      error.message = message;
+      return error;
+    }
+    return error;
   }
 
   generateRandomChartData(seriesName: string, n: number) {

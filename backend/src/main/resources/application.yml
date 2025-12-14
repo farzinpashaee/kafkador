@@ -52,3 +52,5 @@ spring:
     console:
       enabled: true
       path: /kafkador-h2
+  jackson:
+    default-property-inclusion: non_null

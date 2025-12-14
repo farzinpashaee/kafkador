@@ -52,8 +52,8 @@ export class ConnectComponent  {
           }
           this.flags.set('getConnectionsLoading',false);
         },
-        error: (err:HttpErrorResponse) => {
-          this.errors.set("getConnections",{code:'500',message:err.error.message});
+        error: (res:HttpErrorResponse) => {
+          this.errors.set("getConnections",this.commonService.prepareError(res.error.error,'500','Failed to get cluster connections!'));
           this.flags.set('getConnectionsLoading',false);
         }
       });
@@ -70,7 +70,7 @@ export class ConnectComponent  {
   addConnection(){
     const errors = this.validationService.validateRequiredFields(this.newConnection, ['name', 'host', 'port']);
     if (errors.length > 0) {
-      this.errors.set("addConnection",{code:'400',message:errors[0]});
+      this.errors.set("addConnection",{code:'400',message:errors[0],datetime:''});
       return;
     } else {
       this.errors.delete('addConnection');
@@ -83,8 +83,9 @@ export class ConnectComponent  {
         this.flags.set('getConnectionsEmpty',false);
         this.commonService.hideModal('addClusterModal');
       },
-      error: (err:HttpErrorResponse) => {
-        this.errors.set("addConnection",{code:'500',message:err.error.message});
+      error: (res:HttpErrorResponse) => {
+        this.errors.set("addConnection",this.commonService.prepareError(res.error.error,'500','Failed to add new connection!'));
+        console.log(this.errors.get("addConnection"));
         this.flags.set('addConnectionLoading',false);
       }
     });
@@ -109,8 +110,8 @@ export class ConnectComponent  {
           this.flags.set('deleteConnectionLoading',false);
           this.commonService.hideModal('deleteClusterModal');
         },
-        error: (err:HttpErrorResponse) => {
-          this.errors.set("deleteConnection",{code:'500',message:err.error.message});
+        error: (res:HttpErrorResponse) => {
+          this.errors.set("deleteConnection",this.commonService.prepareError(res.error.error,'500','Failed to delete connection!'));
           this.flags.set('deleteConnectionLoading',false);
         }
       });

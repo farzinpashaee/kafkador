@@ -14,14 +14,11 @@ public class GenericResponse<T> {
     Meta meta;
     T data;
     Link link;
+    Error error;
 
     @Data
     @Accessors(chain = true)
     public static class Meta {
-        private String error;
-        private String message;
-        private Date datetime;
-
     }
 
     @Data
@@ -30,13 +27,20 @@ public class GenericResponse<T> {
 
     }
 
+    @Data
+    @Accessors(chain = true)
+    public static class Error {
+        private String code;
+        private String message;
+        private Date datetime;
+    }
+
     public static class Builder<T> {
 
         Meta meta;
         T data;
         Link link;
-        String error;
-        String message;
+        Error error;
 
         public Builder<T> meta( Meta meta ){
             this.meta = meta;
@@ -48,15 +52,15 @@ public class GenericResponse<T> {
             return this;
         }
 
-        public Builder<T> error( String error ){
-            if( meta == null ) meta = new Meta();
-            meta.setError(error);
+        public Builder<T> code( String code ){
+            if( error == null ) error = new Error();
+            error.setCode(code);
             return this;
         }
 
         public Builder<T> message( String message ){
-            if( meta == null ) meta = new Meta();
-            meta.setMessage(message);
+            if( error == null ) error = new Error();
+            error.setMessage(message);
             return this;
         }
 
@@ -73,10 +77,9 @@ public class GenericResponse<T> {
         }
 
         public ResponseEntity<GenericResponse<T>> failed( HttpStatus httpStatus ){
-            this.meta.setDatetime(new Date());
+            this.error.setDatetime(new Date());
             GenericResponse<T> response = new GenericResponse<T>()
-                    .setMeta(this.meta)
-                    .setLink(this.link);
+                    .setError(error);
             return new ResponseEntity<>(response,httpStatus);
         }
 
