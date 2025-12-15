@@ -3,8 +3,8 @@
   <span class="placeholder col-12"></span>
   <span class="placeholder col-8"></span>
 </p>
-<div class="row"  *ngIf="!isLoading">
-  <div class="row mt-4">
+<div class="row" *ngIf="!isLoading">
+  <div class="row">
     <h5>Connections</h5>
     <p class="text-s">List of Connection to connect to clusters</p>
     <div class="table-responsive">
@@ -14,6 +14,7 @@
           <th scope="col">name</th>
           <th scope="col">Host</th>
           <th scope="col">Port</th>
+          <th scope="col"></th>
         </tr>
         </thead>
         <tbody>
@@ -21,6 +22,7 @@
             <th scope="row">{{connection.name}}</th>
             <td>{{connection.host}}</td>
             <td>{{connection.port}}</td>
+            <td><a><i class="bi bi-trash3"></i></a></td>
           </tr>
         </tbody>
       </table>
