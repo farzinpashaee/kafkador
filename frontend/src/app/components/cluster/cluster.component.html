@@ -1,9 +1,9 @@
-<p class="placeholder-glow" *ngIf="isLoading">
+<p class="placeholder-glow" *ngIf="flags.get('getClusterLoading')">
   <span class="placeholder col-12"></span>
   <span class="placeholder col-12"></span>
   <span class="placeholder col-8"></span>
 </p>
-<div class="view-element" id="clusterDetailsView"  *ngIf="!isLoading">
+<div class="view-element" id="clusterDetailsView" *ngIf="!flags.get('getClusterLoading')">
   <div class="row align-items-start">
     <div class="col-12 col-md-12 col-lg-12">
       <div class="card card-top-widget">
@@ -16,8 +16,9 @@
               Cluster ID: {{cluster.id}}
             </p>
           </div>
-          <div class="ms-auto chart-container-medium">
+          <div class="ms-auto chart-container-medium" >
             <ngx-charts-bar-vertical
+              *ngIf="flags.get('agentEnabled')"
               [results]="data"
               [scheme]="cartTopWidgetWhiteScheme"
               [xAxis]="false"

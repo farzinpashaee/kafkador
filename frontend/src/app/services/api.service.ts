@@ -11,6 +11,7 @@ import { SearchResult } from '../models/search-result';
 import { ConsumerGroup } from '../models/consumer-group';
 import { GenericResponse } from '../models/generic-response';
 import { SchemaRegistry } from '../models/schema-registry';
+import { Chart } from '../models/chart';
 
 @Injectable({
   providedIn: 'root'
@@ -68,6 +69,10 @@ export class ApiService {
     return this.http.get<GenericResponse<SearchResult[]>>(`${ApiService.ApiBaseUrl}/search?query=${query}`,{ withCredentials: true });
   }
 
+  public getChart(id:string,query:string): Observable<HttpResponse<GenericResponse<Chart>>> {
+    return this.http.get<GenericResponse<Chart>>(`${ApiService.ApiBaseUrl}/metric/chart/${id}${query}`,
+      { withCredentials: true ,observe: 'response' });
+  }
 
   public connect(id:string): Observable<GenericResponse<Connection>> {
     let params = new HttpParams();
