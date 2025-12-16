@@ -17,6 +17,7 @@
           </div>
           <div class="ms-auto chart-container-small">
             <ngx-charts-bar-vertical
+              *ngIf="activeConnection?.agentEnabled"
               [results]="data"
               [scheme]="cartTopWidgetWhiteScheme"
               [xAxis]="false"
@@ -40,6 +41,7 @@
           </div>
           <div class="ms-auto chart-container-small">
             <ngx-charts-bar-vertical
+              *ngIf="activeConnection?.agentEnabled"
               [results]="data2"
               [scheme]="cartTopWidgetWhiteScheme"
               [xAxis]="false"
@@ -63,6 +65,7 @@
           </div>
           <div class="ms-auto chart-container-small">
             <ngx-charts-bar-vertical
+              *ngIf="activeConnection?.agentEnabled"
               [results]="data3"
               [scheme]="cartTopWidgetWhiteScheme"
               [xAxis]="false"
@@ -74,7 +77,7 @@
       </div>
     </div>
 </div>
-<div class="row mt-4">
+<div class="row mt-4" *ngIf="activeConnection?.agentEnabled">
   <div class="col-12 col-md-6 col-lg-8 chart-column-min">
     <h6><i class="bi bi-bar-chart-fill"></i>&nbsp; Average Msp</h6>
     <ngx-charts-area-chart
