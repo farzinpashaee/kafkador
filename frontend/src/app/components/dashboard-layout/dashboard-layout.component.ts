@@ -4,15 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { HttpResponse } from '@angular/common/http';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
 import { RouterModule, RouterOutlet, ActivatedRoute, Router } from '@angular/router';
-import { LocalStorageService } from '../../services/local-storage.service';
-import { ApiService } from '../../services/api.service';
-import { CommonService } from '../../services/common.service';
-import { Connection } from '../../models/connection';
-import { GenericResponse } from '../../models/generic-response';
-import { SearchResult } from '../../models/search-result';
-import { Config } from '../../models/config';
+import { LocalStorageService, ApiService, CommonService } from '../../services';
+import { Connection, GenericResponse, SearchResult, Config } from '../../models';
 import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
-
 
 @Component({
   selector: 'app-dashboard-layout',

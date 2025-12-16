@@ -1,10 +1,9 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute,RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { ApiService } from '../../services/api.service';
-import { GenericResponse } from '../../models/generic-response';
-import { ConsumerGroup } from '../../models/consumer-group';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
+import { ApiService } from '../../services';
+import { GenericResponse, ConsumerGroup } from '../../models';
 
 @Component({
   selector: 'app-consumers',

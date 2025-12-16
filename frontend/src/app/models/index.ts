@@ -10,6 +10,7 @@ export * from './alert';
 export * from './error';
 export * from './config';
 export * from './schema';
+export * from './schema-registry';
 export * from './generic-response';
 export * from './link';
 export * from './meta';

@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute,RouterModule } from '@angular/router';
-import { ApiService } from '../../services/api.service';
-import { GenericResponse } from '../../models/generic-response';
-import { SchemaRegistry } from '../../models/schema-registry';
+import { ApiService } from '../../services';
+import { GenericResponse, SchemaRegistry } from '../../models';
+
 
 @Component({
   selector: 'app-schema-registry',

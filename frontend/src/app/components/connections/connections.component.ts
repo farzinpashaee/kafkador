@@ -2,10 +2,9 @@ import { Component } from '@angular/core';
 import { ActivatedRoute,RouterModule } from '@angular/router';
 import { HttpResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { ApiService } from '../../services/api.service';
-import { GenericResponse } from '../../models/generic-response';
-import { Connection } from '../../models/connection';
 import { Observable } from 'rxjs';
+import { ApiService } from '../../services';
+import { GenericResponse, Connection } from '../../models';
 
 @Component({
   selector: 'app-connections',

@@ -2,10 +2,11 @@ import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
-import { ConsumerGroup, GenericResponse, Alert, Cluster, Topic, Error, Connection } from '../../models';
-import { ApiService, CommonService, DateTimeService, LocalStorageService } from '../../services';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 import * as shape from 'd3-shape';
+import { ConsumerGroup, GenericResponse, Alert, Cluster, Topic, Error, Connection } from '../../models';
+import { ApiService, CommonService, DateTimeService, LocalStorageService } from '../../services';
+
 
 @Component({
   selector: 'app-dashboard',

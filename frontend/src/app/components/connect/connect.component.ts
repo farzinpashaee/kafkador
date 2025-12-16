@@ -4,13 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
-import { ApiService } from '../../services/api.service';
-import { ValidationService } from '../../services/validation.service';
-import { LocalStorageService } from '../../services/local-storage.service';
-import { CommonService } from '../../services/common.service';
-import { GenericResponse } from '../../models/generic-response';
-import { Connection } from '../../models/connection';
-import { Error } from '../../models/error';
+import { ApiService, ValidationService, LocalStorageService, CommonService } from '../../services';
+import { GenericResponse, Connection, Error } from '../../models';
 import { environment } from '../../environments/environment';
 
 @Component({

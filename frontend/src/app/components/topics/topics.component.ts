@@ -2,13 +2,9 @@ import { Component } from '@angular/core';
 import { ActivatedRoute,RouterModule } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { ApiService } from '../../services/api.service';
-import { CommonService } from '../../services/common.service';
-import { GenericResponse } from '../../models/generic-response';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
-import { Topic } from '../../models/topic';
-import { Chart } from '../../models/chart';
-import { Error } from '../../models/error';
+import { ApiService, CommonService } from '../../services';
+import { GenericResponse, Topic, Chart, Error } from '../../models';
 
 @Component({
   selector: 'app-topics',

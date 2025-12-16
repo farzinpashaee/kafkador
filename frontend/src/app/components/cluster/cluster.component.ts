@@ -2,12 +2,10 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
-import { ApiService } from '../../services/api.service';
-import { CommonService } from '../../services/common.service';
-import { LocalStorageService } from '../../services/local-storage.service';
-import { Cluster, Chart, Error, Connection, GenericResponse } from '../../models';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 import { Observable } from 'rxjs';
+import { ApiService, CommonService, LocalStorageService } from '../../services';
+import { Cluster, Chart, Error, Connection, GenericResponse } from '../../models';
 
 @Component({
   selector: 'app-cluster',
