@@ -4,11 +4,8 @@ import { CommonModule, AsyncPipe, DecimalPipe  } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { startWith, map } from 'rxjs/operators';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
-import { ApiService } from '../../services/api.service';
-import { DocumentationService } from '../../services/documentation.service';
-import { Broker } from '../../models/broker';
-import { Config } from '../../models/config';
-import { GenericResponse } from '../../models/generic-response';
+import { ApiService, DocumentationService } from '../../services';
+import { Broker, Config, GenericResponse } from '../../models';
 
 @Component({
   selector: 'app-broker',
