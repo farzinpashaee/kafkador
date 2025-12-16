@@ -6,4 +6,5 @@ export class Connection {
     name!: string;
     defaultConnection?: boolean;
     redirectAfterLogin?: boolean;
+    agentEnabled?: boolean;
 }

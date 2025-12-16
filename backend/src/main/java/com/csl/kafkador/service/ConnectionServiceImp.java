@@ -11,6 +11,7 @@ import com.csl.kafkador.exception.DuplicatedClusterException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.domain.model.Cluster;
 import com.csl.kafkador.repository.ClusterRepository;
+import com.csl.kafkador.service.agent.AgentService;
 import com.csl.kafkador.service.config.KafkadorConfigService;
 import com.csl.kafkador.util.DtoMapper;
 import com.csl.kafkador.util.KafkaHelper;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 public class ConnectionServiceImp implements ConnectionService {
 
     private final ClusterRepository clusterRepository;
+    private final AgentService agentService;
     private final SessionHolder sessionHolder;
     @Qualifier("ObserverConfigService")
     private final KafkadorConfigService<ObserverConfigDto,ObserverConfigDto> kafkadorConfigService;
@@ -102,10 +104,10 @@ public class ConnectionServiceImp implements ConnectionService {
     @Override
     public ConnectionDto connect(String id) throws ClusterNotFoundException {
         Optional<Cluster> clusterOptional = clusterRepository.findById(id);
-        if(!clusterOptional.isPresent())
-            throw new ClusterNotFoundException("Connection with given cluster ID not found!");
+        if(clusterOptional.isEmpty()) throw new ClusterNotFoundException("Connection with given cluster ID not found!");
         ConnectionDto connection = DtoMapper.connectionMapper(clusterOptional.get());
         sessionHolder.getSession().setAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString(),connection);
+        if(!agentService.getAgents().isEmpty()) connection.setAgentEnabled(true);
         return connection;
     }
 

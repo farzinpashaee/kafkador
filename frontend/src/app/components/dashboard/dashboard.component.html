@@ -1,5 +1,10 @@
 <div class="row align-items-start">
-    <div class="col-12 col-md-12 col-lg-4">
+  <div class="alert alert-light text-s p-2" role="alert" *ngIf="!activeConnection?.agentEnabled">
+    &nbsp; To enable statistical visualizations and related feature enable Kafkador Agent
+    <button type="button" class="btn btn-outline-light btn-sm text-s float-end">Configure Agent</button>
+  </div>
+
+  <div class="col-12 col-md-12 col-lg-4">
       <div class="card card-top-widget">
         <div class="card-body text-white d-flex">
           <div class="spinner-border" role="status" *ngIf="flags.get('getClusterLoading')"></div>

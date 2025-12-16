@@ -8,9 +8,11 @@ import { Alert } from '../../models/alert';
 import { Cluster } from '../../models/cluster';
 import { Topic } from '../../models/topic';
 import { Error } from '../../models/error';
+import { Connection } from '../../models/connection';
 import { ApiService } from '../../services/api.service';
 import { CommonService } from '../../services/common.service';
 import { DateTimeService } from '../../services/date-time.service';
+import { LocalStorageService } from '../../services/local-storage.service';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 import * as shape from 'd3-shape';
 
@@ -25,6 +27,7 @@ export class DashboardComponent {
   alerts!: Alert[];
   cluster!: Cluster;
   topics!: Topic[];
+  activeConnection: Connection | null = null;
   consumerGroups!: ConsumerGroup[];
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
@@ -37,10 +40,14 @@ export class DashboardComponent {
 
 
   constructor(private apiService: ApiService,
+    private localStorageService: LocalStorageService,
     private commonService: CommonService,
     private dateTimeService: DateTimeService) {}
 
   ngOnInit() {
+    this.activeConnection = this.localStorageService.getItem<Connection>("activeConnection");
+    console.log("this.activeConnection");
+        console.log(this.activeConnection);
     this.flags.set('getAlertLoading',true);
     this.flags.set('getClusterLoading',true);
     this.flags.set('getTopicLoading',true);

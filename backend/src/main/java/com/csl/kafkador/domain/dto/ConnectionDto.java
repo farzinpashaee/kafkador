@@ -18,5 +18,6 @@ public class ConnectionDto implements Serializable {
     private Boolean privateConnection;
     private String userId;
     private String redirectAfterLogin;
+    private Boolean agentEnabled = false;
 
 }
