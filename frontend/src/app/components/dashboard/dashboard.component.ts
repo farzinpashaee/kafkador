@@ -46,8 +46,6 @@ export class DashboardComponent {
 
   ngOnInit() {
     this.activeConnection = this.localStorageService.getItem<Connection>("activeConnection");
-    console.log("this.activeConnection");
-        console.log(this.activeConnection);
     this.flags.set('getAlertLoading',true);
     this.flags.set('getClusterLoading',true);
     this.flags.set('getTopicLoading',true);

@@ -4,10 +4,8 @@ import { RouterModule } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { ApiService } from '../../services/api.service';
 import { CommonService } from '../../services/common.service';
-import { Cluster } from '../../models/cluster';
-import { Chart } from '../../models/chart';
-import { Error } from '../../models/error';
-import { GenericResponse } from '../../models/generic-response';
+import { LocalStorageService } from '../../services/local-storage.service';
+import { Cluster, Chart, Error, Connection, GenericResponse } from '../../models';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 import { Observable } from 'rxjs';
 
@@ -35,13 +33,16 @@ export class ClusterComponent{
   };
 
   cluster!: Cluster;
+  activeConnection: Connection | null = null;
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
 
   constructor(private commonService: CommonService,
+    private localStorageService: LocalStorageService,
     private apiService: ApiService) {}
 
   ngOnInit() {
+    this.activeConnection = this.localStorageService.getItem<Connection>("activeConnection");
     this.flags.set('getClusterLoading',true);
     this.flags.set('agentEnabled',true);
     this.apiService.getClusterDetails().subscribe((res: GenericResponse<Cluster>) => {

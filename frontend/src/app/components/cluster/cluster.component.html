@@ -18,7 +18,7 @@
           </div>
           <div class="ms-auto chart-container-medium" >
             <ngx-charts-bar-vertical
-              *ngIf="flags.get('agentEnabled')"
+              *ngIf="activeConnection?.agentEnabled"
               [results]="data"
               [scheme]="cartTopWidgetWhiteScheme"
               [xAxis]="false"
