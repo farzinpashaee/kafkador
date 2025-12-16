@@ -1,11 +1,13 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Alert } from '../../models/alert';
-import { Cluster } from '../../models/cluster';
-import { Topic } from '../../models/topic';
+import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { ConsumerGroup } from '../../models/consumer-group';
 import { GenericResponse } from '../../models/generic-response';
+import { Alert } from '../../models/alert';
+import { Cluster } from '../../models/cluster';
+import { Topic } from '../../models/topic';
+import { Error } from '../../models/error';
 import { ApiService } from '../../services/api.service';
 import { CommonService } from '../../services/common.service';
 import { DateTimeService } from '../../services/date-time.service';
@@ -49,9 +51,14 @@ export class DashboardComponent {
       this.flags.set('getClusterLoading',false);
       this.flags.set('getBrokerLoading',false);
     });
-    this.apiService.getTopics().subscribe((res: GenericResponse<Topic[]>) => {
-      this.topics = res.data;
-      this.flags.set('getTopicLoading',false);
+    this.apiService.getTopics().subscribe({ next: (res: HttpResponse<GenericResponse<Topic[]>>) => {
+        this.topics = res.body?.data ?? [];
+        this.flags.set('getTopicLoading',false);
+      },
+      error: (res:HttpErrorResponse) => {
+        this.errors.set("getTopics",this.commonService.prepareError(res.error.error,'500','Failed to get topics!'));
+        this.flags.set('getTopicLoading',false);
+      }
     });
     this.apiService.getConsumerGroups().subscribe((res: GenericResponse<ConsumerGroup[]>) => {
       this.consumerGroups = res.data;

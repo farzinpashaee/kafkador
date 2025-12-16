@@ -1,9 +1,9 @@
-<p class="placeholder-glow" *ngIf="isLoading">
+<p class="placeholder-glow" *ngIf="flags.get('getTopicsLoading')">
   <span class="placeholder col-12"></span>
   <span class="placeholder col-12"></span>
   <span class="placeholder col-8"></span>
 </p>
-<div class="view-element" *ngIf="!isLoading">
+<div class="view-element" *ngIf="!flags.get('getTopicsLoading')">
   <div class="row align-items-start">
     <div class="col-12 col-md-12 col-lg-12">
       <div class="card card-top-widget">
@@ -17,6 +17,7 @@
           </div>
           <div class="ms-auto chart-container-medium">
             <ngx-charts-bar-vertical
+              *ngIf="flags.get('agentEnabled')"
               [results]="data"
               [scheme]="cartTopWidgetWhiteScheme"
               [xAxis]="false"

@@ -35,7 +35,6 @@ export class ClusterComponent{
   };
 
   cluster!: Cluster;
-  isLoading: boolean = true;
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
 

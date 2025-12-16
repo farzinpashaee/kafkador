@@ -49,8 +49,9 @@ export class ApiService {
     return this.http.get<GenericResponse<Alert[]>>(`${ApiService.ApiBaseUrl}/alert`,{ withCredentials: true });
   }
 
-  public getTopics(): Observable<GenericResponse<Topic[]>> {
-    return this.http.get<GenericResponse<Topic[]>>(`${ApiService.ApiBaseUrl}/topic`,{ withCredentials: true });
+  public getTopics(): Observable<HttpResponse<GenericResponse<Topic[]>>> {
+    return this.http.get<GenericResponse<Topic[]>>(`${ApiService.ApiBaseUrl}/topic`,
+      { withCredentials: true ,observe: 'response'});
   }
 
   public getTopicDetails(name:string): Observable<GenericResponse<Topic>> {
