@@ -57,9 +57,14 @@ export class DashboardComponent {
         this.flags.set('getTopicLoading',false);
       }
     });
-    this.apiService.getConsumerGroups().subscribe((res: GenericResponse<ConsumerGroup[]>) => {
-      this.consumerGroups = res.data;
-      this.flags.set('getConsumerGroupLoading',false);
+    this.apiService.getConsumerGroups().subscribe({ next: (res: HttpResponse<GenericResponse<ConsumerGroup[]>>) => {
+        this.consumerGroups = res.body?.data ?? [];
+        this.flags.set('getConsumerGroupLoading',false);
+      },
+      error: (res:HttpErrorResponse) => {
+        this.errors.set("getConsumerGroup",this.commonService.prepareError(res.error.error,'500','Failed to get topics!'));
+        this.flags.set('getConsumerGroupLoading',false);
+      }
     });
     this.apiService.getAlerts().subscribe((res: GenericResponse<Alert[]>) => {
       this.alerts = res.data.map(alert => ({

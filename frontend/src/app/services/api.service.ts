@@ -58,8 +58,9 @@ export class ApiService {
     return this.http.get<GenericResponse<Topic>>(`${ApiService.ApiBaseUrl}/topic/${name}`,{ withCredentials: true });
   }
 
-  public getConsumerGroups(): Observable<GenericResponse<ConsumerGroup[]>> {
-    return this.http.get<GenericResponse<ConsumerGroup[]>>(`${ApiService.ApiBaseUrl}/consumer-group`,{ withCredentials: true });
+  public getConsumerGroups(): Observable<HttpResponse<GenericResponse<ConsumerGroup[]>>> {
+    return this.http.get<GenericResponse<ConsumerGroup[]>>(`${ApiService.ApiBaseUrl}/consumer-group`,
+      { withCredentials: true ,observe: 'response'} );
   }
 
   public getSchemaSubjects(): Observable<GenericResponse<SchemaRegistry>> {
