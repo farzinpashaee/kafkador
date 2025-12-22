@@ -1,19 +1,19 @@
 package com.csl.kafkador.service;
 
 import com.csl.kafkador.domain.dto.BrokerDto;
-import com.csl.kafkador.exception.ConnectionSessionExpiredException;
-import com.csl.kafkador.exception.KafkaAdminApiException;
-import com.csl.kafkador.exception.KafkadorException;
+import com.csl.kafkador.exception.*;
 import com.csl.kafkador.record.ConfigEntry;
 import com.csl.kafkador.util.ViewHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.Config;
+import org.apache.kafka.clients.admin.DescribeClusterResult;
 import org.apache.kafka.common.config.ConfigResource;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
+import org.apache.kafka.common.Node;
 
 import java.util.*;
 
@@ -26,11 +26,29 @@ public class BrokerServiceImp implements BrokerService {
     private final MessageSource messageSource;
 
     @Override
-    public BrokerDto getDetail(String clusterId, String brokerId) throws KafkaAdminApiException {
-        BrokerDto broker = new BrokerDto();
-        broker.setId(brokerId);
-        broker.setConfig(getConfigurations(clusterId,brokerId));
-        return broker;
+    public BrokerDto getDetail(String clusterId, String brokerId) throws KafkaAdminApiException,BrokerNotFoundException {
+        BrokerDto response = new BrokerDto();
+        try {
+            Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
+            DescribeClusterResult clusterResult = admin.describeCluster();
+            Collection<Node> nodes = clusterResult.nodes().get();
+            Optional<Node> brokerOptional = nodes.stream().filter( n -> n.id() == Integer.parseInt(brokerId) ).findFirst();
+            if( brokerOptional.isPresent() ){
+                Node broker = brokerOptional.get();
+                response.setId(brokerId);
+                response.setHost(broker.host());
+                response.setPort(broker.port());
+                response.setRack(broker.rack());
+                response.setConfig(getConfigurations(clusterId,brokerId));
+            } else {
+                throw new BrokerNotFoundException("Broker with given ID not found!");
+            }
+        } catch (ConnectionSessionExpiredException | BrokerNotFoundException e ){
+            throw e;
+        } catch (Exception e) {
+            throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
+        }
+        return response;
     }
 
     @Override

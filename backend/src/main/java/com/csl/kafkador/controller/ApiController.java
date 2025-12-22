@@ -53,7 +53,7 @@ public class ApiController {
 
 
     @GetMapping("/broker/{id}")
-    public ResponseEntity<GenericResponse<BrokerDto>> getBroker(@PathVariable String id ) throws KafkaAdminApiException {
+    public ResponseEntity<GenericResponse<BrokerDto>> getBroker(@PathVariable String id ) throws KafkaAdminApiException, BrokerNotFoundException {
         BrokerService brokerService = (BrokerService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.BROKER));
         ConnectionDto connection = connectionService.getActiveConnection();
