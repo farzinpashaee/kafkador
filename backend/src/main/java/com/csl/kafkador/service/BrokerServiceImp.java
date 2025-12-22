@@ -7,6 +7,7 @@ import com.csl.kafkador.util.ViewHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.Admin;
+import org.apache.kafka.clients.admin.AlterConfigOp;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.DescribeClusterResult;
 import org.apache.kafka.common.config.ConfigResource;
@@ -86,5 +87,26 @@ public class BrokerServiceImp implements BrokerService {
         } catch (Exception e) {
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
         }
+    }
+
+    public void updateConfig( String clusterId, String brokerId, ConfigEntry configEntry ) throws KafkaAdminApiException {
+
+        try{
+            Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
+            ConfigResource brokerResource = new ConfigResource(ConfigResource.Type.BROKER, brokerId);
+            List<AlterConfigOp> ops = List.of(
+                    new AlterConfigOp(
+                            new org.apache.kafka.clients.admin.ConfigEntry(configEntry.name(), configEntry.value()),
+                            AlterConfigOp.OpType.SET
+                    )
+            );
+            Map<ConfigResource, Collection<AlterConfigOp>> updateRequest = Map.of(brokerResource, ops);
+            admin.incrementalAlterConfigs(updateRequest).all().get();
+        } catch (ConnectionSessionExpiredException e){
+            throw e;
+        } catch (Exception e) {
+            throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
+        }
+
     }
 }

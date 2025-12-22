@@ -6,6 +6,7 @@ import com.csl.kafkador.domain.*;
 import com.csl.kafkador.domain.dto.*;
 import com.csl.kafkador.domain.model.Agent;
 import com.csl.kafkador.exception.*;
+import com.csl.kafkador.record.ConfigEntry;
 import com.csl.kafkador.service.*;
 import com.csl.kafkador.service.agent.AgentService;
 import com.csl.kafkador.service.alert.AlertService;
@@ -61,6 +62,14 @@ public class ApiController {
         return new GenericResponse.Builder<BrokerDto>()
                 .data(broker)
                 .success(HttpStatus.OK);
+    }
+
+    @PostMapping("/broker/{id}/config")
+    public void updateBrokerConfig(@PathVariable String id, @RequestBody ConfigEntry configEntry) throws KafkaAdminApiException, BrokerNotFoundException {
+        BrokerService brokerService = (BrokerService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.BROKER));
+        ConnectionDto connection = connectionService.getActiveConnection();
+        brokerService.updateConfig(connection.getClusterId(), id, configEntry);
     }
 
     @GetMapping("/topic")

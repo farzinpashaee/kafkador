@@ -12,5 +12,6 @@ public interface BrokerService {
 
     BrokerDto getDetail(String clusterId, String brokerId) throws KafkaAdminApiException, BrokerNotFoundException;
     List<ConfigEntry> getConfigurations(String clusterId, String brokerId) throws KafkaAdminApiException, ClusterNotFoundException;
+    void updateConfig( String clusterId, String brokerId, ConfigEntry configEntry ) throws KafkaAdminApiException;
 
 }
