@@ -23,9 +23,9 @@
 
   <div class="tab-content border border-top-0 p-3" id="profileTabsContent">
     <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="projects-tab" tabindex="0">
-      <div class="alert alert-warning" role="alert">
-        This Service is Not Enabled!
-      </div>
+      <strong>ID:</strong> {{topic.id}}<br/>
+      <strong>Name:</strong> {{topic.name}}<br/>
+      <strong>Partitions:</strong> {{topic.partitions}}
     </div>
     <div class="tab-pane fade" id="configurations" role="tabpanel" aria-labelledby="overview-tab" tabindex="0">
       <div class="d-flex justify-content-end align-items-center gap-2">
