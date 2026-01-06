@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Error } from '../models/error';
+import { Error, Config } from '../models';
 
 declare var bootstrap: any;
 
@@ -75,6 +75,11 @@ export class CommonService {
     const allValues = data[0].series.map((p: any) => p.value);
     const max = Math.max(...allValues);
     return max * 1.30;  // +15% padding
+  }
+
+  generateConfigEditHtml(config: Config){
+    let form = config.name;
+    return form;
   }
 
 }

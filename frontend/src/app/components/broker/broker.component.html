@@ -23,9 +23,11 @@
 
   <div class="tab-content border border-top-0 p-3" id="profileTabsContent">
     <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="logs-tab" tabindex="0">
-      <strong>ID:</strong> {{broker.id}}<br/>
-      <strong>Host:</strong> {{broker.host}}<br/>
-        <strong>Post:</strong> {{broker.port}}
+      <ul>
+        <li><strong> ID:</strong> {{broker.id}}</li>
+        <li><strong> Host:</strong> {{broker.host}}</li>
+        <li><strong> Port:</strong> {{broker.port}}</li>
+      </ul>
     </div>
     <div class="tab-pane fade" id="configurations" role="tabpanel" aria-labelledby="overview-tab" tabindex="0">
       <div class="d-flex justify-content-end align-items-center gap-2">
@@ -81,7 +83,7 @@
                 <span *ngIf="config.sensitive">******** <i  class="bi bi-eye-slash text-danger"></i></span>
               </td>
               <td class="text-center">
-                <i *ngIf="!config.readOnly" class="bi bi-pencil-square opacity-75 cursor-pointer"></i>
+                <i *ngIf="!config.readOnly" class="bi bi-pencil-square opacity-75 cursor-pointer"  data-bs-toggle="modal" data-bs-target="#editModal"  (click)="editMod(i)"></i>
               </td>
             </tr>
           }
@@ -103,5 +105,45 @@
       <div class="modal-body" id="documentationBody" [innerHTML]="documentation">
       </div>
     </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="editModalLabel">Edit Configuration</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="editBody" >
+        <h5>{{selectedEditConfig?.name}}</h5>
+        <p class="text-s">{{selectedEditConfig?.documentation}}</p>
+        <input *ngIf="selectedEditConfig?.type === 'STRING'" required type="text" class="form-control" value="{{selectedEditConfig?.value}}"/>
+        <input *ngIf="selectedEditConfig?.type === 'LONG'" required type="number" class="form-control" value="{{selectedEditConfig?.value}}"/>
+        <input *ngIf="selectedEditConfig?.type === 'INT'" required type="number" class="form-control" value="{{selectedEditConfig?.value}}"/>
+        <div *ngIf="selectedEditConfig as cfg">
+        <div *ngIf="selectedEditConfig?.type === 'BOOLEAN'" >
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="booleanRadio" id="trueRadio" value="true"
+                   [(ngModel)]="selectedEditConfig.value">
+            <label class="form-check-label" for="trueRadio">
+              True
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="booleanRadio" id="falseRadio" value="false"
+                   [(ngModel)]="selectedEditConfig.value">
+            <label class="form-check-label" for="falseRadio">
+              False
+            </label>
+          </div>
+        </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Save Configuration</button>
+      </div>
   </div>
 </div>

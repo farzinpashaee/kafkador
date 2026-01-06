@@ -4,7 +4,7 @@ import { CommonModule, AsyncPipe, DecimalPipe  } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { startWith, map } from 'rxjs/operators';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
-import { ApiService, DocumentationService } from '../../services';
+import { ApiService, DocumentationService, CommonService } from '../../services';
 import { Broker, Config, GenericResponse } from '../../models';
 
 @Component({
@@ -20,6 +20,7 @@ export class BrokerComponent {
   brokerConfig!: Config[];
   isLoading: boolean = true;
   documentation!: string;
+  selectedEditConfig?: Config;
 
   filter = new FormControl('', { nonNullable: true });
   filterSensitive$ = new BehaviorSubject<boolean>(false);
@@ -27,6 +28,7 @@ export class BrokerComponent {
 
   constructor(private apiService: ApiService,
     private documentationService: DocumentationService,
+    private commonService: CommonService,
     private route: ActivatedRoute) {}
 
   ngOnInit() {
@@ -57,6 +59,11 @@ export class BrokerComponent {
                                  this.brokerConfig[index].documentationLink
                                );
   }
+
+  editMod(index: number){
+    this.selectedEditConfig =  this.brokerConfig[index];
+  }
+
 
   search(text: string): Config[] {
     const term = text.toLowerCase();
