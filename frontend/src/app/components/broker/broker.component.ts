@@ -1,5 +1,6 @@
 import { Component, PipeTransform  } from '@angular/core';
 import { ActivatedRoute,RouterModule } from '@angular/router';
+import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { CommonModule, AsyncPipe, DecimalPipe  } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { startWith, map } from 'rxjs/operators';
@@ -64,6 +65,21 @@ export class BrokerComponent {
     this.selectedEditConfig =  this.brokerConfig[index];
   }
 
+  updateConfig(){
+    if (!this.selectedEditConfig) {
+        console.error('No config selected');
+        return;
+    }
+    this.apiService.updateBrokerConfig(this.brokerId, this.selectedEditConfig).subscribe({
+      next: (res: HttpResponse<GenericResponse<Config>>) => {
+        alert("OK");
+      },
+      error: (res:HttpErrorResponse) => {
+        alert(res.error.error);
+      }
+    });
+
+  }
 
   search(text: string): Config[] {
     const term = text.toLowerCase();

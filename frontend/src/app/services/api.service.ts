@@ -2,16 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse,HttpResponse   } from '@angular/common/http';
 import { throwError, Observable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { Cluster } from '../models/cluster';
-import { Connection } from '../models/connection';
-import { Broker } from '../models/broker';
-import { Alert } from '../models/alert';
-import { Topic } from '../models/topic';
-import { SearchResult } from '../models/search-result';
-import { ConsumerGroup } from '../models/consumer-group';
-import { GenericResponse } from '../models/generic-response';
-import { SchemaRegistry } from '../models/schema-registry';
-import { Chart } from '../models/chart';
+import { Cluster, Connection, Config, Broker, Alert, Topic, SearchResult, ConsumerGroup, GenericResponse,
+  SchemaRegistry, Chart } from '../models';
 
 @Injectable({
   providedIn: 'root'
@@ -88,6 +80,11 @@ export class ApiService {
 
   public disconnect(): Observable<HttpResponse<GenericResponse<Connection>>> {
     return this.http.get<GenericResponse<Connection>>(`${ApiService.ApiBaseUrl}/disconnect`,{withCredentials: true, observe: 'response' });
+  }
+
+  public updateBrokerConfig(brokerId:string, config:Config): Observable<HttpResponse<GenericResponse<Config>>> {
+    return this.http.post<GenericResponse<Config>>(`${ApiService.ApiBaseUrl}/broker/${brokerId}/config`,config,
+      { withCredentials: true ,observe: 'response' });
   }
 
 }
