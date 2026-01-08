@@ -28,6 +28,9 @@ public class SessionInterceptor implements HandlerInterceptor {
                              HttpServletResponse response,
                              Object handler) throws Exception {
 
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
 
         HttpSession session = request.getSession();
         if(session.getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString()) == null){

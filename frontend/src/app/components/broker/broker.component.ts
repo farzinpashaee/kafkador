@@ -70,6 +70,7 @@ export class BrokerComponent {
         console.error('No config selected');
         return;
     }
+    alert(this.selectedEditConfig.value);
     this.apiService.updateBrokerConfig(this.brokerId, this.selectedEditConfig).subscribe({
       next: (res: HttpResponse<GenericResponse<Config>>) => {
         alert("OK");

@@ -119,26 +119,26 @@
       <div class="modal-body" id="editBody" >
         <h5>{{selectedEditConfig?.name}}</h5>
         <p class="text-s">{{selectedEditConfig?.documentation}}</p>
-        <input *ngIf="selectedEditConfig?.type === 'STRING'" required type="text" class="form-control" value="{{selectedEditConfig?.value}}"/>
-        <input *ngIf="selectedEditConfig?.type === 'LONG'" required type="number" class="form-control" value="{{selectedEditConfig?.value}}"/>
-        <input *ngIf="selectedEditConfig?.type === 'INT'" required type="number" class="form-control" value="{{selectedEditConfig?.value}}"/>
         <div *ngIf="selectedEditConfig as cfg">
-        <div *ngIf="selectedEditConfig?.type === 'BOOLEAN'" >
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="booleanRadio" id="trueRadio" value="true"
-                   [(ngModel)]="selectedEditConfig.value">
-            <label class="form-check-label" for="trueRadio">
-              True
-            </label>
+          <input *ngIf="selectedEditConfig?.type === 'STRING'" required type="text" class="form-control" [(ngModel)]="selectedEditConfig.value"/>
+          <input *ngIf="selectedEditConfig?.type === 'LONG'" required type="number" class="form-control" [(ngModel)]="selectedEditConfig.value"/>
+          <input *ngIf="selectedEditConfig?.type === 'INT'" required type="number" class="form-control" [(ngModel)]="selectedEditConfig.value"/>
+          <div *ngIf="selectedEditConfig?.type === 'BOOLEAN'" >
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="booleanRadio" id="trueRadio" value="true"
+                     [(ngModel)]="selectedEditConfig.value">
+              <label class="form-check-label" for="trueRadio">
+                True
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="booleanRadio" id="falseRadio" value="false"
+                     [(ngModel)]="selectedEditConfig.value">
+              <label class="form-check-label" for="falseRadio">
+                False
+              </label>
+            </div>
           </div>
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="booleanRadio" id="falseRadio" value="false"
-                   [(ngModel)]="selectedEditConfig.value">
-            <label class="form-check-label" for="falseRadio">
-              False
-            </label>
-          </div>
-        </div>
         </div>
       </div>
       <div class="modal-footer">
