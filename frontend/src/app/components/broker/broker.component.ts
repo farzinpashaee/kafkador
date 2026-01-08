@@ -6,7 +6,7 @@ import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { startWith, map } from 'rxjs/operators';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { ApiService, DocumentationService, CommonService } from '../../services';
-import { Broker, Config, GenericResponse } from '../../models';
+import { Broker, Config, GenericResponse, Error } from '../../models';
 
 @Component({
   selector: 'app-broker',
@@ -22,6 +22,8 @@ export class BrokerComponent {
   isLoading: boolean = true;
   documentation!: string;
   selectedEditConfig?: Config;
+  errors: Map<string, Error> = new Map();
+  flags: Map<string, boolean> = new Map();
 
   filter = new FormControl('', { nonNullable: true });
   filterSensitive$ = new BehaviorSubject<boolean>(false);
@@ -66,17 +68,19 @@ export class BrokerComponent {
   }
 
   updateConfig(){
+    this.flags.set('updateConfigLoading',true);
     if (!this.selectedEditConfig) {
         console.error('No config selected');
         return;
     }
-    alert(this.selectedEditConfig.value);
     this.apiService.updateBrokerConfig(this.brokerId, this.selectedEditConfig).subscribe({
       next: (res: HttpResponse<GenericResponse<Config>>) => {
-        alert("OK");
+        this.flags.set('updateConfigLoading',false);
+        this.commonService.hideModal('editModal');
       },
       error: (res:HttpErrorResponse) => {
-        alert(res.error.error);
+        this.errors.set("updateConfig",this.commonService.prepareError(res.error.error,'500','Failed to update configuration!'));
+        this.flags.set('updateConfigLoading',false)
       }
     });
 
