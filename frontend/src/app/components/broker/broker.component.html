@@ -23,11 +23,72 @@
 
   <div class="tab-content border border-top-0 p-3" id="profileTabsContent">
     <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="logs-tab" tabindex="0">
-      <ul>
-        <li><strong> ID:</strong> {{broker.id}}</li>
-        <li><strong> Host:</strong> {{broker.host}}</li>
-        <li><strong> Port:</strong> {{broker.port}}</li>
-      </ul>
+      <div class="row">
+        <h4>Broker: {{broker.host}}:{{broker.port}}</h4>
+        <p>some description</p>
+      </div>
+      <div class="row">
+        <div class="col-12 col-md-12 col-lg-4 mt-1">
+          <ul class="list-group">
+            <li class="list-group-item list-group-item-secondary">Cluster Identity & Core</li>
+            <li class="list-group-item"><strong> ID:</strong> {{broker.id}}</li>
+            <li class="list-group-item"><strong> Process Role:</strong> {{ getConfigValue('process.roles') }}</li>
+            <li class="list-group-item"><strong> Controller Voters:</strong> {{ getConfigValue('controller.quorum.voters') }}</li>
+          </ul>
+        </div>
+        <div class="col-12 col-md-12 col-lg-4 mt-1">
+          <ul class="list-group">
+            <li class="list-group-item list-group-item-secondary">Networking & Listeners</li>
+            <li class="list-group-item"><strong> Listeners:</strong> {{ getConfigValue('listeners') }}</li>
+            <li class="list-group-item"><strong> Advertised Listeners:</strong> {{ getConfigValue('advertised.listeners') }}</li>
+            <li class="list-group-item"><strong> Inter Broker Listener Name:</strong> {{ getConfigValue('inter.broker.listener.name') }}</li>
+          </ul>
+        </div>
+        <div class="col-12 col-md-12 col-lg-4 mt-1">
+          <ul class="list-group">
+            <li class="list-group-item list-group-item-secondary">Replication & Fault Tolerance</li>
+            <li class="list-group-item"><strong> Replication Factor:</strong> {{ getConfigValue('default.replication.factor') }}</li>
+            <li class="list-group-item"><strong> Minimum Number of In-sync Replicas:</strong> {{ getConfigValue('min.insync.replicas') }}</li>
+            <li class="list-group-item"><strong> Unclean Leader Election Enabled:</strong> {{ getConfigValue('unclean.leader.election.enable') }}</li>
+          </ul>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-12">
+          <ul class="list-group">
+            <li class="list-group-item list-group-item-secondary">Messages, Log Storage & Retention</li>
+            <li class="list-group-item"><strong> Message Maximum Size:</strong> {{ getConfigValue('message.max.bytes') }} bytes</li>
+            <li class="list-group-item"><strong> Replica Fetch Max Size:</strong> {{ getConfigValue('replica.fetch.max.bytes') }} bytes</li>
+            <li class="list-group-item"><strong> Log Directory:</strong> {{ getConfigValue('log.dirs') }}</li>
+            <li class="list-group-item"><strong> Log Retention Hours:</strong> {{ getConfigValue('log.retention.hours') }}</li>
+            <li class="list-group-item"><strong> Log Segment:</strong> {{ getConfigValue('log.segment.bytes') }} bytes</li>
+            <li class="list-group-item"><strong> Log Retention Check Interval:</strong> {{ getConfigValue('log.retention.check.interval.ms') }} ms</li>
+          </ul>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-12">
+          <ul class="list-group">
+            <li class="list-group-item list-group-item-secondary">Performance & Throughput</li>
+            <li class="list-group-item"><strong> Network Threads Number:</strong> {{ getConfigValue('num.network.threads') }}</li>
+            <li class="list-group-item"><strong> I/O Threads Number:</strong> {{ getConfigValue('num.io.threads') }}</li>
+            <li class="list-group-item"><strong> Send Socket Buffer Size:</strong> {{ getConfigValue('socket.send.buffer.bytes') }} bytes</li>
+            <li class="list-group-item"><strong> Receive Socket Buffer Size:</strong> {{ getConfigValue('socket.receive.buffer.bytes') }} bytes</li>
+            <li class="list-group-item"><strong> Maximum Queued Requests:</strong> {{ getConfigValue('queued.max.requests') }}</li>
+          </ul>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-12">
+          <ul class="list-group">
+            <li class="list-group-item list-group-item-secondary">Reliability & Availability Tuning</li>
+            <li class="list-group-item"><strong> Controller Shutdown Enabled:</strong> {{ getConfigValue('controlled.shutdown.enable') }}</li>
+            <li class="list-group-item"><strong> Controller Maximum Shutdown Retries:</strong> {{ getConfigValue('controlled.shutdown.max.retries') }}</li>
+            <li class="list-group-item"><strong> Maximum Replica Lag Time:</strong> {{ getConfigValue('replica.lag.time.max.ms') }} ms</li>
+          </ul>
+        </div>
+      </div>
+
     </div>
     <div class="tab-pane fade" id="configurations" role="tabpanel" aria-labelledby="overview-tab" tabindex="0">
       <div class="d-flex justify-content-end align-items-center gap-2">
@@ -76,7 +137,7 @@
           </thead>
           <tbody>
           @for (config of brokerConfig; track config.name; let i = $index) {
-            <tr>
+            <tr id="{{config.name}}">
               <th scope="row" class="text-s">{{config.name}} &nbsp;<a *ngIf="config.documentation" data-name="${name}" href="#" data-bs-toggle="modal" data-bs-target="#documentationModal" (click)="documentationMod(i)" ><i class="bi bi-question-circle opacity-75 cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Check Documentation"></i></a></th>
               <td class="text-truncate text-s">
                 <span *ngIf="!config.sensitive">{{config.value}}</span>

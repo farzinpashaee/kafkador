@@ -96,5 +96,10 @@ export class BrokerComponent {
     });
   }
 
+  getConfigValue(key: String): string | undefined {
+    const matchedItem = this.brokerConfig.find((item: Config) => item.name === key);
+    return matchedItem ? matchedItem.value : undefined;
+  }
+
 
 }
