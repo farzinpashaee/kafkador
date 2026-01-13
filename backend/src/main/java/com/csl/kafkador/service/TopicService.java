@@ -146,4 +146,25 @@ public class TopicService {
         }
     }
 
+    public void updateConfig( String clusterId, String topicId, ConfigEntry configEntry ) throws KafkaAdminApiException {
+
+        try{
+            Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
+            ConfigResource brokerResource = new ConfigResource(ConfigResource.Type.TOPIC, topicId);
+            List<AlterConfigOp> ops = List.of(
+                    new AlterConfigOp(
+                            new org.apache.kafka.clients.admin.ConfigEntry(configEntry.name(), configEntry.value()),
+                            AlterConfigOp.OpType.SET
+                    )
+            );
+            Map<ConfigResource, Collection<AlterConfigOp>> updateRequest = Map.of(brokerResource, ops);
+            admin.incrementalAlterConfigs(updateRequest).all().get();
+        } catch (ConnectionSessionExpiredException e){
+            throw e;
+        } catch (Exception e) {
+            throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
+        }
+
+    }
+
 }

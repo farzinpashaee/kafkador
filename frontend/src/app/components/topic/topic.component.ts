@@ -1,11 +1,12 @@
 import { Component, PipeTransform  } from '@angular/core';
 import { ActivatedRoute,RouterModule } from '@angular/router';
+import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { CommonModule, AsyncPipe, DecimalPipe  } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { startWith, map } from 'rxjs/operators';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
-import { ApiService, DocumentationService } from '../../services';
-import { Broker, GenericResponse, Config, Topic } from '../../models';
+import { ApiService, DocumentationService, CommonService} from '../../services';
+import { Broker, GenericResponse, Config, Topic, Error } from '../../models';
 
 
 
@@ -22,6 +23,9 @@ export class TopicComponent {
   topicConfig!: Config[];
   isLoading: boolean = true;
   documentation!: string;
+  selectedEditConfig?: Config;
+  errors: Map<string, Error> = new Map();
+  flags: Map<string, boolean> = new Map();
 
   filter = new FormControl('', { nonNullable: true });
   filterSensitive$ = new BehaviorSubject<boolean>(false);
@@ -29,6 +33,7 @@ export class TopicComponent {
 
   constructor(private apiService: ApiService,
     private documentationService: DocumentationService,
+    private commonService: CommonService,
     private route: ActivatedRoute) {}
 
   ngOnInit() {
@@ -56,6 +61,29 @@ export class TopicComponent {
                                  this.topicConfig[index].documentation,
                                  this.topicConfig[index].documentationLink
                                );
+  }
+
+  editMod(index: number){
+    this.selectedEditConfig =  this.topicConfig[index];
+  }
+
+  updateConfig(){
+    this.flags.set('updateConfigLoading',true);
+    if (!this.selectedEditConfig) {
+        console.error('No config selected');
+        return;
+    }
+    this.apiService.updateTopicConfig(this.topic.name, this.selectedEditConfig).subscribe({
+      next: (res: HttpResponse<GenericResponse<Config>>) => {
+        this.flags.set('updateConfigLoading',false);
+        this.commonService.hideModal('editModal');
+      },
+      error: (res:HttpErrorResponse) => {
+        this.errors.set("updateConfig",this.commonService.prepareError(res.error.error,'500','Failed to update configuration!'));
+        this.flags.set('updateConfigLoading',false)
+      }
+    });
+
   }
 
   search(text: string): Config[] {

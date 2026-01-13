@@ -3,7 +3,7 @@
   <span class="placeholder col-12"></span>
   <span class="placeholder col-8"></span>
 </p>
-<div class="row"  *ngIf="!isLoading">
+<div class="row" *ngIf="!isLoading">
   <ul class="nav nav-tabs" id="profileTabs" role="tablist">
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="details-tab" data-bs-toggle="tab"
@@ -30,61 +30,112 @@
       <div class="row">
         <div class="col-12 col-md-12 col-lg-4 mt-1">
           <ul class="list-group">
-            <li class="list-group-item list-group-item-secondary"><i class="bi bi-diagram-3"></i>&nbsp; Cluster Identity & Core</li>
+            <li class="list-group-item list-group-item-secondary"><i class="bi bi-diagram-3"></i>&nbsp; Cluster Identity
+              & Core
+            </li>
             <li class="list-group-item text-s"><strong> ID:</strong> {{broker.id}}</li>
-            <li class="list-group-item text-s"><strong> Process Role:</strong> {{ getConfigValue('process.roles') }}</li>
-            <li class="list-group-item text-s"><strong> Controller Voters:</strong> {{ getConfigValue('controller.quorum.voters') }}</li>
+            <li class="list-group-item text-s"><strong> Process Role:</strong> {{ getConfigValue('process.roles') }}
+            </li>
+            <li class="list-group-item text-s"><strong> Controller Voters:</strong> {{
+              getConfigValue('controller.quorum.voters') }}
+            </li>
           </ul>
         </div>
         <div class="col-12 col-md-12 col-lg-4 mt-1">
           <ul class="list-group">
-            <li class="list-group-item list-group-item-secondary"><i class="bi bi-hdd-network"></i>&nbsp; Networking & Listeners</li>
+            <li class="list-group-item list-group-item-secondary"><i class="bi bi-hdd-network"></i>&nbsp; Networking &
+              Listeners
+            </li>
             <li class="list-group-item text-s"><strong> Listeners:</strong> {{ getConfigValue('listeners') }}</li>
-            <li class="list-group-item text-s"><strong> Advertised Listeners:</strong> {{ getConfigValue('advertised.listeners') }}</li>
-            <li class="list-group-item text-s"><strong> Inter Broker Listener Name:</strong> {{ getConfigValue('inter.broker.listener.name') }}</li>
+            <li class="list-group-item text-s"><strong> Advertised Listeners:</strong> {{
+              getConfigValue('advertised.listeners') }}
+            </li>
+            <li class="list-group-item text-s"><strong> Inter Broker Listener Name:</strong> {{
+              getConfigValue('inter.broker.listener.name') }}
+            </li>
           </ul>
         </div>
         <div class="col-12 col-md-12 col-lg-4 mt-1">
           <ul class="list-group">
-            <li class="list-group-item list-group-item-secondary"><i class="bi bi-copy"></i>&nbsp; Replication & Fault Tolerance</li>
-            <li class="list-group-item text-s"><strong> Replication Factor:</strong> {{ getConfigValue('default.replication.factor') }}</li>
-            <li class="list-group-item text-s"><strong> Minimum Number of In-sync Replicas:</strong> {{ getConfigValue('min.insync.replicas') }}</li>
-            <li class="list-group-item text-s"><strong> Unclean Leader Election Enabled:</strong> {{ getConfigValue('unclean.leader.election.enable') }}</li>
+            <li class="list-group-item list-group-item-secondary"><i class="bi bi-copy"></i>&nbsp; Replication & Fault
+              Tolerance
+            </li>
+            <li class="list-group-item text-s"><strong> Replication Factor:</strong> {{
+              getConfigValue('default.replication.factor') }}
+            </li>
+            <li class="list-group-item text-s"><strong> Minimum Number of In-sync Replicas:</strong> {{
+              getConfigValue('min.insync.replicas') }}
+            </li>
+            <li class="list-group-item text-s"><strong> Unclean Leader Election Enabled:</strong> {{
+              getConfigValue('unclean.leader.election.enable') }}
+            </li>
           </ul>
         </div>
       </div>
       <div class="row mt-3">
         <div class="col-12">
           <ul class="list-group">
-            <li class="list-group-item list-group-item-secondary"><i class="bi bi-card-list"></i>&nbsp; Messages, Log Storage & Retention</li>
-            <li class="list-group-item text-s"><strong> Message Maximum Size:</strong> {{ getConfigValue('message.max.bytes') }} bytes</li>
-            <li class="list-group-item text-s"><strong> Replica Fetch Max Size:</strong> {{ getConfigValue('replica.fetch.max.bytes') }} bytes</li>
+            <li class="list-group-item list-group-item-secondary"><i class="bi bi-card-list"></i>&nbsp; Messages, Log
+              Storage & Retention
+            </li>
+            <li class="list-group-item text-s"><strong> Message Maximum Size:</strong> {{
+              getConfigValue('message.max.bytes') }} bytes
+            </li>
+            <li class="list-group-item text-s"><strong> Replica Fetch Max Size:</strong> {{
+              getConfigValue('replica.fetch.max.bytes') }} bytes
+            </li>
             <li class="list-group-item text-s"><strong> Log Directory:</strong> {{ getConfigValue('log.dirs') }}</li>
-            <li class="list-group-item text-s"><strong> Log Retention Hours:</strong> {{ getConfigValue('log.retention.hours') }}</li>
-            <li class="list-group-item text-s"><strong> Log Segment:</strong> {{ getConfigValue('log.segment.bytes') }} bytes</li>
-            <li class="list-group-item text-s"><strong> Log Retention Check Interval:</strong> {{ getConfigValue('log.retention.check.interval.ms') }} ms</li>
+            <li class="list-group-item text-s"><strong> Log Retention Hours:</strong> {{
+              getConfigValue('log.retention.hours') }}
+            </li>
+            <li class="list-group-item text-s"><strong> Log Segment:</strong> {{ getConfigValue('log.segment.bytes') }}
+              bytes
+            </li>
+            <li class="list-group-item text-s"><strong> Log Retention Check Interval:</strong> {{
+              getConfigValue('log.retention.check.interval.ms') }} ms
+            </li>
           </ul>
         </div>
       </div>
       <div class="row mt-3">
         <div class="col-12">
           <ul class="list-group">
-            <li class="list-group-item list-group-item-secondary"><i class="bi bi-speedometer"></i>&nbsp; Performance & Throughput</li>
-            <li class="list-group-item text-s"><strong> Network Threads Number:</strong> {{ getConfigValue('num.network.threads') }}</li>
-            <li class="list-group-item text-s"><strong> I/O Threads Number:</strong> {{ getConfigValue('num.io.threads') }}</li>
-            <li class="list-group-item text-s"><strong> Send Socket Buffer Size:</strong> {{ getConfigValue('socket.send.buffer.bytes') }} bytes</li>
-            <li class="list-group-item text-s"><strong> Receive Socket Buffer Size:</strong> {{ getConfigValue('socket.receive.buffer.bytes') }} bytes</li>
-            <li class="list-group-item text-s"><strong> Maximum Queued Requests:</strong> {{ getConfigValue('queued.max.requests') }}</li>
+            <li class="list-group-item list-group-item-secondary"><i class="bi bi-speedometer"></i>&nbsp; Performance &
+              Throughput
+            </li>
+            <li class="list-group-item text-s"><strong> Network Threads Number:</strong> {{
+              getConfigValue('num.network.threads') }}
+            </li>
+            <li class="list-group-item text-s"><strong> I/O Threads Number:</strong> {{ getConfigValue('num.io.threads')
+              }}
+            </li>
+            <li class="list-group-item text-s"><strong> Send Socket Buffer Size:</strong> {{
+              getConfigValue('socket.send.buffer.bytes') }} bytes
+            </li>
+            <li class="list-group-item text-s"><strong> Receive Socket Buffer Size:</strong> {{
+              getConfigValue('socket.receive.buffer.bytes') }} bytes
+            </li>
+            <li class="list-group-item text-s"><strong> Maximum Queued Requests:</strong> {{
+              getConfigValue('queued.max.requests') }}
+            </li>
           </ul>
         </div>
       </div>
       <div class="row mt-3">
         <div class="col-12">
           <ul class="list-group">
-            <li class="list-group-item list-group-item-secondary"><i class="bi bi-card-checklist"></i>&nbsp; Reliability & Availability Tuning</li>
-            <li class="list-group-item text-s"><strong> Controller Shutdown Enabled:</strong> {{ getConfigValue('controlled.shutdown.enable') }}</li>
-            <li class="list-group-item text-s"><strong> Controller Maximum Shutdown Retries:</strong> {{ getConfigValue('controlled.shutdown.max.retries') }}</li>
-            <li class="list-group-item text-s"><strong> Maximum Replica Lag Time:</strong> {{ getConfigValue('replica.lag.time.max.ms') }} ms</li>
+            <li class="list-group-item list-group-item-secondary"><i class="bi bi-card-checklist"></i>&nbsp; Reliability
+              & Availability Tuning
+            </li>
+            <li class="list-group-item text-s"><strong> Controller Shutdown Enabled:</strong> {{
+              getConfigValue('controlled.shutdown.enable') }}
+            </li>
+            <li class="list-group-item text-s"><strong> Controller Maximum Shutdown Retries:</strong> {{
+              getConfigValue('controlled.shutdown.max.retries') }}
+            </li>
+            <li class="list-group-item text-s"><strong> Maximum Replica Lag Time:</strong> {{
+              getConfigValue('replica.lag.time.max.ms') }} ms
+            </li>
           </ul>
         </div>
       </div>
@@ -98,7 +149,7 @@
             id="table-filtering-search"
             class="form-control form-control-sm"
             type="text"
-            [formControl]="filter" />
+            [formControl]="filter"/>
         </div>
         <div class="dropdown">
           <button
@@ -111,13 +162,15 @@
           <ul class="dropdown-menu dropdown-menu-end dropdown-menu-padded">
             <li>
               <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" id="configsVisibleSwitch" (change)="filterSensitive$.next($event.target.checked)">
+                <input class="form-check-input" type="checkbox" id="configsVisibleSwitch"
+                       (change)="filterSensitive$.next($event.target.checked)">
                 <label class="form-check-label text-s" for="configsVisibleSwitch">Visible</label>
               </div>
             </li>
             <li>
               <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" id="configsEditableSwitch" (change)="filterEditable$.next($event.target.checked)">
+                <input class="form-check-input" type="checkbox" id="configsEditableSwitch"
+                       (change)="filterEditable$.next($event.target.checked)">
                 <label class="form-check-label text-s" for="configsEditableSwitch">Editable</label>
               </div>
             </li>
@@ -136,16 +189,22 @@
           </thead>
           <tbody>
           @for (config of brokerConfig; track config.name; let i = $index) {
-            <tr id="{{config.name}}">
-              <th scope="row" class="text-s">{{config.name}} &nbsp;<a *ngIf="config.documentation" data-name="${name}" href="#" data-bs-toggle="modal" data-bs-target="#documentationModal" (click)="documentationMod(i)" ><i class="bi bi-question-circle opacity-75 cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Check Documentation"></i></a></th>
-              <td class="text-truncate text-s">
-                <span *ngIf="!config.sensitive">{{config.value}}</span>
-                <span *ngIf="config.sensitive">******** <i  class="bi bi-eye-slash text-danger"></i></span>
-              </td>
-              <td class="text-center">
-                <i *ngIf="!config.readOnly" class="bi bi-pencil-square opacity-75 cursor-pointer"  data-bs-toggle="modal" data-bs-target="#editModal"  (click)="editMod(i)"></i>
-              </td>
-            </tr>
+          <tr id="{{config.name}}">
+            <th scope="row" class="text-s">{{config.name}} &nbsp;<a *ngIf="config.documentation" data-name="${name}"
+                                                                    href="#" data-bs-toggle="modal"
+                                                                    data-bs-target="#documentationModal"
+                                                                    (click)="documentationMod(i)"><i
+              class="bi bi-question-circle opacity-75 cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="top"
+              data-bs-title="Check Documentation"></i></a></th>
+            <td class="text-truncate text-s">
+              <span *ngIf="!config.sensitive">{{config.value}}</span>
+              <span *ngIf="config.sensitive">******** <i class="bi bi-eye-slash text-danger"></i></span>
+            </td>
+            <td class="text-center">
+              <i *ngIf="!config.readOnly" class="bi bi-pencil-square opacity-75 cursor-pointer" data-bs-toggle="modal"
+                 data-bs-target="#editModal" (click)="editMod(i)"></i>
+            </td>
+          </tr>
           }
           </tbody>
         </table>
@@ -155,7 +214,8 @@
 </div>
 
 
-<div class="modal fade" id="documentationModal" tabindex="-1" aria-labelledby="documentationModalLabel" aria-hidden="true">
+<div class="modal fade" id="documentationModal" tabindex="-1" aria-labelledby="documentationModalLabel"
+     aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -176,14 +236,17 @@
         <h1 class="modal-title fs-5" id="editModalLabel">Edit Configuration</h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body" id="editBody" >
+      <div class="modal-body" id="editBody">
         <h5>{{selectedEditConfig?.name}}</h5>
         <p class="text-s">{{selectedEditConfig?.documentation}}</p>
         <div *ngIf="selectedEditConfig as cfg">
-          <input *ngIf="selectedEditConfig?.type === 'STRING'" required type="text" class="form-control" [(ngModel)]="selectedEditConfig.value"/>
-          <input *ngIf="selectedEditConfig?.type === 'LONG'" required type="number" class="form-control" [(ngModel)]="selectedEditConfig.value"/>
-          <input *ngIf="selectedEditConfig?.type === 'INT'" required type="number" class="form-control" [(ngModel)]="selectedEditConfig.value"/>
-          <div *ngIf="selectedEditConfig?.type === 'BOOLEAN'" >
+          <input *ngIf="selectedEditConfig?.type === 'STRING'" required type="text" class="form-control"
+                 [(ngModel)]="selectedEditConfig.value"/>
+          <input *ngIf="selectedEditConfig?.type === 'LONG'" required type="number" class="form-control"
+                 [(ngModel)]="selectedEditConfig.value"/>
+          <input *ngIf="selectedEditConfig?.type === 'INT'" required type="number" class="form-control"
+                 [(ngModel)]="selectedEditConfig.value"/>
+          <div *ngIf="selectedEditConfig?.type === 'BOOLEAN'">
             <div class="form-check">
               <input class="form-check-input" type="radio" name="booleanRadio" id="trueRadio" value="true"
                      [(ngModel)]="selectedEditConfig.value">
@@ -207,13 +270,19 @@
 
       </div>
       <div class="modal-footer">
-        <button *ngIf="!flags.get('updateConfigLoading')" type="button" class="btn btn-light" data-bs-dismiss="modal"  data-bs-dismiss="modal">Cancel</button>
-        <button *ngIf="!flags.get('updateConfigLoading')" type="button" class="btn btn-primary" (click)="updateConfig()">Save Configuration</button>
+        <button *ngIf="!flags.get('updateConfigLoading')" type="button" class="btn btn-light" data-bs-dismiss="modal"
+                data-bs-dismiss="modal">Cancel
+        </button>
+        <button *ngIf="!flags.get('updateConfigLoading')" type="button" class="btn btn-primary"
+                (click)="updateConfig()">Save Configuration
+        </button>
         <div *ngIf="flags.get('updateConfigLoading')">
           <div class="spinner-border spinner-border-sm" role="status">
             <span class="visually-hidden">Loading...</span>
-          </div> Updating...&nbsp;
+          </div>
+          Updating...&nbsp;
         </div>
       </div>
+    </div>
   </div>
 </div>

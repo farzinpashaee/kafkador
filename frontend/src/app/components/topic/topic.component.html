@@ -117,7 +117,8 @@
               <span *ngIf="config.sensitive">******** <i  class="bi bi-eye-slash text-danger"></i></span>
             </td>
             <td class="text-center">
-              <i *ngIf="!config.readOnly" class="bi bi-pencil-square opacity-75 cursor-pointer"></i>
+              <i *ngIf="!config.readOnly" class="bi bi-pencil-square opacity-75 cursor-pointer"  data-bs-toggle="modal"
+                 data-bs-target="#editModal" (click)="editMod(i)"></i>
             </td>
           </tr>
           }
@@ -136,6 +137,65 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body" id="documentationBody" [innerHTML]="documentation">
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="editModalLabel">Edit Configuration</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="editBody">
+        <h5>{{selectedEditConfig?.name}}</h5>
+        <p class="text-s">{{selectedEditConfig?.documentation}}</p>
+        <div *ngIf="selectedEditConfig as cfg">
+          <input *ngIf="selectedEditConfig?.type === 'STRING'" required type="text" class="form-control"
+                 [(ngModel)]="selectedEditConfig.value"/>
+          <input *ngIf="selectedEditConfig?.type === 'LONG'" required type="number" class="form-control"
+                 [(ngModel)]="selectedEditConfig.value"/>
+          <input *ngIf="selectedEditConfig?.type === 'INT'" required type="number" class="form-control"
+                 [(ngModel)]="selectedEditConfig.value"/>
+          <div *ngIf="selectedEditConfig?.type === 'BOOLEAN'">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="booleanRadio" id="trueRadio" value="true"
+                     [(ngModel)]="selectedEditConfig.value">
+              <label class="form-check-label" for="trueRadio">
+                True
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="booleanRadio" id="falseRadio" value="false"
+                     [(ngModel)]="selectedEditConfig.value">
+              <label class="form-check-label" for="falseRadio">
+                False
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="errors.get('updateConfig')" class="alert alert-danger" role="alert">
+          {{ errors.get('updateConfig')?.message }}
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button *ngIf="!flags.get('updateConfigLoading')" type="button" class="btn btn-light" data-bs-dismiss="modal"
+                data-bs-dismiss="modal">Cancel
+        </button>
+        <button *ngIf="!flags.get('updateConfigLoading')" type="button" class="btn btn-primary"
+                (click)="updateConfig()">Save Configuration
+        </button>
+        <div *ngIf="flags.get('updateConfigLoading')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          Updating...&nbsp;
+        </div>
       </div>
     </div>
   </div>

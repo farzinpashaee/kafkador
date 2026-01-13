@@ -82,6 +82,14 @@ public class ApiController {
                 .success(HttpStatus.OK);
     }
 
+    @PostMapping("/topic/{id}/config")
+    public void updateTopicConfig(@PathVariable String id, @RequestBody ConfigEntry configEntry) throws KafkaAdminApiException, BrokerNotFoundException {
+        TopicService topicService = (TopicService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
+        ConnectionDto connection = connectionService.getActiveConnection();
+        topicService.updateConfig(connection.getClusterId(), id, configEntry);
+    }
+
     @GetMapping("/topic/{name}")
     public ResponseEntity<GenericResponse<Topic>> getTopic( @PathVariable String name ) throws KafkaAdminApiException {
         TopicService topicService = (TopicService) applicationContext

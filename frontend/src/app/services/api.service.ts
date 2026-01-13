@@ -87,4 +87,9 @@ export class ApiService {
       { withCredentials: true ,observe: 'response' });
   }
 
+  public updateTopicConfig(topicId:string, config:Config): Observable<HttpResponse<GenericResponse<Config>>> {
+    return this.http.post<GenericResponse<Config>>(`${ApiService.ApiBaseUrl}/topic/${topicId}/config`,config,
+      { withCredentials: true ,observe: 'response' });
+  }
+
 }
