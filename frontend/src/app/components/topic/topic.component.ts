@@ -58,14 +58,19 @@ export class TopicComponent {
                                );
   }
 
-    search(text: string): Config[] {
-      const term = text.toLowerCase();
-      return this.topic.config.filter((config: Config) => {
-        const matchesText = config.name.toLowerCase().includes(term);
-        const matchesSensitive = !this.filterSensitive$.value || config.sensitive === true;
-        const matchesEditable = !this.filterEditable$.value || config.readOnly === false;
-        return matchesText && matchesSensitive && matchesEditable;
-      });
-    }
+  search(text: string): Config[] {
+    const term = text.toLowerCase();
+    return this.topic.config.filter((config: Config) => {
+      const matchesText = config.name.toLowerCase().includes(term);
+      const matchesSensitive = !this.filterSensitive$.value || config.sensitive === true;
+      const matchesEditable = !this.filterEditable$.value || config.readOnly === false;
+      return matchesText && matchesSensitive && matchesEditable;
+    });
+  }
+
+  getConfigValue(key: String): string | undefined {
+    const matchedItem = this.topicConfig.find((item: Config) => item.name === key);
+    return matchedItem ? matchedItem.value : undefined;
+  }
 
 }

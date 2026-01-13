@@ -23,26 +23,63 @@
 
   <div class="tab-content border border-top-0 p-3" id="profileTabsContent">
     <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="projects-tab" tabindex="0">
-      <strong>ID:</strong> {{topic.id}}<br/>
-      <strong>Name:</strong> {{topic.name}}<br/>
-      <strong>Partitions:</strong> {{topic.partitions}}
+      <div class="row">
+        <h4><i class="bi bi-chat-square-text"></i>&nbsp; {{topic.name}}</h4>
+        <p>some description</p>
+      </div>
+      <div class="row">
+        <div class="col-12 col-md-12 col-lg-4 mt-1">
+          <ul class="list-group">
+            <li class="list-group-item list-group-item-secondary"><i class="bi bi-diagram-3"></i>&nbsp; Topic Identity & Partitioning</li>
+            <li class="list-group-item text-s"><strong> ID:</strong> {{topic.id}}</li>
+            <li class="list-group-item text-s"><strong> partitions:</strong> {{topic.partitions}}</li>
+            <li class="list-group-item text-s"><strong> Replication Factor:</strong> {{ getConfigValue('replication.factor') }}</li>
+          </ul>
+        </div>
+        <div class="col-12 col-md-12 col-lg-4 mt-1">
+          <ul class="list-group">
+            <li class="list-group-item list-group-item-secondary"><i class="bi bi-copy"></i>&nbsp; Retention & Cleanup Policy</li>
+            <li class="list-group-item text-s"><strong> Cleanup Policy:</strong> {{ getConfigValue('cleanup.policy') }}</li>
+            <li class="list-group-item text-s"><strong> Retention Duration:</strong> {{ getConfigValue('retention.ms') }} ms</li>
+            <li class="list-group-item text-s"><strong> Retention Size:</strong> {{ getConfigValue('retention.bytes') }} bytes</li>
+          </ul>
+        </div>
+        <div class="col-12 col-md-12 col-lg-4 mt-1">
+          <ul class="list-group">
+            <li class="list-group-item list-group-item-secondary"><i class="bi bi-hdd-network"></i>&nbsp; In-Sync Replicas & Durability</li>
+            <li class="list-group-item text-s"><strong> Minimum In-sync Replicas:</strong> {{ getConfigValue('min.insync.replicas') }}</li>
+            <li class="list-group-item text-s"><strong> Unclean Leader Election Enabled:</strong> {{ getConfigValue('unclean.leader.election.enable') }}</li>
+          </ul>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-12">
+          <ul class="list-group">
+            <li class="list-group-item list-group-item-secondary"><i class="bi bi-card-list"></i>&nbsp; Messages, Ordering and Tiered Storage</li>
+            <li class="list-group-item text-s"><strong> Message Maximum Size:</strong> {{ getConfigValue('max.message.bytes') }} bytes</li>
+            <li class="list-group-item text-s"><strong> Message Timestamp Type:</strong> {{ getConfigValue('message.timestamp.type') }}</li>
+            <li class="list-group-item text-s"><strong> Local Retention Duration:</strong> {{ getConfigValue('local.retention.ms') }} ms</li>
+          </ul>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-12">
+          <ul class="list-group">
+            <li class="list-group-item list-group-item-secondary"><i class="bi bi-speedometer"></i>&nbsp; Performance & Throughput</li>
+            <li class="list-group-item text-s"><strong> Segment Size:</strong> {{ getConfigValue('segment.bytes') }} bytes</li>
+            <li class="list-group-item text-s"><strong> Segment Duration:</strong> {{ getConfigValue('segment.ms') }} ms</li>
+            <li class="list-group-item text-s"><strong> Flush Messages:</strong> {{ getConfigValue('flush.messages') }}</li>
+          </ul>
+        </div>
+      </div>
     </div>
     <div class="tab-pane fade" id="configurations" role="tabpanel" aria-labelledby="overview-tab" tabindex="0">
       <div class="d-flex justify-content-end align-items-center gap-2">
         <div class="flex-grow-0">
-          <input
-            placeholder="Search"
-            id="table-filtering-search"
-            class="form-control form-control-sm"
-            type="text"
-            [formControl]="filter" />
+          <input placeholder="Search" id="table-filtering-search" class="form-control form-control-sm" type="text" [formControl]="filter" />
         </div>
         <div class="dropdown">
-          <button
-            class="btn btn-sm dropdown-toggle outline-button"
-            type="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false">
+          <button class="btn btn-sm dropdown-toggle outline-button" type="button"  data-bs-toggle="dropdown"  aria-expanded="false">
             <i class="bi bi-funnel"></i> Filter
           </button>
           <ul class="dropdown-menu dropdown-menu-end dropdown-menu-padded">
