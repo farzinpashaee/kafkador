@@ -29,14 +29,15 @@ header {
   width:1.7em;
   margin-top:-0.3em;
 }
+
 .text-xs{
   font-size: 0.6em;
-  color: var(--app-text-xs-color);
 }
+
 .text-s{
   font-size: 0.8em;
-  color: var(--app-text-x-color);
 }
+
 .badge-link{
   color:#fff;
   font-size:1.3em;
@@ -189,7 +190,10 @@ span.placeholder{
 
 .search-input-small {
   font-size: 0.8em;
-  width: 200px;
+  width: 100%;
+  padding: 0.4em 0.5em 0.4em 0.5em;
+  border-radius: 0.4em;
+  border: 1px solid #CCC;
 }
 
 .dropdown-menu-padded {
