@@ -162,6 +162,10 @@
                  [(ngModel)]="selectedEditConfig.value"/>
           <input *ngIf="selectedEditConfig?.type === 'INT'" required type="number" class="form-control"
                  [(ngModel)]="selectedEditConfig.value"/>
+          <input *ngIf="selectedEditConfig?.type === 'SHORT'" required type="number" class="form-control"
+                 [(ngModel)]="selectedEditConfig.value"/>
+          <input *ngIf="selectedEditConfig?.type === 'DOUBLE'" required type="number" class="form-control"
+                 [(ngModel)]="selectedEditConfig.value"/>
           <div *ngIf="selectedEditConfig?.type === 'BOOLEAN'">
             <div class="form-check">
               <input class="form-check-input" type="radio" name="booleanRadio" id="trueRadio" value="true"
