@@ -240,6 +240,8 @@
         <h5>{{selectedEditConfig?.name}}</h5>
         <p class="text-s">{{selectedEditConfig?.documentation}}</p>
         <div *ngIf="selectedEditConfig as cfg">
+          <input *ngIf="selectedEditConfig?.type === 'LIST'" required type="text" class="form-control"
+                 [(ngModel)]="selectedEditConfig.value"/>
           <input *ngIf="selectedEditConfig?.type === 'STRING'" required type="text" class="form-control"
                  [(ngModel)]="selectedEditConfig.value"/>
           <input *ngIf="selectedEditConfig?.type === 'LONG'" required type="number" class="form-control"
