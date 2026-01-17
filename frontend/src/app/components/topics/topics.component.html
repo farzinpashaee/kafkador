@@ -41,17 +41,13 @@
         </tr>
         </thead>
         <tbody >
-          <tr *ngFor="let topic of topics">
+          <tr *ngFor="let topic of topics" routerLink="/topic/{{topic.name}}" class="cursor-pointer">
             <th scope="row">
-              <span class="badge bg-dark">
-                <a routerLink="/topic/{{topic.name}}" routerLinkActive="active" class="badge-link">{{topic.name}}</a>
-              </span>
+              <span class="badge bg-dark"><a class="badge-link">{{topic.name}}</a></span>
             </th>
             <td>{{topic.id}}</td>
             <td>{{topic.partitions}}</td>
-            <td>
-              <a routerLink="/topic/{{topic.name}}" routerLinkActive="active"><i class="bi bi-three-dots"></i></a>
-            </td>
+            <td><i class="bi bi-three-dots"></i></td>
           </tr>
         </tbody>
       </table>

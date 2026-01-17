@@ -128,22 +128,16 @@
           <th scope="col">Host</th>
           <th scope="col">Port</th>
           <th scope="col">Size (KB)</th>
-          <th scope="col">Hash</th>
           <th></th>
         </tr>
         </thead>
         <tbody id="clusterBrokers">
-        <tr *ngFor="let broker of cluster.brokers">
+        <tr *ngFor="let broker of cluster.brokers" routerLink="/broker/{{broker.id}}" class="cursor-pointer">
           <th scope="row">{{broker.id}}</th>
-          <td>
-              <span class="badge bg-dark">
-                <a routerLink="/broker/{{broker.id}}" routerLinkActive="active" class="badge-link">{{broker.host}}</a>
-              </span>
-          </td>
+          <td><span class="badge bg-dark "><a class="badge-link" >{{broker.host}}</a></span></td>
           <td>{{broker.port}}</td>
           <td>{{broker.size}}</td>
-          <td>{{broker.hash}}</td>
-          <td><a routerLink="/broker/{{broker.id}}" routerLinkActive="active"><i class="bi bi-three-dots"></i></a></td>
+          <td><i class="bi bi-three-dots"></i></td>
         </tr>
         </tbody>
       </table>
