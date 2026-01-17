@@ -21,19 +21,19 @@ export const routes: Routes = [
     path: '',
     component: DashboardLayoutComponent,
     children: [
-      { path: '', component: DashboardComponent, title: 'Dashboard', data: { breadcrumb: 'Dashboard' } },
-      { path: 'cluster', component: ClusterComponent, title: 'Cluster', data: { breadcrumb: 'Cluster' } },
-      { path: 'broker/:id', component: BrokerComponent, title: 'Broker', data: { breadcrumb: 'Cluster > Broker' } },
-      { path: 'topics', component: TopicsComponent, title: 'Topics', data: { breadcrumb: 'Topics' } },
-      { path: 'topic/:name', component: TopicComponent, title: 'Topic', data: { breadcrumb: 'Topics > {{Topic Name}}' } },
-      { path: 'consumers', component: ConsumersComponent, title: 'Consumers', data: { breadcrumb: 'Consumers' } },
-      { path: 'access-control', component: AccessControlComponent, title: 'Access Control', data: { breadcrumb: 'Access Control' } },
-      { path: 'streams', component: StreamsComponent, title: 'Streams', data: { breadcrumb: 'Streams' } },
-      { path: 'ksqldb', component: KsqlDBComponent, title: 'KsqlDB', data: { breadcrumb: 'KsqlDB' } },
-      { path: 'connectors', component: ConnectorsComponent, title: 'Connectors', data: { breadcrumb: 'Connectors' } },
-      { path: 'schema-registry', component: SchemaRegistryComponent, title: 'Schema Registry', data: { breadcrumb: 'Schema Registry' } },
-      { path: 'connections', component: ConnectionsComponent, title: 'Connections', data: { breadcrumb: 'Connections' } },
-      { path: 'settings', component: SettingsComponent, title: 'Settings', data: { breadcrumb: 'Settings' } }
+      { path: '', component: DashboardComponent, title: 'Dashboard', data: { breadcrumb: { label: 'Dashboard'} } },
+      { path: 'cluster', component: ClusterComponent, title: 'Cluster', data: { breadcrumb: { label: 'Cluster'} } },
+      { path: 'broker/:id', component: BrokerComponent, title: 'Broker', data: { breadcrumb: { param: 'id'} } },
+      { path: 'topic', component: TopicsComponent, title: 'Topics', data: { breadcrumb: { label:'Topics', url:'/topic'} } },
+      { path: 'topic/:name', component: TopicComponent, title: 'Topics', data: { breadcrumb: { param: 'name'} } },
+      { path: 'consumer', component: ConsumersComponent, title: 'Consumers', data: { breadcrumb: { label: 'Consumers'} } },
+      { path: 'access-control', component: AccessControlComponent, title: 'Access Control', data: { breadcrumb: { label: 'Access Control'} } },
+      { path: 'stream', component: StreamsComponent, title: 'Streams', data: { breadcrumb: { label: 'Streams'} } },
+      { path: 'ksqldb', component: KsqlDBComponent, title: 'KsqlDB', data: { breadcrumb: { label: 'KsqlDB'} } },
+      { path: 'connector', component: ConnectorsComponent, title: 'Connectors', data: { breadcrumb: { label: 'Connectors'} } },
+      { path: 'schema-registry', component: SchemaRegistryComponent, title: 'Schema Registry', data: { breadcrumb: { label: 'Schema Registry'} } },
+      { path: 'connection', component: ConnectionsComponent, title: 'Connections', data: { breadcrumb: { label: 'Connections'} } },
+      { path: 'settings', component: SettingsComponent, title: 'Settings', data: { breadcrumb: { label: 'Settings'} } }
     ]
   },
   {
