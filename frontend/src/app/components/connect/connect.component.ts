@@ -103,7 +103,7 @@ export class ConnectComponent  {
         next: (res: HttpResponse<void>) => {
           this.connections = this.connections.filter(c => c.id !== this.deletedConnection.id);
           this.flags.set('deleteConnectionLoading',false);
-          this.commonService.hideModal('deleteClusterModal');
+          this.commonService.hideModal('deleteConnectionModal');
         },
         error: (res:HttpErrorResponse) => {
           this.errors.set("deleteConnection",this.commonService.prepareError(res.error.error,'500','Failed to delete connection!'));

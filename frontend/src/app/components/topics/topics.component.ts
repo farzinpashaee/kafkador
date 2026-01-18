@@ -32,6 +32,7 @@ export class TopicsComponent {
 
   topics!: Topic[];
   newTopic!: Topic;
+  deletedTopic!: Topic;
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
 
@@ -42,6 +43,7 @@ export class TopicsComponent {
 
   ngOnInit() {
     this.newTopic = { name: '' , id : '' , partitions :1 , internal: false , replicatorFactor: 1, config: [] };
+    this.deletedTopic = { name: '' , id : '' , partitions :1 , internal: false , replicatorFactor: 1, config: [] };
     this.flags.set('getTopicLoading',true);
     this.flags.set('agentEnabled',true);
     this.apiService.getTopics().subscribe({ next: (res: HttpResponse<GenericResponse<Topic[]>>) => {
@@ -89,6 +91,26 @@ export class TopicsComponent {
         this.flags.set('createTopicLoading',false);
       }
     });
+  }
+
+  openDeleteDialog(topic: Topic) {
+    this.errors.delete('deleteTopic');
+    this.deletedTopic = topic;
+  }
+
+  deleteTopic(){
+    if (!this.deletedTopic) return;
+    this.apiService.deleteTopic(this.deletedTopic.name).subscribe({
+        next: (res: HttpResponse<void>) => {
+          this.topics = this.topics.filter(c => c.name !== this.deletedTopic.name);
+          this.flags.set('deleteTopicLoading',false);
+          this.commonService.hideModal('deleteTopicModal');
+        },
+        error: (res:HttpErrorResponse) => {
+          this.errors.set("deleteTopic",this.commonService.prepareError(res.error.error,'500','Failed to delete topic!'));
+          this.flags.set('deleteTopicLoading',false);
+        }
+      });
   }
 
 }

@@ -49,7 +49,6 @@ public class TopicService {
     }
 
     public Topic createTopic( String clusterId , Topic topic ) throws KafkaAdminApiException {
-
         try {
             Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
             NewTopic newTopic = new NewTopic(topic.getName(),
@@ -73,13 +72,10 @@ public class TopicService {
     }
 
 
-    public void deleteTopic(Request<String> request ) throws KafkaAdminApiException {
-
-        ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
-
-        try (Admin admin = Admin.create(connectionService.getActiveConnectionProperties())) {
-            DeleteTopicsResult deleteTopicsResult = admin.deleteTopics(Collections.singleton(request.getBody()));
+    public void deleteTopic( String clusterId, String name) throws KafkaAdminApiException {
+        try {
+            Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
+            DeleteTopicsResult deleteTopicsResult = admin.deleteTopics(Collections.singleton(name));
             deleteTopicsResult.all().get();
         } catch (ConnectionSessionExpiredException e){
             throw e;

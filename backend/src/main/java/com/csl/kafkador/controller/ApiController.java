@@ -103,18 +103,21 @@ public class ApiController {
 
 
     @PostMapping("/topic")
-    public void createTopic(@RequestBody Topic topic) throws KafkaAdminApiException {
+    public ResponseEntity<GenericResponse<Topic>>  createTopic(@RequestBody Topic topic) throws KafkaAdminApiException {
         TopicService topicService = (TopicService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
         ConnectionDto connection = connectionService.getActiveConnection();
-        topicService.createTopic(connection.getClusterId(),topic);
+        return new GenericResponse.Builder<Topic>()
+                .data(topicService.createTopic(connection.getClusterId(),topic))
+                .success(HttpStatus.OK);
     }
 
-    @DeleteMapping("/topic/{id}")
+    @DeleteMapping("/topic/{name}")
     public void deleteTopic(@PathVariable String name, HttpSession session ) throws KafkaAdminApiException {
         TopicService topicService = (TopicService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
-        topicService.deleteTopic(new Request<String>(session).setBody(name));
+        ConnectionDto connection = connectionService.getActiveConnection();
+        topicService.deleteTopic(connection.getClusterId(),name);
     }
 
     @PostMapping("/connection")

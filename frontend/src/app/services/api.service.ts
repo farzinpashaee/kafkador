@@ -32,11 +32,6 @@ export class ApiService {
       { withCredentials: true ,observe: 'response' });
   }
 
-  public createTopic(topic:Topic): Observable<HttpResponse<GenericResponse<Topic>>> {
-    return this.http.post<GenericResponse<Topic>>(`${ApiService.ApiBaseUrl}/topic`,topic,
-      { withCredentials: true ,observe: 'response' });
-  }
-
   public deleteConnection(id:string): Observable<HttpResponse<void>> {
     return this.http.delete<void>(`${ApiService.ApiBaseUrl}/connection/`+id,
       { withCredentials: true ,observe: 'response' });
@@ -53,6 +48,16 @@ export class ApiService {
 
   public getTopicDetails(name:string): Observable<GenericResponse<Topic>> {
     return this.http.get<GenericResponse<Topic>>(`${ApiService.ApiBaseUrl}/topic/${name}`,{ withCredentials: true });
+  }
+
+  public createTopic(topic:Topic): Observable<HttpResponse<GenericResponse<Topic>>> {
+    return this.http.post<GenericResponse<Topic>>(`${ApiService.ApiBaseUrl}/topic`,topic,
+      { withCredentials: true ,observe: 'response' });
+  }
+
+  public deleteTopic(name:string): Observable<HttpResponse<void>> {
+    return this.http.delete<void>(`${ApiService.ApiBaseUrl}/topic/${name}`,
+      { withCredentials: true ,observe: 'response' });
   }
 
   public getConsumerGroups(): Observable<HttpResponse<GenericResponse<ConsumerGroup[]>>> {

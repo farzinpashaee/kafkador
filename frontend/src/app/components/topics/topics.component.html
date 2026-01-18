@@ -28,9 +28,9 @@
       </div>
     </div>
   </div>
-  <div class="row mt-4">
+  <div class="row mt-2">
     <div class="col-12 col-md-12 col-lg-12">
-      <button  type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTopicModal"><i class="bi bi-plus-circle"></i> Create Topic</button>
+      <button  type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTopicModal"><i class="bi bi-plus-circle"></i> Create New Topic</button>
     </div>
   </div>
   <div class="row mt-2">
@@ -45,13 +45,13 @@
         </tr>
         </thead>
         <tbody >
-          <tr *ngFor="let topic of topics" routerLink="/topic/{{topic.name}}" class="cursor-pointer">
-            <th scope="row">
+          <tr *ngFor="let topic of topics" class="cursor-pointer">
+            <th scope="row" routerLink="/topic/{{topic.name}}">
               <span class="badge bg-dark"><a class="badge-link">{{topic.name}}</a></span>
             </th>
-            <td>{{topic.id}}</td>
-            <td>{{topic.partitions}}</td>
-            <td><i class="bi bi-three-dots"></i></td>
+            <td routerLink="/topic/{{topic.name}}">{{topic.id}}</td>
+            <td routerLink="/topic/{{topic.name}}">{{topic.partitions}}</td>
+            <td><a (click)="openDeleteDialog(topic)" data-bs-toggle="modal" data-bs-target="#deleteTopicModal"><i class="bi bi-trash3"></i></a></td>
           </tr>
         </tbody>
       </table>
@@ -61,7 +61,7 @@
 
 
 
-<!-- create topic -->
+<!-- Create topic -->
 <div class="modal fade" id="createTopicModal" tabindex="-1" aria-labelledby="createTopicModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -91,6 +91,31 @@
           <div class="spinner-border spinner-border-sm" role="status">
             <span class="visually-hidden">Loading...</span>
           </div> Creating Topic...&nbsp;
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Delete Topic -->
+<div class="modal fade" id="deleteTopicModal" tabindex="-1" aria-labelledby="deleteTopicLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        <h6 class="text-danger" ><i class="bi bi-x-circle"></i> &nbsp;Topic Delete</h6>
+        Are you sure you want to delete '{{deletedTopic.name}}'?
+        <div *ngIf="errors.get('deleteTopic')" class="alert alert-danger" role="alert">
+          {{ errors.get('deleteTopic')?.message }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button *ngIf="!flags.get('deleteTopicLoading')"  type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button *ngIf="!flags.get('deleteTopicLoading')"  type="button" class="btn btn-danger" (click)="deleteTopic()" >Delete</button>
+        <div *ngIf="flags.get('deleteTopicLoading')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Deleting...&nbsp;
         </div>
       </div>
     </div>
