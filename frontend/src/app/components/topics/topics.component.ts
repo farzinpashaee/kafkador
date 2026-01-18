@@ -3,12 +3,13 @@ import { ActivatedRoute,RouterModule } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
-import { ApiService, CommonService } from '../../services';
+import { ApiService, CommonService, ValidationService } from '../../services';
 import { GenericResponse, Topic, Chart, Error } from '../../models';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-topics',
-  imports: [CommonModule,RouterModule,NgxChartsModule],
+  imports: [CommonModule,RouterModule,NgxChartsModule,FormsModule],
   templateUrl: './topics.component.html',
   styleUrl: './topics.component.scss'
 })
@@ -30,14 +31,17 @@ export class TopicsComponent {
   };
 
   topics!: Topic[];
+  newTopic!: Topic;
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
 
   constructor(private apiService: ApiService,
     private commonService: CommonService,
+    private validationService: ValidationService,
     private route: ActivatedRoute) {}
 
   ngOnInit() {
+    this.newTopic = { name: '' , id : '' , partitions :1 , internal: false , replicatorFactor: 1, config: [] };
     this.flags.set('getTopicLoading',true);
     this.flags.set('agentEnabled',true);
     this.apiService.getTopics().subscribe({ next: (res: HttpResponse<GenericResponse<Topic[]>>) => {
@@ -60,6 +64,29 @@ export class TopicsComponent {
           this.errors.set("getChart",this.commonService.prepareError(res.error.error,'500','Failed to get cluster chart information!'));
           this.flags.set('getChartLoading',false);
         }
+      }
+    });
+  }
+
+  createTopic(){
+    const errors = this.validationService.validateRequiredFields(this.newTopic, ['name', 'partitions', 'replicatorFactor']);
+    if (errors.length > 0) {
+      this.errors.set("createTopic",{code:'400',message:errors[0],datetime:''});
+      return;
+    } else {
+      this.errors.delete('createTopic');
+    }
+    this.flags.set('createTopicLoading',true);
+    this.apiService.createTopic(this.newTopic).subscribe({
+      next: (res: HttpResponse<GenericResponse<Topic>>) => {
+        this.topics.push(this.newTopic);
+        this.flags.set('createTopicLoading',false);
+        this.commonService.hideModal('createTopicModal');
+      },
+      error: (res:HttpErrorResponse) => {
+        this.errors.set("createTopic",this.commonService.prepareError(res.error.error,'500','Failed to add new Topic!'));
+        console.log(this.errors.get("createTopic"));
+        this.flags.set('createTopicLoading',false);
       }
     });
   }
