@@ -29,8 +29,24 @@
     </div>
   </div>
   <div class="row mt-2">
-    <div class="col-12 col-md-12 col-lg-12">
-      <button  type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTopicModal"><i class="bi bi-plus-circle"></i> Create New Topic</button>
+    <div class="col-12">
+      <div class="d-flex align-items-center justify-content-between">
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-bs-toggle="modal"
+          data-bs-target="#createTopicModal">
+          <i class="bi bi-plus-circle me-1"></i>
+          Create New Topic
+        </button>
+        <input
+          placeholder="Search"
+          id="table-filtering-search"
+          class="form-control form-control-sm"
+          type="text"
+          style="max-width: 220px;"
+          [formControl]="filter"/>
+      </div>
     </div>
   </div>
   <div class="row mt-2">
@@ -45,14 +61,16 @@
         </tr>
         </thead>
         <tbody >
-          <tr *ngFor="let topic of topics" class="cursor-pointer">
-            <th scope="row" routerLink="/topic/{{topic.name}}">
+        @for (topic of filteredTopics; track topic.name; let i = $index) {
+          <tr>
+            <th scope="row" class="cursor-pointer" routerLink="/topic/{{topic.name}}">
               <span class="badge bg-dark"><a class="badge-link">{{topic.name}}</a></span>
             </th>
-            <td routerLink="/topic/{{topic.name}}">{{topic.id}}</td>
-            <td routerLink="/topic/{{topic.name}}">{{topic.partitions}}</td>
+            <td routerLink="/topic/{{topic.name}}" class="cursor-pointer">{{topic.id}}</td>
+            <td routerLink="/topic/{{topic.name}}" class="cursor-pointer">{{topic.partitions}}</td>
             <td><a (click)="openDeleteDialog(topic)" data-bs-toggle="modal" data-bs-target="#deleteTopicModal"><i class="bi bi-trash3"></i></a></td>
           </tr>
+        }
         </tbody>
       </table>
     </div>

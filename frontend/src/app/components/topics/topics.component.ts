@@ -5,11 +5,13 @@ import { CommonModule } from '@angular/common';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 import { ApiService, CommonService, ValidationService } from '../../services';
 import { GenericResponse, Topic, Chart, Error } from '../../models';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
+import { startWith, map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-topics',
-  imports: [CommonModule,RouterModule,NgxChartsModule,FormsModule],
+  imports: [CommonModule,RouterModule,NgxChartsModule,FormsModule,ReactiveFormsModule],
   templateUrl: './topics.component.html',
   styleUrl: './topics.component.scss'
 })
@@ -31,10 +33,12 @@ export class TopicsComponent {
   };
 
   topics!: Topic[];
+  filteredTopics!: Topic[];
   newTopic!: Topic;
   deletedTopic!: Topic;
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
+  filter = new FormControl('', { nonNullable: true });
 
   constructor(private apiService: ApiService,
     private commonService: CommonService,
@@ -48,7 +52,17 @@ export class TopicsComponent {
     this.flags.set('agentEnabled',true);
     this.apiService.getTopics().subscribe({ next: (res: HttpResponse<GenericResponse<Topic[]>>) => {
         this.topics = res.body?.data ?? [];
+        this.filteredTopics = res.body?.data ?? [];
         this.flags.set('getTopicLoading',false);
+
+        combineLatest([
+          this.filter.valueChanges.pipe(startWith(''))
+        ])
+          .pipe(map(([text]) => this.search(text)))
+          .subscribe((filtered: Topic[]) => {
+            this.filteredTopics = filtered;
+          });
+
       },
       error: (res:HttpErrorResponse) => {
         this.errors.set("getTopics",this.commonService.prepareError(res.error.error,'500','Failed to get topics!'));
@@ -111,6 +125,14 @@ export class TopicsComponent {
           this.flags.set('deleteTopicLoading',false);
         }
       });
+  }
+
+  search(text: string): Topic[] {
+    const term = text.toLowerCase();
+    return this.topics.filter((topic: Topic) => {
+      const matchesText = topic.name.toLowerCase().includes(term);
+      return matchesText;
+    });
   }
 
 }
