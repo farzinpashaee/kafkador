@@ -10,7 +10,7 @@
           <div class="spinner-border" role="status" *ngIf="flags.get('getClusterLoading')"></div>
           <div class="flex-grow-1"  *ngIf="!flags.get('getClusterLoading')">
             <h5 class="card-title">Cluster ({{cluster.name}})</h5>
-            <p class="card-text text-s">
+            <p class="text-s text-color-gray-9">
               Brokers: {{cluster.brokers.length}} <br/>
               Controller: {{cluster.controller.host}}
             </p>
@@ -34,9 +34,8 @@
           <div class="spinner-border" role="status" *ngIf="flags.get('getTopicLoading')"></div>
           <div class="flex-grow-1"  *ngIf="!flags.get('getTopicLoading')">
             <h5 class="card-title">Topics</h5>
-            <p class="card-text text-s">
-              Topics: {{topics.length}} <br/>
-              Average Msp: 113
+            <p class="text-s text-color-gray-9">
+              Total Number of Topics: {{topics.length}} <br/>
             </p>
           </div>
           <div class="ms-auto chart-container-small">
@@ -58,9 +57,8 @@
           <div class="spinner-border" role="status" *ngIf="flags.get('getConsumerGroupLoading')"></div>
           <div class="flex-grow-1"  *ngIf="!flags.get('getConsumerGroupLoading')">
             <h5 class="card-title">Consumers</h5>
-            <p class="card-text text-s">
+            <p class="text-s text-color-gray-9">
               Consumer Groups: {{consumerGroups.length}} <br/>
-              Average Lpc: 11
             </p>
           </div>
           <div class="ms-auto chart-container-small">
