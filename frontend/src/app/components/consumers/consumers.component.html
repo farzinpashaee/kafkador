@@ -10,9 +10,8 @@
         <div class="card-body text-white d-flex">
           <div class="flex-grow-1">
             <h5 class="card-title">Consumers</h5>
-            <p class="card-text" class="text-s">
-              Consumer Groups: {{consumerGroups.length}} <br/>
-              Average Lpc: 11
+            <p class="card-text" class="text-s text-color-gray-9">
+              Total Number of Consumer Groups: {{consumerGroups.length}}
             </p>
           </div>
           <div class="ms-auto chart-container-medium">
@@ -29,9 +28,27 @@
       </div>
     </div>
   </div>
-
+  <div class="row mt-2">
+    <div class="col-12">
+      <div class="d-flex align-items-center justify-content-between">
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-bs-toggle="modal"
+          data-bs-target="#createConsumerGroupModal">
+          <i class="bi bi-plus-circle me-1"></i>
+          New Consumer Group
+        </button>
+        <input
+          placeholder="Search"
+          id="table-filtering-search"
+          class="form-control form-control-sm"
+          type="text"
+          style="max-width: 250px;"/>
+      </div>
+    </div>
+  </div>
   <div class="row mt-4">
-    <h4>Consumer Groups</h4>
     <div class="table-responsive">
       <table class="table">
         <thead>
@@ -42,6 +59,7 @@
           <th scope="col">Simple Consumer Group</th>
           <th scope="col">Partition Assignor</th>
           <th scope="col">Group State</th>
+          <th scope="col"></th>
         </tr>
         </thead>
         <tbody>
@@ -51,10 +69,45 @@
             <td>{{consumerGroup.coordinator}}</td>
             <td></td>
             <td>{{consumerGroup.partitionAssignor}}</td>
-            <td>{{consumerGroup.groupState}}</td></tr>
+            <td>{{consumerGroup.groupState}}</td>
+            <td><i class="bi bi-box-arrow-in-down"></i></td>
+          </tr>
         </tbody>
       </table>
     </div>
+  </div>
+</div>
 
+
+<!-- Create Consumer Groups -->
+<div class="modal fade" id="createConsumerGroupModal" tabindex="-1" aria-labelledby="createConsumerGroupModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="name" class="form-label">Consumer Group ID:</label>
+          <input required type="text" class="form-control" id="id" placeholder="e.g. MyConsumerId">
+        </div>
+        <div class="mb-3">
+          <label for="name" class="form-label">Topic:</label>
+          <input required type="text" class="form-control" id="name" placeholder="e.g. MyTopicName" [(ngModel)]="topicName" (input)="onInputChange()">
+          <ul class="dropdown-menu show w-100 mt-1" *ngIf="flags.get('showDropdown')" >
+            <li *ngFor="let topic of suggestedTopics" class="dropdown-item cursor-pointer" (click)="selectTopic(topic)">
+              {{ topic.name }}
+            </li>
+          </ul>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button *ngIf="!flags.get('createConsumerGroupLoading')"  type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button *ngIf="!flags.get('createConsumerGroupLoading')"  type="button" class="btn btn-primary" >Create & Listen</button>
+        <div *ngIf="flags.get('createConsumerGroupLoading')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Deleting...&nbsp;
+        </div>
+      </div>
+    </div>
   </div>
 </div>

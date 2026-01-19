@@ -3,13 +3,14 @@ import { ActivatedRoute,RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ApiService, CommonService, LocalStorageService } from '../../services';
-import { ConsumerGroup, Chart, Error, Connection, GenericResponse } from '../../models';
+import { ConsumerGroup, Chart, Error, Connection, GenericResponse, Topic } from '../../models';
 
 
 @Component({
   selector: 'app-consumers',
-  imports: [CommonModule,RouterModule,NgxChartsModule],
+  imports: [CommonModule,RouterModule,NgxChartsModule,FormsModule],
   templateUrl: './consumers.component.html',
   styleUrl: './consumers.component.scss'
 })
@@ -29,6 +30,9 @@ export class ConsumersComponent {
     domain: ['#FFF']
   };
 
+  topicName = '';
+  topics!: Topic[];
+  suggestedTopics!: Topic[];
   consumerGroups!: ConsumerGroup[];
   activeConnection: Connection | null = null;
   errors: Map<string, Error> = new Map();
@@ -53,7 +57,17 @@ export class ConsumersComponent {
       }
     });
 
-  this.apiService.getChart('x','q').subscribe({ next: (res: HttpResponse<GenericResponse<Chart>>) => {
+    this.apiService.getTopics().subscribe({ next: (res: HttpResponse<GenericResponse<Topic[]>>) => {
+          this.topics = res.body?.data ?? [];
+          this.flags.set('getTopicLoading',false);
+        },
+        error: (res:HttpErrorResponse) => {
+          this.errors.set("getTopics",this.commonService.prepareError(res.error.error,'500','Failed to get topics!'));
+          this.flags.set('getTopicLoading',false);
+        }
+    });
+
+    this.apiService.getChart('x','q').subscribe({ next: (res: HttpResponse<GenericResponse<Chart>>) => {
           // TODO: get chart data
           },
           error: (res:HttpErrorResponse) => {
@@ -65,6 +79,26 @@ export class ConsumersComponent {
             }
           }
         });
+  }
+
+  searchTopic(term: string): Topic[] {
+    const lower = term.toLowerCase();
+    return this.topics.filter(i => i.name.toLowerCase().includes(lower));
+  }
+
+  selectTopic(topic: Topic): void {
+    this.topicName = topic.name;
+    this.flags.set('showDropdown',false);
+  }
+
+  onInputChange(): void {
+    if (this.topicName.length < 2) {
+      this.suggestedTopics = [];
+      this.flags.set('showDropdown',false);
+      return;
+    }
+    this.suggestedTopics = this.searchTopic(this.topicName);
+    this.flags.set('showDropdown',this.suggestedTopics.length > 0);
   }
 
 }
