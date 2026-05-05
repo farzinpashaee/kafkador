@@ -1,27 +1,24 @@
 package com.csl.kafkador.controller;
 
-import com.csl.kafkador.domain.ErrorResponse;
 import com.csl.kafkador.domain.GenericResponse;
 import com.csl.kafkador.exception.ConfigurationRequiredException;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.DuplicatedClusterException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+@Slf4j
 @ControllerAdvice(assignableTypes = ApiController.class)
 public class RestExceptionController {
 
     @ExceptionHandler(ConnectionSessionExpiredException.class)
     public ResponseEntity<GenericResponse<Void>> handleConnectionSessionExpiredException(ConnectionSessionExpiredException ex) {
-        ErrorResponse error = new ErrorResponse();
-        error.setStatus(HttpStatus.UNAUTHORIZED.value());
-        error.setMessage(ex.getMessage());
-        error.setTimestamp(System.currentTimeMillis());
         return new GenericResponse.Builder<Void>()
                 .code(String.valueOf(HttpStatus.UNAUTHORIZED.value()))
-                .message(ex.getMessage())
+                .message("Session expired")
                 .failed(HttpStatus.UNAUTHORIZED);
     }
 
@@ -43,9 +40,10 @@ public class RestExceptionController {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<GenericResponse<Void>> anyOtherException(Exception ex) {
+        log.error("Unhandled error in API controller", ex);
         return new GenericResponse.Builder<Void>()
                 .code(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()))
-                .message(ex.getMessage())
+                .message("Internal server error")
                 .failed(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
