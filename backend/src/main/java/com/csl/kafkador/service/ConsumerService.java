@@ -6,7 +6,9 @@ import com.csl.kafkador.domain.ConsumerGroup;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.util.DtoMapper;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
@@ -26,8 +28,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service("ConsumerService")
 @RequiredArgsConstructor
 public class ConsumerService {
@@ -45,7 +50,7 @@ public class ConsumerService {
         properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
         properties.put(ConsumerConfig.GROUP_ID_CONFIG, "kafkador");
-        properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest"); // or "latest"
+        properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         return properties;
     }
@@ -56,39 +61,68 @@ public class ConsumerService {
             Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
             KafkaFuture<Collection<ConsumerGroupListing>> consumersFuture = admin.listConsumerGroups().all();
             KafkaFuture<Map<String, ConsumerGroupDescription>> consumerDescribedFuture = admin.describeConsumerGroups(
-                    consumersFuture.get().stream().map(i -> i.groupId() ).collect(Collectors.toList())).all();
+                    consumersFuture.get().stream().map(i -> i.groupId()).collect(Collectors.toList())).all();
 
-            return consumerDescribedFuture.get().entrySet().stream().map( i -> DtoMapper.consumerGroupDescriptionMapper(i.getValue()) ).collect(Collectors.toList());
-        } catch (ConnectionSessionExpiredException e){
+            return consumerDescribedFuture.get().entrySet().stream()
+                    .map(i -> DtoMapper.consumerGroupDescriptionMapper(i.getValue()))
+                    .collect(Collectors.toList());
+        } catch (ConnectionSessionExpiredException e) {
             throw e;
-        }  catch (Exception e) {
+        } catch (Exception e) {
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
         }
     }
 
     public SseEmitter consume(String topic) {
-        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE); // Long-lived connection
+        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+        AtomicBoolean running = new AtomicBoolean(true);
+
+        emitter.onCompletion(() -> running.set(false));
+        emitter.onError(e -> running.set(false));
+        emitter.onTimeout(() -> {
+            running.set(false);
+            emitter.complete();
+        });
+
         Properties properties = getProperties();
         executor.execute(() -> {
+            log.info("Kafka consumer started. Listening to topic: {}", topic);
             try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties)) {
                 consumer.subscribe(Collections.singletonList(topic));
-                System.out.println("Kafka consumer started. Listening to topic: " + topic);
-                while (true) {
+                while (running.get()) {
                     try {
                         ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
                         for (ConsumerRecord<String, String> record : records) {
-                            emitter.send("Consumed message: key = " + record.key() + ", value = " + record.value() + ", offset = " + record.offset());
+                            emitter.send("Consumed message: key = " + record.key()
+                                    + ", value = " + record.value()
+                                    + ", offset = " + record.offset());
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error("Error while consuming from topic {}", topic, e);
+                        emitter.completeWithError(e);
+                        running.set(false);
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Failed to create Kafka consumer for topic {}", topic, e);
+                emitter.completeWithError(e);
             }
-
+            log.info("Kafka consumer stopped for topic: {}", topic);
         });
+
         return emitter;
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        executor.shutdownNow();
+        try {
+            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                log.warn("ConsumerService executor did not terminate within 5 seconds");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
 }
