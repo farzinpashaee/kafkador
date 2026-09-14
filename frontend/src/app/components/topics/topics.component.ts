@@ -6,8 +6,8 @@ import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 import { ApiService, CommonService, ValidationService } from '../../services';
 import { GenericResponse, Topic, Chart, Error } from '../../models';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
-import { startWith, map } from 'rxjs/operators';
+import { combineLatest } from 'rxjs';
+import { startWith, map, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'app-topics',
@@ -32,8 +32,8 @@ export class TopicsComponent {
     domain: ['#FFF']
   };
 
-  topics!: Topic[];
-  filteredTopics!: Topic[];
+  topics: Topic[] = [];
+  filteredTopics: Topic[] = [];
   newTopic!: Topic;
   deletedTopic!: Topic;
   errors: Map<string, Error> = new Map();
@@ -46,23 +46,24 @@ export class TopicsComponent {
     private route: ActivatedRoute) {}
 
   ngOnInit() {
-    this.newTopic = { name: '' , id : '' , partitions :1 , internal: false , replicatorFactor: 1, config: [] };
-    this.deletedTopic = { name: '' , id : '' , partitions :1 , internal: false , replicatorFactor: 1, config: [] };
+    this.newTopic = this.blankTopic();
+    this.deletedTopic = this.blankTopic();
     this.flags.set('getTopicLoading',true);
     this.flags.set('agentEnabled',true);
+
+    combineLatest([
+      this.filter.valueChanges.pipe(startWith(''), debounceTime(200), distinctUntilChanged())
+    ])
+      .pipe(map(([text]) => this.search(text)))
+      .subscribe((filtered: Topic[]) => {
+        this.filteredTopics = filtered;
+      });
+
     this.apiService.getTopics().subscribe({ next: (res: HttpResponse<GenericResponse<Topic[]>>) => {
         this.topics = res.body?.data ?? [];
-        this.filteredTopics = res.body?.data ?? [];
+        this.filteredTopics = this.search(this.filter.value);
+        this.errors.delete('getTopics');
         this.flags.set('getTopicLoading',false);
-
-        combineLatest([
-          this.filter.valueChanges.pipe(startWith(''))
-        ])
-          .pipe(map(([text]) => this.search(text)))
-          .subscribe((filtered: Topic[]) => {
-            this.filteredTopics = filtered;
-          });
-
       },
       error: (res:HttpErrorResponse) => {
         this.errors.set("getTopics",this.commonService.prepareError(res.error.error,'500','Failed to get topics!'));
@@ -85,7 +86,10 @@ export class TopicsComponent {
   }
 
   createTopic(){
-    const errors = this.validationService.validateRequiredFields(this.newTopic, ['name', 'partitions', 'replicatorFactor']);
+    const errors = [
+      ...this.validationService.validateRequiredFields(this.newTopic, ['name', 'partitions', 'replicatorFactor']),
+      ...this.validationService.validatePositiveIntegerFields(this.newTopic, ['partitions', 'replicatorFactor'])
+    ];
     if (errors.length > 0) {
       this.errors.set("createTopic",{code:'400',message:errors[0],datetime:''});
       return;
@@ -93,15 +97,17 @@ export class TopicsComponent {
       this.errors.delete('createTopic');
     }
     this.flags.set('createTopicLoading',true);
-    this.apiService.createTopic(this.newTopic).subscribe({
+    const topicToCreate = this.newTopic;
+    this.apiService.createTopic(topicToCreate).subscribe({
       next: (res: HttpResponse<GenericResponse<Topic>>) => {
-        this.topics.push(this.newTopic);
+        this.topics = [...this.topics, res.body?.data ?? topicToCreate];
+        this.filteredTopics = this.search(this.filter.value);
+        this.newTopic = this.blankTopic();
         this.flags.set('createTopicLoading',false);
         this.commonService.hideModal('createTopicModal');
       },
       error: (res:HttpErrorResponse) => {
         this.errors.set("createTopic",this.commonService.prepareError(res.error.error,'500','Failed to add new Topic!'));
-        console.log(this.errors.get("createTopic"));
         this.flags.set('createTopicLoading',false);
       }
     });
@@ -114,9 +120,11 @@ export class TopicsComponent {
 
   deleteTopic(){
     if (!this.deletedTopic) return;
+    this.flags.set('deleteTopicLoading',true);
     this.apiService.deleteTopic(this.deletedTopic.name).subscribe({
-        next: (res: HttpResponse<void>) => {
+        next: () => {
           this.topics = this.topics.filter(c => c.name !== this.deletedTopic.name);
+          this.filteredTopics = this.search(this.filter.value);
           this.flags.set('deleteTopicLoading',false);
           this.commonService.hideModal('deleteTopicModal');
         },
@@ -129,10 +137,11 @@ export class TopicsComponent {
 
   search(text: string): Topic[] {
     const term = text.toLowerCase();
-    return this.topics.filter((topic: Topic) => {
-      const matchesText = topic.name.toLowerCase().includes(term);
-      return matchesText;
-    });
+    return this.topics.filter((topic: Topic) => topic.name.toLowerCase().includes(term));
+  }
+
+  private blankTopic(): Topic {
+    return { name: '' , id : '' , partitions : 1 , internal: false , replicatorFactor: 1, config: [] };
   }
 
 }

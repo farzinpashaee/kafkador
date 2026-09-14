@@ -1,16 +1,16 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse,HttpResponse   } from '@angular/common/http';
-import { throwError, Observable } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { Cluster, Connection, Config, Broker, Alert, Topic, SearchResult, ConsumerGroup, GenericResponse,
   SchemaRegistry, Chart } from '../models';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
 
-  private static ApiBaseUrl = 'http://localhost:8080/api';
+  private static ApiBaseUrl = `${environment.baseUrl}/api/v1`;
 
   constructor(private http: HttpClient) {}
 
@@ -19,87 +19,105 @@ export class ApiService {
   }
 
   public getBrokerDetails(id:string): Observable<GenericResponse<Broker>> {
-    return this.http.get<GenericResponse<Broker>>(`${ApiService.ApiBaseUrl}/broker/${id}`,{ withCredentials: true });
+    return this.http.get<GenericResponse<Broker>>(`${ApiService.ApiBaseUrl}/brokers/${id}`,{ withCredentials: true });
   }
 
   public getConnections(): Observable<HttpResponse<GenericResponse<Connection[]>>> {
-    return this.http.get<GenericResponse<Connection[]>>(`${ApiService.ApiBaseUrl}/connection`,
+    return this.http.get<GenericResponse<Connection[]>>(`${ApiService.ApiBaseUrl}/connections`,
       { withCredentials: true, observe: 'response' });
   }
 
   public addConnection(connection:Connection): Observable<HttpResponse<GenericResponse<Connection>>> {
-    return this.http.post<GenericResponse<Connection>>(`${ApiService.ApiBaseUrl}/connection`,connection,
+    return this.http.post<GenericResponse<Connection>>(`${ApiService.ApiBaseUrl}/connections`,connection,
       { withCredentials: true ,observe: 'response' });
   }
 
   public deleteConnection(id:string): Observable<HttpResponse<void>> {
-    return this.http.delete<void>(`${ApiService.ApiBaseUrl}/connection/`+id,
+    return this.http.delete<void>(`${ApiService.ApiBaseUrl}/connections/`+id,
       { withCredentials: true ,observe: 'response' });
   }
 
   public getAlerts(): Observable<GenericResponse<Alert[]>> {
-    return this.http.get<GenericResponse<Alert[]>>(`${ApiService.ApiBaseUrl}/alert`,{ withCredentials: true });
+    return this.http.get<GenericResponse<Alert[]>>(`${ApiService.ApiBaseUrl}/alerts`,{ withCredentials: true });
   }
 
   public getTopics(): Observable<HttpResponse<GenericResponse<Topic[]>>> {
-    return this.http.get<GenericResponse<Topic[]>>(`${ApiService.ApiBaseUrl}/topic`,
+    return this.http.get<GenericResponse<Topic[]>>(`${ApiService.ApiBaseUrl}/topics`,
       { withCredentials: true ,observe: 'response'});
   }
 
   public getTopicDetails(name:string): Observable<GenericResponse<Topic>> {
-    return this.http.get<GenericResponse<Topic>>(`${ApiService.ApiBaseUrl}/topic/${name}`,{ withCredentials: true });
+    return this.http.get<GenericResponse<Topic>>(`${ApiService.ApiBaseUrl}/topics/${name}`,{ withCredentials: true });
   }
 
   public createTopic(topic:Topic): Observable<HttpResponse<GenericResponse<Topic>>> {
-    return this.http.post<GenericResponse<Topic>>(`${ApiService.ApiBaseUrl}/topic`,topic,
+    return this.http.post<GenericResponse<Topic>>(`${ApiService.ApiBaseUrl}/topics`,topic,
       { withCredentials: true ,observe: 'response' });
   }
 
   public deleteTopic(name:string): Observable<HttpResponse<void>> {
-    return this.http.delete<void>(`${ApiService.ApiBaseUrl}/topic/${name}`,
+    return this.http.delete<void>(`${ApiService.ApiBaseUrl}/topics/${name}`,
       { withCredentials: true ,observe: 'response' });
   }
 
   public getConsumerGroups(): Observable<HttpResponse<GenericResponse<ConsumerGroup[]>>> {
-    return this.http.get<GenericResponse<ConsumerGroup[]>>(`${ApiService.ApiBaseUrl}/consumer-group`,
+    return this.http.get<GenericResponse<ConsumerGroup[]>>(`${ApiService.ApiBaseUrl}/consumer-groups`,
       { withCredentials: true ,observe: 'response'} );
   }
 
   public getSchemaSubjects(): Observable<GenericResponse<SchemaRegistry>> {
-    return this.http.get<GenericResponse<SchemaRegistry>>(`${ApiService.ApiBaseUrl}/schema-registry/subject`,{ withCredentials: true });
+    return this.http.get<GenericResponse<SchemaRegistry>>(`${ApiService.ApiBaseUrl}/schema-registry/subjects`,{ withCredentials: true });
   }
 
   public search(query:string): Observable<GenericResponse<SearchResult[]>> {
-    return this.http.get<GenericResponse<SearchResult[]>>(`${ApiService.ApiBaseUrl}/search?query=${query}`,{ withCredentials: true });
+    let params = new HttpParams().set('query', query);
+    return this.http.get<GenericResponse<SearchResult[]>>(`${ApiService.ApiBaseUrl}/search`,{ params, withCredentials: true });
   }
 
   public getChart(id:string,query:string): Observable<HttpResponse<GenericResponse<Chart>>> {
-    return this.http.get<GenericResponse<Chart>>(`${ApiService.ApiBaseUrl}/metric/chart/${id}${query}`,
+    return this.http.get<GenericResponse<Chart>>(`${ApiService.ApiBaseUrl}/metrics/chart/${id}${query}`,
       { withCredentials: true ,observe: 'response' });
   }
 
   public connect(id:string): Observable<GenericResponse<Connection>> {
-    let params = new HttpParams();
-    params = params.set('id', id);
-    return this.http.get<GenericResponse<Connection>>(`${ApiService.ApiBaseUrl}/connect`,{ params, withCredentials: true })
-      .pipe(catchError((error: HttpErrorResponse) => {
-          return throwError(() => error);
-        })
-      );
+    return this.http.post<GenericResponse<Connection>>(`${ApiService.ApiBaseUrl}/connections/${id}/connect`,{},{ withCredentials: true });
   }
 
   public disconnect(): Observable<HttpResponse<GenericResponse<Connection>>> {
-    return this.http.get<GenericResponse<Connection>>(`${ApiService.ApiBaseUrl}/disconnect`,{withCredentials: true, observe: 'response' });
+    return this.http.post<GenericResponse<Connection>>(`${ApiService.ApiBaseUrl}/connections/disconnect`,{},
+      { withCredentials: true, observe: 'response' });
   }
 
-  public updateBrokerConfig(brokerId:string, config:Config): Observable<HttpResponse<GenericResponse<Config>>> {
-    return this.http.post<GenericResponse<Config>>(`${ApiService.ApiBaseUrl}/broker/${brokerId}/config`,config,
+  public updateBrokerConfig(brokerId:string, config:Config): Observable<HttpResponse<void>> {
+    return this.http.put<void>(`${ApiService.ApiBaseUrl}/brokers/${brokerId}/config`,config,
       { withCredentials: true ,observe: 'response' });
   }
 
-  public updateTopicConfig(topicId:string, config:Config): Observable<HttpResponse<GenericResponse<Config>>> {
-    return this.http.post<GenericResponse<Config>>(`${ApiService.ApiBaseUrl}/topic/${topicId}/config`,config,
+  public updateTopicConfig(topicId:string, config:Config): Observable<HttpResponse<void>> {
+    return this.http.put<void>(`${ApiService.ApiBaseUrl}/topics/${topicId}/config`,config,
       { withCredentials: true ,observe: 'response' });
+  }
+
+  /**
+   * Opens a live Server-Sent Events stream of messages consumed from `topic` under
+   * consumer group `groupId`. HttpClient has no SSE support, so this wraps the
+   * native EventSource API in an Observable that closes the connection when
+   * unsubscribed (component teardown, navigation away, etc).
+   */
+  public consumeTopicMessages(topic: string, groupId: string): Observable<string> {
+    return new Observable<string>((subscriber) => {
+      const params = new HttpParams().set('groupId', groupId);
+      const url = `${ApiService.ApiBaseUrl}/topics/${encodeURIComponent(topic)}/messages/stream?${params.toString()}`;
+      const eventSource = new EventSource(url, { withCredentials: true });
+
+      eventSource.onmessage = (event) => subscriber.next(event.data);
+      eventSource.onerror = () => {
+        subscriber.error(new Error('Connection to the message stream was lost.'));
+        eventSource.close();
+      };
+
+      return () => eventSource.close();
+    });
   }
 
 }

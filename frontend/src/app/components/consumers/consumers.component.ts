@@ -1,16 +1,18 @@
 import { Component } from '@angular/core';
-import { ActivatedRoute,RouterModule } from '@angular/router';
+import { ActivatedRoute,Router,RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ApiService, CommonService, LocalStorageService } from '../../services';
+import { combineLatest } from 'rxjs';
+import { startWith, map, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { ApiService, CommonService, ValidationService, LocalStorageService } from '../../services';
 import { ConsumerGroup, Chart, Error, Connection, GenericResponse, Topic } from '../../models';
 
 
 @Component({
   selector: 'app-consumers',
-  imports: [CommonModule,RouterModule,NgxChartsModule,FormsModule],
+  imports: [CommonModule,RouterModule,NgxChartsModule,FormsModule,ReactiveFormsModule],
   templateUrl: './consumers.component.html',
   styleUrl: './consumers.component.scss'
 })
@@ -30,29 +32,45 @@ export class ConsumersComponent {
     domain: ['#FFF']
   };
 
+  newConsumerGroupId = '';
   topicName = '';
-  topics!: Topic[];
-  suggestedTopics!: Topic[];
-  consumerGroups!: ConsumerGroup[];
+  topics: Topic[] = [];
+  suggestedTopics: Topic[] = [];
+  consumerGroups: ConsumerGroup[] = [];
+  filteredConsumerGroups: ConsumerGroup[] = [];
   activeConnection: Connection | null = null;
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
+  filter = new FormControl('', { nonNullable: true });
 
   constructor(private apiService: ApiService,
     private commonService: CommonService,
+    private validationService: ValidationService,
     private localStorageService: LocalStorageService,
+    private router: Router,
     private route: ActivatedRoute) {}
 
   ngOnInit() {
     this.activeConnection = this.localStorageService.getItem<Connection>("activeConnection");
     this.flags.set('getConsumerGroupsLoading',true);
     this.flags.set('agentEnabled',true);
+
+    combineLatest([
+      this.filter.valueChanges.pipe(startWith(''), debounceTime(200), distinctUntilChanged())
+    ])
+      .pipe(map(([text]) => this.search(text)))
+      .subscribe((filtered: ConsumerGroup[]) => {
+        this.filteredConsumerGroups = filtered;
+      });
+
     this.apiService.getConsumerGroups().subscribe({ next: (res: HttpResponse<GenericResponse<ConsumerGroup[]>>) => {
         this.consumerGroups = res.body?.data ?? [];
+        this.filteredConsumerGroups = this.search(this.filter.value);
+        this.errors.delete('getConsumerGroups');
         this.flags.set('getConsumerGroupsLoading',false);
       },
       error: (res:HttpErrorResponse) => {
-        this.errors.set("getConsumerGroups",this.commonService.prepareError(res.error.error,'500','Failed to get topics!'));
+        this.errors.set("getConsumerGroups",this.commonService.prepareError(res.error.error,'500','Failed to get consumer groups!'));
         this.flags.set('getConsumerGroupsLoading',false);
       }
     });
@@ -81,6 +99,11 @@ export class ConsumersComponent {
         });
   }
 
+  search(text: string): ConsumerGroup[] {
+    const term = text.toLowerCase();
+    return this.consumerGroups.filter((group: ConsumerGroup) => group.id.toLowerCase().includes(term));
+  }
+
   searchTopic(term: string): Topic[] {
     const lower = term.toLowerCase();
     return this.topics.filter(i => i.name.toLowerCase().includes(lower));
@@ -99,6 +122,18 @@ export class ConsumersComponent {
     }
     this.suggestedTopics = this.searchTopic(this.topicName);
     this.flags.set('showDropdown',this.suggestedTopics.length > 0);
+  }
+
+  createAndListen(): void {
+    const errors = this.validationService.validateRequiredFields(
+      { id: this.newConsumerGroupId, topic: this.topicName }, ['id', 'topic']);
+    if (errors.length > 0) {
+      this.errors.set("createConsumerGroup",{code:'400',message:errors[0],datetime:''});
+      return;
+    }
+    this.errors.delete('createConsumerGroup');
+    this.commonService.hideModal('createConsumerGroupModal');
+    this.router.navigate(['/consumer', this.newConsumerGroupId, this.topicName]);
   }
 
 }

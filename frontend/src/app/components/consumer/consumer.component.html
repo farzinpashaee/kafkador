@@ -1,1 +1,43 @@
-<p>consumer works!</p>
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h5 class="mb-0">
+      <span class="badge bg-dark">{{groupId}}</span>
+      <span class="text-s text-color-subtle ms-2">listening on</span>
+      <span class="badge bg-dark ms-1">{{topic}}</span>
+    </h5>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    <span class="badge" [class.text-bg-success]="connected" [class.text-bg-secondary]="!connected">
+      <span class="green-circle me-1" *ngIf="connected"></span>{{ connected ? 'Live' : 'Disconnected' }}
+    </span>
+    <button type="button" class="btn btn-outline-light btn-sm" (click)="stop()">Stop</button>
+  </div>
+</div>
+
+<div *ngIf="error" class="alert alert-danger d-flex align-items-center justify-content-between" role="alert">
+  <span>{{ error }}</span>
+  <button type="button" class="btn btn-sm btn-danger" (click)="reconnect()">Reconnect</button>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-sm">
+    <thead>
+      <tr>
+        <th scope="col">Message</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (message of messages; track $index) {
+        <tr>
+          <td class="text-s font-monospace">{{ message }}</td>
+        </tr>
+      } @empty {
+        <tr>
+          <td class="text-center text-s text-color-subtle py-3">
+            {{ connected ? 'Waiting for messages...' : 'Not connected.' }}
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

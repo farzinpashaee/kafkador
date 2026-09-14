@@ -74,7 +74,7 @@ export class TopicComponent {
         return;
     }
     this.apiService.updateTopicConfig(this.topic.name, this.selectedEditConfig).subscribe({
-      next: (res: HttpResponse<GenericResponse<Config>>) => {
+      next: (res: HttpResponse<void>) => {
         this.flags.set('updateConfigLoading',false);
         this.commonService.hideModal('editModal');
       },

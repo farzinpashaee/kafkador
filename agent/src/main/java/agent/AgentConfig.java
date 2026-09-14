@@ -2,7 +2,7 @@ package agent;
 
 public class AgentConfig {
 
-    private String endpoint = "http://localhost:8080/api/apm/metric/ingest";
+    private String endpoint = "http://localhost:8080/api/v1/apm/metrics/ingest";
     private Integer period = 30;
     private String clusterId;
     private String brokerId;

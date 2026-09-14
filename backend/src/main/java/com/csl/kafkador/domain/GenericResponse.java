@@ -73,7 +73,15 @@ public class GenericResponse<T> {
                     .setMeta(this.meta)
                     .setData(this.data)
                     .setLink(this.link);
-            return ResponseEntity.ok(response);
+            return new ResponseEntity<>(response, httpStatus);
+        }
+
+        public ResponseEntity<GenericResponse<T>> success( HttpStatus httpStatus, org.springframework.http.HttpHeaders headers ){
+            GenericResponse<T> response = new GenericResponse<T>()
+                    .setMeta(this.meta)
+                    .setData(this.data)
+                    .setLink(this.link);
+            return new ResponseEntity<>(response, headers, httpStatus);
         }
 
         public ResponseEntity<GenericResponse<T>> failed( HttpStatus httpStatus ){

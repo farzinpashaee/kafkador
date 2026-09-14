@@ -1,18 +1,21 @@
 package com.csl.kafkador.service;
 
-import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.config.ApplicationConfig;
-import com.csl.kafkador.domain.Request;
 import com.csl.kafkador.domain.Topic;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
+import com.csl.kafkador.exception.TopicAlreadyExistsException;
+import com.csl.kafkador.exception.TopicNotFoundException;
 import com.csl.kafkador.record.ConfigEntry;
 import com.csl.kafkador.util.DtoMapper;
 import com.csl.kafkador.util.ViewHelper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.config.ConfigResource;
+import org.apache.kafka.common.errors.TopicExistsException;
+import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -24,6 +27,7 @@ import java.util.stream.Collectors;
 
 @Service("TopicService")
 @RequiredArgsConstructor
+@Slf4j
 public class TopicService {
 
     private final ApplicationContext applicationContext;
@@ -44,48 +48,57 @@ public class TopicService {
         } catch (ConnectionSessionExpiredException e){
             throw e;
         }  catch (Exception e) {
+            log.error("Failed to list topics for cluster {}", clusterId, e);
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
         }
     }
 
-    public Topic createTopic( String clusterId , Topic topic ) throws KafkaAdminApiException {
+    public Topic createTopic( String clusterId , Topic topic ) throws KafkaAdminApiException, TopicAlreadyExistsException {
         try {
             Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
             NewTopic newTopic = new NewTopic(topic.getName(),
                     topic.getPartitions(),
                     topic.getReplicatorFactor());
-            // Optional: Add topic-specific configurations (e.g., cleanup policy)
-            // newTopic.configs(Collections.singletonMap(TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_COMPACT));
             CreateTopicsResult result = admin.createTopics(Collections.singleton(newTopic));
             KafkaFuture<Void> future = result.values().get(topic.getName());
-            try {
-                future.get();
-            } catch (InterruptedException | ExecutionException e) {
-                System.err.println("Failed to create topic: " + e.getMessage());
-            }
+            future.get();
             return topic;
         } catch (ConnectionSessionExpiredException e){
             throw e;
-        }  catch (Exception e) {
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof TopicExistsException) {
+                throw new TopicAlreadyExistsException("A topic named '" + topic.getName() + "' already exists");
+            }
+            log.error("Failed to create topic {} on cluster {}", topic.getName(), clusterId, e);
+            throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Failed to create topic {} on cluster {}", topic.getName(), clusterId, e);
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
         }
     }
 
 
-    public void deleteTopic( String clusterId, String name) throws KafkaAdminApiException {
+    public void deleteTopic( String clusterId, String name) throws KafkaAdminApiException, TopicNotFoundException {
         try {
             Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
             DeleteTopicsResult deleteTopicsResult = admin.deleteTopics(Collections.singleton(name));
             deleteTopicsResult.all().get();
         } catch (ConnectionSessionExpiredException e){
             throw e;
-        }  catch (Exception e) {
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof UnknownTopicOrPartitionException) {
+                throw new TopicNotFoundException("Topic '" + name + "' does not exist");
+            }
+            log.error("Failed to delete topic {} on cluster {}", name, clusterId, e);
+            throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Failed to delete topic {} on cluster {}", name, clusterId, e);
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
         }
     }
 
 
-    public Topic getTopic( String clusterId, String name ) throws KafkaAdminApiException {
+    public Topic getTopic( String clusterId, String name ) throws KafkaAdminApiException, TopicNotFoundException {
 
         try{
             Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
@@ -103,13 +116,19 @@ public class TopicService {
                 topic.setConfig(getBrokerConfiguration(clusterId, topicDescription.name()));
                 return topic;
             }
-
-        } catch (ConnectionSessionExpiredException e){
+            throw new TopicNotFoundException("Topic '" + name + "' does not exist");
+        } catch (ConnectionSessionExpiredException | TopicNotFoundException e){
             throw e;
-        }  catch (Exception e) {
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof UnknownTopicOrPartitionException) {
+                throw new TopicNotFoundException("Topic '" + name + "' does not exist");
+            }
+            log.error("Failed to fetch topic {} on cluster {}", name, clusterId, e);
+            throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Failed to fetch topic {} on cluster {}", name, clusterId, e);
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
         }
-        return null;
     }
 
     public List<ConfigEntry> getBrokerConfiguration( String clusterId, String name ) throws KafkaAdminApiException {
@@ -121,7 +140,6 @@ public class TopicService {
             ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, name);
             DescribeConfigsResult describeConfigsResult = admin.describeConfigs(Collections.singleton(configResource));
             describeConfigsResult.all().get().forEach((resource, config) -> {
-                System.out.println("Configuration for " + resource.name() + ":");
                 config.entries().forEach(c -> {
                     String documentation = c.documentation();
                     if( documentation == null ){
@@ -131,13 +149,12 @@ public class TopicService {
                             c.type().name(), documentation, ViewHelper.getDocumentationLink(c.name())));
                 });
             });
-            Collections.sort(result, (o1, o2) -> {
-                return o1.name().compareTo(o2.name());
-            });
+            result.sort(Comparator.comparing(ConfigEntry::name));
             return result;
         } catch (ConnectionSessionExpiredException e){
             throw e;
         } catch (Exception e) {
+            log.error("Failed to fetch configuration for topic {} on cluster {}", name, clusterId, e);
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
         }
     }
@@ -158,6 +175,7 @@ public class TopicService {
         } catch (ConnectionSessionExpiredException e){
             throw e;
         } catch (Exception e) {
+            log.error("Failed to update configuration for topic {} on cluster {}", topicId, clusterId, e);
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
         }
 

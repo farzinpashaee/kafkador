@@ -14,32 +14,43 @@ import com.csl.kafkador.service.registry.SchemaRegistryService;
 import com.csl.kafkador.service.search.SearchService;
 import com.csl.kafkador.util.MetricEnum;
 import com.csl.kafkador.util.TimeUnitEnum;
-import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
+@Validated
+@Slf4j
 public class ApiController {
+
+    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int MAX_PAGE_SIZE = 200;
 
     private final ApplicationContext applicationContext;
     private final ApplicationConfig applicationConfig;
     private final ConnectionService connectionService;
     private final MetricService metricService;
-
-
 
     @GetMapping("/cluster")
     public ResponseEntity<GenericResponse<ClusterDto>> getCluster() throws KafkaAdminApiException, ClusterNotFoundException {
@@ -52,9 +63,8 @@ public class ApiController {
                 .success(HttpStatus.OK);
     }
 
-
-    @GetMapping("/broker/{id}")
-    public ResponseEntity<GenericResponse<BrokerDto>> getBroker(@PathVariable String id ) throws KafkaAdminApiException, BrokerNotFoundException {
+    @GetMapping("/brokers/{id}")
+    public ResponseEntity<GenericResponse<BrokerDto>> getBroker(@PathVariable @NotBlank String id) throws KafkaAdminApiException, BrokerNotFoundException {
         BrokerService brokerService = (BrokerService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.BROKER));
         ConnectionDto connection = connectionService.getActiveConnection();
@@ -64,34 +74,39 @@ public class ApiController {
                 .success(HttpStatus.OK);
     }
 
-    @PostMapping("/broker/{id}/config")
-    public void updateBrokerConfig(@PathVariable String id, @RequestBody ConfigEntry configEntry) throws KafkaAdminApiException, BrokerNotFoundException {
+    @PutMapping("/brokers/{id}/config")
+    public ResponseEntity<Void> updateBrokerConfig(@PathVariable @NotBlank String id, @Valid @RequestBody ConfigEntry configEntry) throws KafkaAdminApiException, BrokerNotFoundException {
         BrokerService brokerService = (BrokerService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.BROKER));
         ConnectionDto connection = connectionService.getActiveConnection();
         brokerService.updateConfig(connection.getClusterId(), id, configEntry);
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/topic")
-    public ResponseEntity<GenericResponse<Collection<Topic>>> getTopics( HttpSession session ) throws KafkaAdminApiException {
+    @GetMapping("/topics")
+    public ResponseEntity<GenericResponse<List<Topic>>> getTopics(@RequestParam(defaultValue = "0") @Min(0) int page,
+                                                                    @RequestParam(defaultValue = "" + DEFAULT_PAGE_SIZE) @Min(1) int size)
+            throws KafkaAdminApiException {
         TopicService topicService = (TopicService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
         ConnectionDto connection = connectionService.getActiveConnection();
-        return new GenericResponse.Builder<Collection<Topic>>()
-                .data(topicService.getTopics(connection.getClusterId()))
+        Collection<Topic> topics = topicService.getTopics(connection.getClusterId());
+        return new GenericResponse.Builder<List<Topic>>()
+                .data(paginate(topics, page, size))
                 .success(HttpStatus.OK);
     }
 
-    @PostMapping("/topic/{id}/config")
-    public void updateTopicConfig(@PathVariable String id, @RequestBody ConfigEntry configEntry) throws KafkaAdminApiException, BrokerNotFoundException {
+    @PutMapping("/topics/{name}/config")
+    public ResponseEntity<Void> updateTopicConfig(@PathVariable @NotBlank String name, @Valid @RequestBody ConfigEntry configEntry) throws KafkaAdminApiException, BrokerNotFoundException {
         TopicService topicService = (TopicService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
         ConnectionDto connection = connectionService.getActiveConnection();
-        topicService.updateConfig(connection.getClusterId(), id, configEntry);
+        topicService.updateConfig(connection.getClusterId(), name, configEntry);
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/topic/{name}")
-    public ResponseEntity<GenericResponse<Topic>> getTopic( @PathVariable String name ) throws KafkaAdminApiException {
+    @GetMapping("/topics/{name}")
+    public ResponseEntity<GenericResponse<Topic>> getTopic(@PathVariable @NotBlank String name) throws KafkaAdminApiException, TopicNotFoundException {
         TopicService topicService = (TopicService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
         ConnectionDto connection = connectionService.getActiveConnection();
@@ -101,63 +116,105 @@ public class ApiController {
                 .success(HttpStatus.OK);
     }
 
-
-    @PostMapping("/topic")
-    public ResponseEntity<GenericResponse<Topic>>  createTopic(@RequestBody Topic topic) throws KafkaAdminApiException {
+    @PostMapping("/topics")
+    public ResponseEntity<GenericResponse<Topic>> createTopic(@Valid @RequestBody TopicCreateRequestDto request)
+            throws KafkaAdminApiException, TopicAlreadyExistsException {
         TopicService topicService = (TopicService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
         ConnectionDto connection = connectionService.getActiveConnection();
+        Topic topic = new Topic()
+                .setName(request.getName())
+                .setPartitions(request.getPartitions())
+                .setReplicatorFactor(request.getReplicatorFactor());
+        Topic created = topicService.createTopic(connection.getClusterId(), topic);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequestUri()
+                .path("/{name}")
+                .buildAndExpand(created.getName())
+                .toUri();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(location);
         return new GenericResponse.Builder<Topic>()
-                .data(topicService.createTopic(connection.getClusterId(),topic))
-                .success(HttpStatus.OK);
+                .data(created)
+                .success(HttpStatus.CREATED, headers);
     }
 
-    @DeleteMapping("/topic/{name}")
-    public void deleteTopic(@PathVariable String name, HttpSession session ) throws KafkaAdminApiException {
+    @DeleteMapping("/topics/{name}")
+    public ResponseEntity<Void> deleteTopic(@PathVariable @NotBlank String name) throws KafkaAdminApiException, TopicNotFoundException {
         TopicService topicService = (TopicService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
         ConnectionDto connection = connectionService.getActiveConnection();
-        topicService.deleteTopic(connection.getClusterId(),name);
+        log.info("Deleting topic '{}' on cluster {}", name, connection.getClusterId());
+        topicService.deleteTopic(connection.getClusterId(), name);
+        return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/connection")
-    public ConnectionDto createConnection(@RequestBody ConnectionDto connection) throws KafkaAdminApiException, DuplicatedClusterException {
-        return connectionService.create(connection);
+    @PostMapping("/connections")
+    public ResponseEntity<GenericResponse<ConnectionDto>> createConnection(@Valid @RequestBody ConnectionDto connection)
+            throws KafkaAdminApiException, DuplicatedClusterException {
+        ConnectionDto created = connectionService.create(connection);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequestUri()
+                .path("/{id}")
+                .buildAndExpand(created.getClusterId())
+                .toUri();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(location);
+        return new GenericResponse.Builder<ConnectionDto>()
+                .data(created)
+                .success(HttpStatus.CREATED, headers);
     }
 
-    @DeleteMapping("/connection/{id}")
-    public void createConnection(@PathVariable String id) throws ClusterNotFoundException {
+    @DeleteMapping("/connections/{id}")
+    public ResponseEntity<Void> deleteConnection(@PathVariable @NotBlank String id) throws ClusterNotFoundException {
+        log.info("Deleting connection {}", id);
         connectionService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/connection")
-    public ResponseEntity<GenericResponse<List<ConnectionDto>>> getConnections(HttpSession session) {
-        ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
+    @GetMapping("/connections")
+    public ResponseEntity<GenericResponse<List<ConnectionDto>>> getConnections() {
         return new GenericResponse.Builder<List<ConnectionDto>>()
                 .data(connectionService.getConnections())
                 .success(HttpStatus.OK);
     }
 
-    @GetMapping("/consumer-group")
-    public ResponseEntity<GenericResponse<Collection<ConsumerGroup>>> getConsumerGroup(HttpSession session)
+    @PostMapping("/connections/{id}/connect")
+    public ResponseEntity<GenericResponse<ConnectionDto>> connect(@PathVariable @NotBlank String id) throws ClusterNotFoundException {
+        ConnectionDto connection = connectionService.connect(id);
+        return new GenericResponse.Builder<ConnectionDto>()
+                .data(connection)
+                .success(HttpStatus.OK);
+    }
+
+    @PostMapping("/connections/disconnect")
+    public ResponseEntity<GenericResponse<Void>> disconnect() throws ClusterNotFoundException {
+        connectionService.disconnect();
+        return new GenericResponse.Builder<Void>()
+                .data(null)
+                .success(HttpStatus.OK);
+    }
+
+    @GetMapping("/consumer-groups")
+    public ResponseEntity<GenericResponse<List<ConsumerGroup>>> getConsumerGroups(@RequestParam(defaultValue = "0") @Min(0) int page,
+                                                                                    @RequestParam(defaultValue = "" + DEFAULT_PAGE_SIZE) @Min(1) int size)
             throws KafkaAdminApiException {
         ConsumerService consumersService = (ConsumerService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONSUMER));
         ConnectionDto connection = connectionService.getActiveConnection();
-        return new GenericResponse.Builder<Collection<ConsumerGroup>>()
-                .data(consumersService.getConsumersGroup(connection.getClusterId()))
+        Collection<ConsumerGroup> groups = consumersService.getConsumersGroup(connection.getClusterId());
+        return new GenericResponse.Builder<List<ConsumerGroup>>()
+                .data(paginate(groups, page, size))
                 .success(HttpStatus.OK);
     }
 
-    @GetMapping("/metric/{metric}/{entityId}")
+    @GetMapping("/metrics/{metric}/{entityId}")
     public ResponseEntity<GenericResponse<MetricChartDto>> getMetrics(@PathVariable MetricEnum metric,
-                                                                      @PathVariable String entityId,
-                                                                      @RequestParam Long start,
-                                                                      @RequestParam Long end,
-                                                                      @RequestParam TimeUnitEnum sampleDuration )
+                                                                       @PathVariable String entityId,
+                                                                       @RequestParam Long start,
+                                                                       @RequestParam Long end,
+                                                                       @RequestParam TimeUnitEnum sampleDuration)
             throws KafkaAdminApiException, ClusterNotFoundException {
-        MetricChartDto metricChart = metricService.getChart( new MetricChartDto()
+        MetricChartDto metricChart = metricService.getChart(new MetricChartDto()
                 .setMetricEnum(metric)
                 .setStart(start)
                 .setEnd(end)
@@ -168,72 +225,51 @@ public class ApiController {
                 .success(HttpStatus.OK);
     }
 
-    @GetMapping("/connect")
-    public ResponseEntity<GenericResponse<ConnectionDto>> connect(@RequestParam String id, HttpSession session)
-            throws ClusterNotFoundException {
-        ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
-        ConnectionDto connection =  connectionService.connect( id );
-        return new GenericResponse.Builder<ConnectionDto>()
-                .data(connection)
-                .success(HttpStatus.OK);
-    }
-
-    @GetMapping("/disconnect")
-    public ResponseEntity<GenericResponse<Void>> disconnect() throws ClusterNotFoundException {
-        ConnectionService connectionService = (ConnectionService) applicationContext
-                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
-        connectionService.disconnect();
-        return new GenericResponse.Builder<Void>()
-                .data(null)
-                .success(HttpStatus.OK);
-    }
-
-
-    @GetMapping(value = "/alert")
-    public ResponseEntity<GenericResponse<List<AlertDto>>> getAlerts() throws KafkadorException {
-        AlertService alertService = (AlertService) applicationContext
-                .getBean("AlertService");
+    @GetMapping("/alerts")
+    public ResponseEntity<GenericResponse<List<AlertDto>>> getAlerts(@RequestParam(defaultValue = "0") @Min(0) int page,
+                                                                       @RequestParam(defaultValue = "" + DEFAULT_PAGE_SIZE) @Min(1) int size) throws KafkadorException {
+        AlertService alertService = (AlertService) applicationContext.getBean("AlertService");
         Sort sort = Sort.by(Sort.Direction.DESC, "creationDateTime");
-        Pageable pageable = PageRequest.of(0, 10, sort);
+        Pageable pageable = PageRequest.of(page, Math.min(size, MAX_PAGE_SIZE), sort);
         return new GenericResponse.Builder<List<AlertDto>>()
                 .data(alertService.getAlerts(pageable))
                 .success(HttpStatus.OK);
     }
 
-    @GetMapping(value = "/alert/{id}")
+    @GetMapping("/alerts/{id}")
     public ResponseEntity<GenericResponse<AlertDto>> getAlert(@PathVariable Integer id) throws AlertNotFoundException {
-        AlertService alertService = (AlertService) applicationContext
-                .getBean("AlertService");
+        AlertService alertService = (AlertService) applicationContext.getBean("AlertService");
         return new GenericResponse.Builder<AlertDto>()
                 .data(alertService.getAlert(id))
                 .success(HttpStatus.OK);
     }
 
-    @PostMapping("/produce/{topic}")
-    public Event produce(@RequestBody Event<String,String> event, @PathVariable String topic) throws KafkadorException {
-        ProducerService producerService = (ProducerService) applicationContext
-                .getBean("SimpleProducerService");
-        return producerService.produce(topic, event);
+    @PostMapping("/topics/{topic}/messages")
+    public ResponseEntity<GenericResponse<Event<String, String>>> produce(@Valid @RequestBody Event<String, String> event, @PathVariable @NotBlank String topic) throws KafkadorException {
+        ProducerService producerService = (ProducerService) applicationContext.getBean("SimpleProducerService");
+        Event<String, String> produced = producerService.produce(topic, event);
+        return new GenericResponse.Builder<Event<String, String>>()
+                .data(produced)
+                .success(HttpStatus.ACCEPTED);
     }
 
-    @GetMapping(value = "/consume/{topic}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter consume(@PathVariable String topic) throws KafkadorException {
-        ConsumerService consumersService = (ConsumerService) applicationContext
-                .getBean("ConsumerService");
-        return consumersService.consume(topic);
+    @GetMapping(value = "/topics/{topic}/messages/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter consume(@PathVariable @NotBlank String topic,
+                               @RequestParam(defaultValue = "kafkador") @NotBlank String groupId) throws KafkadorException {
+        ConsumerService consumersService = (ConsumerService) applicationContext.getBean("ConsumerService");
+        return consumersService.consume(topic, groupId);
     }
 
-    @GetMapping(value = "/acl")
-    public void acl() throws ClusterNotFoundException {
-        AclServiceImp aclService = (AclServiceImp) applicationContext
-                .getBean("AclService");
+    @GetMapping("/acl")
+    public ResponseEntity<GenericResponse<List<AclBindingDto>>> getAclBindings() throws ClusterNotFoundException, KafkaAdminApiException {
+        AclService aclService = (AclService) applicationContext.getBean("AclService");
         ConnectionDto connection = connectionService.getActiveConnection();
-        aclService.getAclBindings(connection.getClusterId());
+        return new GenericResponse.Builder<List<AclBindingDto>>()
+                .data(aclService.getAclBindings(connection.getClusterId()))
+                .success(HttpStatus.OK);
     }
 
-
-    @GetMapping(value = "/schema-registry/subject")
+    @GetMapping("/schema-registry/subjects")
     public ResponseEntity<GenericResponse<SchemaRegistryDto>> getSubjects() {
         ConnectionDto connection = connectionService.getActiveConnection();
         SchemaRegistryService schemaRegistryService = (SchemaRegistryService) applicationContext
@@ -243,31 +279,40 @@ public class ApiController {
                 .success(HttpStatus.OK);
     }
 
-    @GetMapping(value = "/search")
-    public ResponseEntity<GenericResponse<List<SearchResult>>> getAlert(@RequestParam String query) throws AlertNotFoundException {
-        SearchService searchService = (SearchService) applicationContext
-                .getBean("SearchService");
+    @GetMapping("/search")
+    public ResponseEntity<GenericResponse<List<SearchResult>>> search(@RequestParam @NotBlank String query,
+                                                                        @RequestParam(defaultValue = "0") @Min(0) int page,
+                                                                        @RequestParam(defaultValue = "" + DEFAULT_PAGE_SIZE) @Min(1) int size) {
+        SearchService searchService = (SearchService) applicationContext.getBean("SearchService");
+        List<SearchResult> results = searchService.search(query);
         return new GenericResponse.Builder<List<SearchResult>>()
-                .data(searchService.search(query))
+                .data(paginate(results, page, size))
                 .success(HttpStatus.OK);
     }
 
-    @GetMapping(value = "/metric/chart/{id}")
-    public ResponseEntity<GenericResponse<String>> getMetricChart(@PathVariable String id) throws ConfigurationRequiredException{
-        AgentService agentService = (AgentService) applicationContext
-                .getBean("AgentService");
+    @GetMapping("/metrics/chart/{id}")
+    public ResponseEntity<GenericResponse<String>> getMetricChart(@PathVariable String id) throws ConfigurationRequiredException {
+        AgentService agentService = (AgentService) applicationContext.getBean("AgentService");
         List<Agent> agents = agentService.getAgents();
-        if(agents.size() == 0) throw new ConfigurationRequiredException("APM agent configuration required");
+        if (agents.isEmpty()) throw new ConfigurationRequiredException("APM agent configuration required");
         return new GenericResponse.Builder<String>()
                 .data("xxxx")
                 .success(HttpStatus.OK);
     }
 
-    @PostMapping(value = "/apm/metric/ingest")
-    public ResponseEntity<GenericResponse<String>> ingest(@RequestBody ApmMetricIngestDto apmMetricIngest) throws AlertNotFoundException {
-        System.out.println(apmMetricIngest);
+    @PostMapping("/apm/metrics/ingest")
+    public ResponseEntity<GenericResponse<String>> ingest(@Valid @RequestBody ApmMetricIngestDto apmMetricIngest) {
+        log.debug("Received APM metric ingest payload: {}", apmMetricIngest);
         return new GenericResponse.Builder<String>()
                 .data("OK")
-                .success(HttpStatus.OK);
+                .success(HttpStatus.ACCEPTED);
+    }
+
+    private <T> List<T> paginate(Collection<T> items, int page, int size) {
+        int boundedSize = Math.min(size, MAX_PAGE_SIZE);
+        return items.stream()
+                .skip((long) page * boundedSize)
+                .limit(boundedSize)
+                .collect(Collectors.toList());
     }
 }

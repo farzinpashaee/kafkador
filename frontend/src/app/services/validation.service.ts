@@ -17,6 +17,19 @@ export class ValidationService {
       return errors;
    }
 
+   validatePositiveIntegerFields(model: any, fields: string[]): string[] {
+      const errors: string[] = [];
+
+      fields.forEach(field => {
+        const value = Number(model[field]);
+        if (!Number.isInteger(value) || value < 1) {
+          errors.push(`${this.formatFieldName(field)} must be a positive whole number`);
+        }
+      });
+
+      return errors;
+   }
+
    private formatFieldName(field: string): string {
       return field.charAt(0).toUpperCase() + field.slice(1);
    }

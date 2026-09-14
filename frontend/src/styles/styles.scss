@@ -38,8 +38,10 @@ header {
   font-size: 0.8em;
 }
 
-.text-color-gray-9{
-  color: #999;
+// Dims whatever text color it inherits (rather than hardcoding a gray hex),
+// so subtext stays legible and correctly themed in both light and dark mode.
+.text-color-subtle{
+  opacity: 0.75;
 }
 
 .badge-link{
@@ -130,6 +132,16 @@ span.placeholder{
     cursor: pointer;
 }
 
+.btn-icon {
+  line-height: 1;
+  color: inherit;
+  text-decoration: none;
+}
+
+.btn-icon:hover {
+  color: var(--bs-primary);
+}
+
 .opacity-15 {
     opacity: .15 !important;
 }
@@ -210,6 +222,10 @@ span.placeholder{
 
 .search-input-compact {
   height: 1em;
+}
+
+.search-input-compact-width {
+  max-width: 250px;
 }
 
 .chart-container-small {

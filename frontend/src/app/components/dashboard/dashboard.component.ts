@@ -43,17 +43,24 @@ export class DashboardComponent {
     this.flags.set('getTopicLoading',true);
     this.flags.set('getConsumerGroupLoading',true);
     this.flags.set('getBrokerLoading',true);
-    this.apiService.getClusterDetails().subscribe((res: GenericResponse<Cluster>) => {
-      this.cluster = res.data;
-      this.flags.set('getClusterLoading',false);
-      this.flags.set('getBrokerLoading',false);
+    this.apiService.getClusterDetails().subscribe({ next: (res: GenericResponse<Cluster>) => {
+        this.cluster = res.data;
+        this.errors.delete('getCluster');
+        this.flags.set('getClusterLoading',false);
+        this.flags.set('getBrokerLoading',false);
+      },
+      error: (res:HttpErrorResponse) => {
+        this.errors.set("getCluster",this.commonService.prepareError(res.error?.error,'500','Failed to get cluster details!'));
+        this.flags.set('getClusterLoading',false);
+        this.flags.set('getBrokerLoading',false);
+      }
     });
     this.apiService.getTopics().subscribe({ next: (res: HttpResponse<GenericResponse<Topic[]>>) => {
         this.topics = res.body?.data ?? [];
         this.flags.set('getTopicLoading',false);
       },
       error: (res:HttpErrorResponse) => {
-        this.errors.set("getTopics",this.commonService.prepareError(res.error.error,'500','Failed to get topics!'));
+        this.errors.set("getTopics",this.commonService.prepareError(res.error?.error,'500','Failed to get topics!'));
         this.flags.set('getTopicLoading',false);
       }
     });
@@ -62,16 +69,22 @@ export class DashboardComponent {
         this.flags.set('getConsumerGroupLoading',false);
       },
       error: (res:HttpErrorResponse) => {
-        this.errors.set("getConsumerGroup",this.commonService.prepareError(res.error.error,'500','Failed to get topics!'));
+        this.errors.set("getConsumerGroup",this.commonService.prepareError(res.error?.error,'500','Failed to get consumer groups!'));
         this.flags.set('getConsumerGroupLoading',false);
       }
     });
-    this.apiService.getAlerts().subscribe((res: GenericResponse<Alert[]>) => {
-      this.alerts = res.data.map(alert => ({
-                                    ...alert,
-                                    formattedTime: this.dateTimeService.formatDateTimeFromNow(alert.creationDateTime)
-                                  }));
-      this.flags.set('getAlertLoading',false);
+    this.apiService.getAlerts().subscribe({ next: (res: GenericResponse<Alert[]>) => {
+        this.alerts = res.data.map(alert => ({
+                                      ...alert,
+                                      formattedTime: this.dateTimeService.formatDateTimeFromNow(alert.creationDateTime)
+                                    }));
+        this.errors.delete('getAlerts');
+        this.flags.set('getAlertLoading',false);
+      },
+      error: (res:HttpErrorResponse) => {
+        this.errors.set("getAlerts",this.commonService.prepareError(res.error?.error,'500','Failed to get alerts!'));
+        this.flags.set('getAlertLoading',false);
+      }
     });
 
     this.data4 = this.commonService.generateRandomChartData("MPS",12);

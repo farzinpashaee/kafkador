@@ -5,6 +5,7 @@ import { DashboardComponent } from './components/dashboard/dashboard.component'
 import { ClusterComponent } from './components/cluster/cluster.component'
 import { TopicComponent } from './components/topic/topic.component'
 import { ConsumersComponent } from './components/consumers/consumers.component'
+import { ConsumerComponent } from './components/consumer/consumer.component'
 import { ConnectComponent } from './components/connect/connect.component'
 import { BrokerComponent } from './components/broker/broker.component'
 import { TopicsComponent } from './components/topics/topics.component'
@@ -27,6 +28,7 @@ export const routes: Routes = [
       { path: 'topic', component: TopicsComponent, title: 'Topics', data: { breadcrumb: { label:'Topics', url:'/topic'} } },
       { path: 'topic/:name', component: TopicComponent, title: 'Topics', data: { breadcrumb: { param: 'name'} } },
       { path: 'consumer', component: ConsumersComponent, title: 'Consumers', data: { breadcrumb: { label: 'Consumers'} } },
+      { path: 'consumer/:groupId/:topic', component: ConsumerComponent, title: 'Consumer Group', data: { breadcrumb: { param: 'groupId'} } },
       { path: 'access-control', component: AccessControlComponent, title: 'Access Control', data: { breadcrumb: { label: 'Access Control'} } },
       { path: 'stream', component: StreamsComponent, title: 'Streams', data: { breadcrumb: { label: 'Streams'} } },
       { path: 'ksqldb', component: KsqlDBComponent, title: 'KsqlDB', data: { breadcrumb: { label: 'KsqlDB'} } },

@@ -48,6 +48,11 @@ spring:
       initialize-schema: always
     timeout:
       seconds: 365d # TODO: update
+  servlet:
+    session:
+      cookie:
+        same-site: strict
+        http-only: true
   h2:
     console:
       enabled: true

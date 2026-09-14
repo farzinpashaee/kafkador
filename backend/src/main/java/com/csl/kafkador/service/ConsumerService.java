@@ -7,6 +7,7 @@ import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.util.DtoMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
@@ -26,10 +27,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Service("ConsumerService")
 @RequiredArgsConstructor
+@Slf4j
 public class ConsumerService {
 
     private final ApplicationContext applicationContext;
@@ -37,14 +40,14 @@ public class ConsumerService {
     private final ConnectionService connectionService;
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
-    public Properties getProperties() {
+    public Properties getProperties(String groupId) {
         ConnectionService connectionService = (ConnectionService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONNECTION));
 
         Properties properties = connectionService.getActiveConnectionProperties();
         properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
-        properties.put(ConsumerConfig.GROUP_ID_CONFIG, "kafkador");
+        properties.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest"); // or "latest"
 
         return properties;
@@ -62,29 +65,38 @@ public class ConsumerService {
         } catch (ConnectionSessionExpiredException e){
             throw e;
         }  catch (Exception e) {
+            log.error("Failed to list consumer groups for cluster {}", clusterId, e);
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
         }
     }
 
-    public SseEmitter consume(String topic) {
+    public SseEmitter consume(String topic, String groupId) {
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE); // Long-lived connection
-        Properties properties = getProperties();
+        Properties properties = getProperties(groupId);
+        AtomicBoolean stopped = new AtomicBoolean(false);
+        emitter.onCompletion(() -> stopped.set(true));
+        emitter.onTimeout(() -> stopped.set(true));
+        emitter.onError(e -> stopped.set(true));
+
         executor.execute(() -> {
             try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties)) {
                 consumer.subscribe(Collections.singletonList(topic));
-                System.out.println("Kafka consumer started. Listening to topic: " + topic);
-                while (true) {
+                log.info("Kafka consumer '{}' started. Listening to topic: {}", groupId, topic);
+                while (!stopped.get()) {
                     try {
                         ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
                         for (ConsumerRecord<String, String> record : records) {
                             emitter.send("Consumed message: key = " + record.key() + ", value = " + record.value() + ", offset = " + record.offset());
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error("Error streaming messages for topic {}", topic, e);
+                        emitter.completeWithError(e);
+                        return;
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Failed to start Kafka consumer for topic {}", topic, e);
+                emitter.completeWithError(e);
             }
 
         });
