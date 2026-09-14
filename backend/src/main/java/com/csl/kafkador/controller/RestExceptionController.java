@@ -34,9 +34,9 @@ public class RestExceptionController {
     @ExceptionHandler(DuplicatedClusterException.class)
     public ResponseEntity<GenericResponse<Void>> handleDuplicatedClusterException(DuplicatedClusterException ex) {
         return new GenericResponse.Builder<Void>()
-                .code(String.valueOf(HttpStatus.CONFLICT.value()))
+                .code(String.valueOf(HttpStatus.BAD_REQUEST.value()))
                 .message(ex.getMessage())
-                .failed(HttpStatus.CONFLICT);
+                .failed(HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(ConfigurationRequiredException.class)

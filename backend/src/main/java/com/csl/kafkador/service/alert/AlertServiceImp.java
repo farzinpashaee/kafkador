@@ -30,8 +30,8 @@ public class AlertServiceImp implements AlertService {
 
     @Override
     public AlertDto getAlert(Integer id) throws AlertNotFoundException {
-        Optional<Alert> alert = alertRepository.findById(id);
-        if( alert.isPresent() ) throw new AlertNotFoundException("Alert with given ID not found!");
-        return DtoMapper.alertMapper(alert.get());
+        return alertRepository.findById(id)
+                .map(DtoMapper::alertMapper)
+                .orElseThrow(() -> new AlertNotFoundException("Alert with given ID not found!"));
     }
 }
