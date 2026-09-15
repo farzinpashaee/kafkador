@@ -1,14 +1,14 @@
-import { Component, PipeTransform  } from '@angular/core';
+import { Component, OnDestroy, PipeTransform  } from '@angular/core';
 import { ActivatedRoute,RouterModule } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { CommonModule, AsyncPipe, DecimalPipe  } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { startWith, map } from 'rxjs/operators';
-import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
+import { BehaviorSubject, combineLatest, Observable, Subscription } from 'rxjs';
 import { ApiService, DocumentationService, CommonService} from '../../services';
 import { Broker, GenericResponse, Config, Topic, Error } from '../../models';
 
-
+const MAX_VISIBLE_TEST_MESSAGES = 200;
 
 @Component({
   selector: 'app-topic',
@@ -16,7 +16,7 @@ import { Broker, GenericResponse, Config, Topic, Error } from '../../models';
   templateUrl: './topic.component.html',
   styleUrl: './topic.component.scss'
 })
-export class TopicComponent {
+export class TopicComponent implements OnDestroy {
 
   topicName!: string;
   topic!: Topic;
@@ -30,6 +30,11 @@ export class TopicComponent {
   filter = new FormControl('', { nonNullable: true });
   filterSensitive$ = new BehaviorSubject<boolean>(false);
   filterEditable$ = new BehaviorSubject<boolean>(false);
+
+  listening: boolean = false;
+  consumedMessages: string[] = [];
+  producerEvent: string = '';
+  private testTopicSubscription?: Subscription;
 
   constructor(private apiService: ApiService,
     private documentationService: DocumentationService,
@@ -99,6 +104,56 @@ export class TopicComponent {
   getConfigValue(key: String): string | undefined {
     const matchedItem = this.topicConfig.find((item: Config) => item.name === key);
     return matchedItem ? matchedItem.value : undefined;
+  }
+
+  ngOnDestroy(): void {
+    this.testTopicSubscription?.unsubscribe();
+  }
+
+  toggleListening(): void {
+    if (this.listening) {
+      this.stopListening();
+    } else {
+      this.startListening();
+    }
+  }
+
+  startListening(): void {
+    this.errors.delete('testTopicConsumer');
+    this.listening = true;
+    const groupId = `kafkador-test-${Date.now()}`;
+    this.testTopicSubscription = this.apiService.consumeTopicMessages(this.topicName, groupId).subscribe({
+      next: (message: string) => {
+        this.consumedMessages = [message, ...this.consumedMessages].slice(0, MAX_VISIBLE_TEST_MESSAGES);
+      },
+      error: (err) => {
+        this.listening = false;
+        this.errors.set('testTopicConsumer', this.commonService.prepareError(undefined, '500', err?.message ?? 'Connection to the message stream was lost.'));
+      }
+    });
+  }
+
+  stopListening(): void {
+    this.testTopicSubscription?.unsubscribe();
+    this.listening = false;
+  }
+
+  sendEvent(): void {
+    if (!this.producerEvent.trim()) {
+      return;
+    }
+    this.errors.delete('sendEvent');
+    this.flags.set('sendingEvent', true);
+    this.apiService.produceTopicMessage(this.topicName, { value: this.producerEvent }).subscribe({
+      next: () => {
+        this.flags.set('sendingEvent', false);
+        this.producerEvent = '';
+      },
+      error: (res: HttpErrorResponse) => {
+        this.errors.set('sendEvent', this.commonService.prepareError(res.error?.error, '500', 'Failed to send event!'));
+        this.flags.set('sendingEvent', false);
+      }
+    });
   }
 
 }

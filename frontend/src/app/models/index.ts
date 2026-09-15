@@ -14,4 +14,5 @@ export * from './schema-registry';
 export * from './generic-response';
 export * from './link';
 export * from './meta';
+export * from './event';
 

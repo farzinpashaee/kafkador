@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse,HttpResponse   } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Cluster, Connection, Config, Broker, Alert, Topic, SearchResult, ConsumerGroup, GenericResponse,
-  SchemaRegistry, Chart } from '../models';
+  SchemaRegistry, Chart, Event } from '../models';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -118,6 +118,12 @@ export class ApiService {
 
       return () => eventSource.close();
     });
+  }
+
+  public produceTopicMessage(topic: string, event: Event): Observable<GenericResponse<Event>> {
+    return this.http.post<GenericResponse<Event>>(
+      `${ApiService.ApiBaseUrl}/topics/${encodeURIComponent(topic)}/messages`, event,
+      { withCredentials: true });
   }
 
 }
