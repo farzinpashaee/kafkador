@@ -1,6 +1,7 @@
 package com.csl.kafkador.service.registry;
 
 import com.csl.kafkador.domain.dto.SchemaDto;
+import com.csl.kafkador.domain.dto.SchemaRegistryConfigDto;
 import com.csl.kafkador.domain.dto.SchemaRegistryDto;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
 
 public class SchemaRegistryServiceImp implements SchemaRegistryService {
 
+    private static final String CONFIG_KEY = "kafkador.schema-registry.url";
+
     private final RestTemplate restTemplate;
     private final KafkadorConfigService<String,Map.Entry<String,String>> kafkadorConfigService;
 
@@ -30,7 +34,7 @@ public class SchemaRegistryServiceImp implements SchemaRegistryService {
         String url = null;
         SchemaRegistryDto schemaRegistry = new SchemaRegistryDto();
         try {
-            url = kafkadorConfigService.get("kafkador.schema-registry.url",clusterId);
+            url = kafkadorConfigService.get(CONFIG_KEY,clusterId);
             schemaRegistry.setConfigured(true);
             ResponseEntity<List<String>> response = restTemplate.exchange(
                     url + "/subjects",
@@ -53,5 +57,22 @@ public class SchemaRegistryServiceImp implements SchemaRegistryService {
         return schemaRegistry;
     }
 
+    @Override
+    public SchemaRegistryConfigDto getConfig(String clusterId) {
+        SchemaRegistryConfigDto config = new SchemaRegistryConfigDto();
+        try {
+            config.setUrl(kafkadorConfigService.get(CONFIG_KEY, clusterId));
+            config.setConfigured(true);
+        } catch (ConfigNotFoundException e) {
+            log.warn(e.toString());
+        }
+        return config;
+    }
+
+    @Override
+    public SchemaRegistryConfigDto saveConfig(String url, String clusterId) {
+        String saved = kafkadorConfigService.save(new AbstractMap.SimpleEntry<>(CONFIG_KEY, url), clusterId);
+        return new SchemaRegistryConfigDto().setUrl(saved).setConfigured(true);
+    }
 
 }

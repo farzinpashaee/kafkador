@@ -11,6 +11,7 @@ export * from './error';
 export * from './config';
 export * from './schema';
 export * from './schema-registry';
+export * from './ksql-db';
 export * from './generic-response';
 export * from './link';
 export * from './meta';

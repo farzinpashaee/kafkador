@@ -39,6 +39,7 @@ public class KafkadorContext {
         CLUSTER("cluster", "ClusterService"),
         BROKER("broker", "BrokerService"),
         SCHEMA_REGISTRY("schema-registry", "SchemaRegistryService"),
+        KSQL_DB("ksql-db", "KsqlDbService"),
         CONSUMER("consumer", "ConsumerService"),
         PRODUCER("producer", "ProducerService");
 

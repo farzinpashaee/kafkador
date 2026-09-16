@@ -16,6 +16,13 @@ export class CommonService {
     modal?.hide();
   }
 
+  showTab(tabId:string) {
+    const el = document.getElementById(tabId);
+    if (!el) return;
+    const tab = bootstrap.Tab.getOrCreateInstance(el);
+    tab.show();
+  }
+
   showCommonModal() {
     const el = document.getElementById('commonModal');
     this.commonModal = bootstrap.Modal.getOrCreateInstance(el, {
@@ -32,7 +39,7 @@ export class CommonService {
   }
 
   prepareError(error: Error | null | undefined, code: string, message: string) {
-    if (!error) {
+    if (!error || !error.message) {
       error = new Error();
       error.code = code;
       error.message = message;

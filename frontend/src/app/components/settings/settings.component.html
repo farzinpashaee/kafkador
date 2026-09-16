@@ -46,12 +46,74 @@
       <h6>Observer Settings</h6>
     </div>
 
-    <div class="tab-pane fade" id="schema-Registry" role="tabpanel" aria-labelledby="cluster-tab" tabindex="0">
+    <div class="tab-pane fade" id="schema-Registry" role="tabpanel" aria-labelledby="schema-Registry-tab" tabindex="0">
       <h6>Schema Registry Settings</h6>
+
+      <div *ngIf="flags.get('schemaRegistryConfigLoading')" class="text-center">
+        <div class="spinner-border spinner-border-sm" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <div *ngIf="!flags.get('schemaRegistryConfigLoading')">
+        <div class="mb-3">
+          <label for="schemaRegistryUrl" class="form-label">Schema Registry URL:</label>
+          <input required [(ngModel)]="schemaRegistryConfig.url" (ngModelChange)="savedAt.delete('schemaRegistryConfig')" type="text" class="form-control" id="schemaRegistryUrl" placeholder="e.g. http://localhost:8081" aria-describedby="schemaRegistryUrlHelp">
+          <div id="schemaRegistryUrlHelp" class="form-text">The base URL of your Schema Registry server's REST API.</div>
+        </div>
+
+        <div *ngIf="errors.get('getSchemaRegistryConfig')" class="alert alert-danger" role="alert">
+          {{ errors.get('getSchemaRegistryConfig')?.message }}
+        </div>
+        <div *ngIf="errors.get('saveSchemaRegistryConfig')" class="alert alert-danger" role="alert">
+          {{ errors.get('saveSchemaRegistryConfig')?.message }}
+        </div>
+        <div *ngIf="savedAt.get('schemaRegistryConfig')" class="alert alert-success" role="alert">
+          Successfully updated at {{ savedAt.get('schemaRegistryConfig') | date:'medium' }}.
+        </div>
+
+        <button *ngIf="!flags.get('schemaRegistryConfigSaving')" type="button" class="btn btn-primary" (click)="saveSchemaRegistryConfig()">Save</button>
+        <div *ngIf="flags.get('schemaRegistryConfigSaving')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Saving...&nbsp;
+        </div>
+      </div>
     </div>
 
-    <div class="tab-pane fade" id="ksqldb" role="tabpanel" aria-labelledby="cluster-tab" tabindex="0">
+    <div class="tab-pane fade" id="ksqldb" role="tabpanel" aria-labelledby="ksqldb-tab" tabindex="0">
       <h6>KsqlDB Settings</h6>
+
+      <div *ngIf="flags.get('ksqlDbConfigLoading')" class="text-center">
+        <div class="spinner-border spinner-border-sm" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <div *ngIf="!flags.get('ksqlDbConfigLoading')">
+        <div class="mb-3">
+          <label for="ksqlDbUrl" class="form-label">ksqlDB Server URL:</label>
+          <input required [(ngModel)]="ksqlDbConfig.url" (ngModelChange)="savedAt.delete('ksqlDbConfig')" type="text" class="form-control" id="ksqlDbUrl" placeholder="e.g. http://localhost:8088" aria-describedby="ksqlDbUrlHelp">
+          <div id="ksqlDbUrlHelp" class="form-text">The base URL of your ksqlDB server's REST API.</div>
+        </div>
+
+        <div *ngIf="errors.get('getKsqlDbConfig')" class="alert alert-danger" role="alert">
+          {{ errors.get('getKsqlDbConfig')?.message }}
+        </div>
+        <div *ngIf="errors.get('saveKsqlDbConfig')" class="alert alert-danger" role="alert">
+          {{ errors.get('saveKsqlDbConfig')?.message }}
+        </div>
+        <div *ngIf="savedAt.get('ksqlDbConfig')" class="alert alert-success" role="alert">
+          Successfully updated at {{ savedAt.get('ksqlDbConfig') | date:'medium' }}.
+        </div>
+
+        <button *ngIf="!flags.get('ksqlDbConfigSaving')" type="button" class="btn btn-primary" (click)="saveKsqlDbConfig()">Save</button>
+        <div *ngIf="flags.get('ksqlDbConfigSaving')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Saving...&nbsp;
+        </div>
+      </div>
     </div>
 
     <div class="tab-pane fade" id="connectors" role="tabpanel" aria-labelledby="cluster-tab" tabindex="0">

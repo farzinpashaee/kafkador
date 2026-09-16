@@ -10,6 +10,7 @@ import com.csl.kafkador.record.ConfigEntry;
 import com.csl.kafkador.service.*;
 import com.csl.kafkador.service.agent.AgentService;
 import com.csl.kafkador.service.alert.AlertService;
+import com.csl.kafkador.service.ksqldb.KsqlDbService;
 import com.csl.kafkador.service.registry.SchemaRegistryService;
 import com.csl.kafkador.service.search.SearchService;
 import com.csl.kafkador.util.MetricEnum;
@@ -17,6 +18,7 @@ import com.csl.kafkador.util.TimeUnitEnum;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -286,6 +288,96 @@ public class ApiController {
         return new GenericResponse.Builder<SchemaRegistryDto>()
                 .data(schemaRegistryService.getSubjects(connection.getClusterId()))
                 .success(HttpStatus.OK);
+    }
+
+    @GetMapping("/schema-registry/config")
+    public ResponseEntity<GenericResponse<SchemaRegistryConfigDto>> getSchemaRegistryConfig() {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        SchemaRegistryService schemaRegistryService = (SchemaRegistryService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.SCHEMA_REGISTRY));
+        return new GenericResponse.Builder<SchemaRegistryConfigDto>()
+                .data(schemaRegistryService.getConfig(connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @PutMapping("/schema-registry/config")
+    public ResponseEntity<GenericResponse<SchemaRegistryConfigDto>> saveSchemaRegistryConfig(@Valid @RequestBody SchemaRegistryConfigDto config) {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        SchemaRegistryService schemaRegistryService = (SchemaRegistryService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.SCHEMA_REGISTRY));
+        return new GenericResponse.Builder<SchemaRegistryConfigDto>()
+                .data(schemaRegistryService.saveConfig(config.getUrl(), connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @GetMapping("/ksqldb/config")
+    public ResponseEntity<GenericResponse<KsqlDbConfigDto>> getKsqlDbConfig() {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        KsqlDbService ksqlDbService = (KsqlDbService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KSQL_DB));
+        return new GenericResponse.Builder<KsqlDbConfigDto>()
+                .data(ksqlDbService.getConfig(connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @PutMapping("/ksqldb/config")
+    public ResponseEntity<GenericResponse<KsqlDbConfigDto>> saveKsqlDbConfig(@Valid @RequestBody KsqlDbConfigDto config) {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        KsqlDbService ksqlDbService = (KsqlDbService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KSQL_DB));
+        return new GenericResponse.Builder<KsqlDbConfigDto>()
+                .data(ksqlDbService.saveConfig(config.getUrl(), connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @GetMapping("/ksqldb/info")
+    public ResponseEntity<GenericResponse<KsqlServerInfoDto>> getKsqlDbInfo() throws ConfigNotFoundException, KsqlDbApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        KsqlDbService ksqlDbService = (KsqlDbService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KSQL_DB));
+        return new GenericResponse.Builder<KsqlServerInfoDto>()
+                .data(ksqlDbService.getServerInfo(connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @GetMapping("/ksqldb/streams")
+    public ResponseEntity<GenericResponse<List<KsqlStreamDto>>> getKsqlDbStreams() throws ConfigNotFoundException, KsqlDbApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        KsqlDbService ksqlDbService = (KsqlDbService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KSQL_DB));
+        return new GenericResponse.Builder<List<KsqlStreamDto>>()
+                .data(ksqlDbService.getStreams(connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @GetMapping("/ksqldb/tables")
+    public ResponseEntity<GenericResponse<List<KsqlTableDto>>> getKsqlDbTables() throws ConfigNotFoundException, KsqlDbApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        KsqlDbService ksqlDbService = (KsqlDbService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KSQL_DB));
+        return new GenericResponse.Builder<List<KsqlTableDto>>()
+                .data(ksqlDbService.getTables(connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @GetMapping("/ksqldb/queries")
+    public ResponseEntity<GenericResponse<List<KsqlQueryDto>>> getKsqlDbQueries() throws ConfigNotFoundException, KsqlDbApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        KsqlDbService ksqlDbService = (KsqlDbService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KSQL_DB));
+        return new GenericResponse.Builder<List<KsqlQueryDto>>()
+                .data(ksqlDbService.getQueries(connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @PostMapping("/ksqldb/queries/{id}/terminate")
+    public ResponseEntity<Void> terminateKsqlDbQuery(@PathVariable @NotBlank @Pattern(regexp = "[A-Za-z0-9_\\-]+", message = "Invalid query id") String id)
+            throws ConfigNotFoundException, KsqlDbApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        KsqlDbService ksqlDbService = (KsqlDbService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KSQL_DB));
+        ksqlDbService.terminateQuery(id, connection.getClusterId());
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/search")

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse,HttpResponse   } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Cluster, Connection, Config, Broker, Alert, Topic, SearchResult, ConsumerGroup, GenericResponse,
-  SchemaRegistry, Chart, Event } from '../models';
+  SchemaRegistry, SchemaRegistryConfig, Chart, Event, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery } from '../models';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -72,6 +72,51 @@ export class ApiService {
 
   public getSchemaSubjects(): Observable<GenericResponse<SchemaRegistry>> {
     return this.http.get<GenericResponse<SchemaRegistry>>(`${ApiService.ApiBaseUrl}/schema-registry/subjects`,{ withCredentials: true });
+  }
+
+  public getSchemaRegistryConfig(): Observable<HttpResponse<GenericResponse<SchemaRegistryConfig>>> {
+    return this.http.get<GenericResponse<SchemaRegistryConfig>>(`${ApiService.ApiBaseUrl}/schema-registry/config`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public saveSchemaRegistryConfig(url:string): Observable<HttpResponse<GenericResponse<SchemaRegistryConfig>>> {
+    return this.http.put<GenericResponse<SchemaRegistryConfig>>(`${ApiService.ApiBaseUrl}/schema-registry/config`,{ url },
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public getKsqlDbConfig(): Observable<HttpResponse<GenericResponse<KsqlDbConfig>>> {
+    return this.http.get<GenericResponse<KsqlDbConfig>>(`${ApiService.ApiBaseUrl}/ksqldb/config`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public saveKsqlDbConfig(url:string): Observable<HttpResponse<GenericResponse<KsqlDbConfig>>> {
+    return this.http.put<GenericResponse<KsqlDbConfig>>(`${ApiService.ApiBaseUrl}/ksqldb/config`,{ url },
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public getKsqlDbInfo(): Observable<HttpResponse<GenericResponse<KsqlServerInfo>>> {
+    return this.http.get<GenericResponse<KsqlServerInfo>>(`${ApiService.ApiBaseUrl}/ksqldb/info`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public getKsqlDbStreams(): Observable<HttpResponse<GenericResponse<KsqlStream[]>>> {
+    return this.http.get<GenericResponse<KsqlStream[]>>(`${ApiService.ApiBaseUrl}/ksqldb/streams`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public getKsqlDbTables(): Observable<HttpResponse<GenericResponse<KsqlTable[]>>> {
+    return this.http.get<GenericResponse<KsqlTable[]>>(`${ApiService.ApiBaseUrl}/ksqldb/tables`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public getKsqlDbQueries(): Observable<HttpResponse<GenericResponse<KsqlQuery[]>>> {
+    return this.http.get<GenericResponse<KsqlQuery[]>>(`${ApiService.ApiBaseUrl}/ksqldb/queries`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public terminateKsqlDbQuery(id:string): Observable<HttpResponse<void>> {
+    return this.http.post<void>(`${ApiService.ApiBaseUrl}/ksqldb/queries/${id}/terminate`,null,
+      { withCredentials: true, observe: 'response' });
   }
 
   public search(query:string): Observable<GenericResponse<SearchResult[]>> {

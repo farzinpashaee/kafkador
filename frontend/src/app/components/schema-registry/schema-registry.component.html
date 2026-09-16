@@ -9,7 +9,7 @@
       <div class="me-auto">
         Schema Registry configuration is not set!
       </div>
-      <button type="button" class="btn btn-sm btn-warning ms-auto">Config Now</button>
+      <button type="button" class="btn btn-sm btn-warning ms-auto" routerLink="/settings" fragment="schema-Registry">Config Now</button>
     </div>
     <div class="table-responsive" *ngIf="schemaRegistry.configured">
       <table class="table">

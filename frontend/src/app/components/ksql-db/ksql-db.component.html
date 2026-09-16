@@ -1,3 +1,185 @@
-<div class="alert alert-warning" role="alert">
-  This Service is Not Enabled!
+<p class="placeholder-glow" *ngIf="flags.get('configLoading')">
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-8"></span>
+</p>
+
+<div *ngIf="!flags.get('configLoading') && errors.get('getConfig')" class="alert alert-danger" role="alert">
+  {{ errors.get('getConfig')?.message }}
+</div>
+
+<div class="alert alert-warning d-flex" role="alert" *ngIf="!flags.get('configLoading') && !errors.get('getConfig') && !config.configured">
+  <div class="me-auto">
+    ksqlDB configuration is not set!
+  </div>
+  <button type="button" class="btn btn-sm btn-warning ms-auto" routerLink="/settings" fragment="ksqldb">Config Now</button>
+</div>
+
+<div *ngIf="config.configured">
+
+  <div *ngIf="errors.get('loadData')" class="alert alert-danger" role="alert">
+    {{ errors.get('loadData')?.message }}
+  </div>
+
+  <div class="card card-top-widget mb-2" *ngIf="serverInfo">
+    <div class="card-body text-white">
+      <h5 class="card-title">ksqlDB Server</h5>
+      <p class="card-text text-s text-color-subtle mb-0">
+        Version {{ serverInfo.version }} &middot; Status: {{ serverInfo.serverStatus }} &middot; Service ID: {{ serverInfo.ksqlServiceId }}
+      </p>
+    </div>
+  </div>
+
+  <p class="placeholder-glow" *ngIf="flags.get('dataLoading')">
+    <span class="placeholder col-12"></span>
+    <span class="placeholder col-12"></span>
+    <span class="placeholder col-8"></span>
+  </p>
+
+  <div *ngIf="!flags.get('dataLoading')">
+    <ul class="nav nav-tabs" id="ksqlDbTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="streams-tab" data-bs-toggle="tab"
+                data-bs-target="#streams" type="button" role="tab"
+                aria-controls="streams" aria-selected="true">
+          Streams
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tables-tab" data-bs-toggle="tab"
+                data-bs-target="#tables" type="button" role="tab"
+                aria-controls="tables" aria-selected="false">
+          Tables
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="queries-tab" data-bs-toggle="tab"
+                data-bs-target="#queries" type="button" role="tab"
+                aria-controls="queries" aria-selected="false">
+          Persistent Queries
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content border border-top-0 p-3" id="ksqlDbTabsContent">
+      <div class="tab-pane fade show active" id="streams" role="tabpanel" aria-labelledby="streams-tab" tabindex="0">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Topic</th>
+              <th scope="col">Key Format</th>
+              <th scope="col">Value Format</th>
+            </tr>
+            </thead>
+            <tbody>
+            @for (stream of streams; track stream.name) {
+              <tr>
+                <td><span class="badge bg-dark">{{ stream.name }}</span></td>
+                <td>{{ stream.topic }}</td>
+                <td>{{ stream.keyFormat }}</td>
+                <td>{{ stream.valueFormat }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="text-center text-s text-color-subtle py-3">No streams found.</td>
+              </tr>
+            }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="tables" role="tabpanel" aria-labelledby="tables-tab" tabindex="0">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Topic</th>
+              <th scope="col">Key Format</th>
+              <th scope="col">Value Format</th>
+            </tr>
+            </thead>
+            <tbody>
+            @for (table of tables; track table.name) {
+              <tr>
+                <td><span class="badge bg-dark">{{ table.name }}</span></td>
+                <td>{{ table.topic }}</td>
+                <td>{{ table.keyFormat }}</td>
+                <td>{{ table.valueFormat }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="text-center text-s text-color-subtle py-3">No tables found.</td>
+              </tr>
+            }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="queries" role="tabpanel" aria-labelledby="queries-tab" tabindex="0">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+            <tr>
+              <th scope="col">ID</th>
+              <th scope="col">Type</th>
+              <th scope="col">Status</th>
+              <th scope="col">Sources</th>
+              <th scope="col">Sinks</th>
+              <th scope="col"></th>
+            </tr>
+            </thead>
+            <tbody>
+            @for (query of queries; track query.id) {
+              <tr>
+                <td>{{ query.id }}</td>
+                <td>{{ query.queryType }}</td>
+                <td>{{ query.status }}</td>
+                <td>{{ query.sources?.join(', ') }}</td>
+                <td>{{ query.sinks?.join(', ') }}</td>
+                <td>
+                  <button type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Terminate query {{query.id}}"
+                          (click)="openTerminateDialog(query)" data-bs-toggle="modal" data-bs-target="#terminateQueryModal">
+                    <i class="bi bi-x-circle" aria-hidden="true"></i>
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="text-center text-s text-color-subtle py-3">No persistent queries found.</td>
+              </tr>
+            }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Terminate Query -->
+<div class="modal fade" id="terminateQueryModal" tabindex="-1" aria-labelledby="terminateQueryModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        <h6 class="text-danger"><i class="bi bi-x-circle"></i> &nbsp;Terminate Query</h6>
+        Are you sure you want to terminate '{{terminatedQuery.id}}'? This cannot be undone.
+        <div *ngIf="errors.get('terminateQuery')" class="alert alert-danger" role="alert">
+          {{ errors.get('terminateQuery')?.message }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button *ngIf="!flags.get('terminateQueryLoading')" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button *ngIf="!flags.get('terminateQueryLoading')" type="button" class="btn btn-danger" (click)="terminateQuery()">Terminate</button>
+        <div *ngIf="flags.get('terminateQueryLoading')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Terminating...&nbsp;
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

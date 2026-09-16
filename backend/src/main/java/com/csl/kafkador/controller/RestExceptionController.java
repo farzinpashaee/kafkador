@@ -84,6 +84,15 @@ public class RestExceptionController {
                 .failed(HttpStatus.BAD_GATEWAY);
     }
 
+    @ExceptionHandler(KsqlDbApiException.class)
+    public ResponseEntity<GenericResponse<Void>> handleKsqlDbApiException(KsqlDbApiException ex) {
+        log.error("ksqlDB API call failed", ex);
+        return new GenericResponse.Builder<Void>()
+                .code(String.valueOf(HttpStatus.BAD_GATEWAY.value()))
+                .message("The ksqlDB server could not complete this request. Please try again.")
+                .failed(HttpStatus.BAD_GATEWAY);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<GenericResponse<Void>> anyOtherException(Exception ex) {
         log.error("Unhandled exception in API request", ex);
