@@ -34,8 +34,9 @@ export class ConsumersComponent {
 
   newConsumerGroupId = '';
   topicName = '';
+  listenGroupId = '';
+  listenTopicName = '';
   topics: Topic[] = [];
-  suggestedTopics: Topic[] = [];
   consumerGroups: ConsumerGroup[] = [];
   filteredConsumerGroups: ConsumerGroup[] = [];
   activeConnection: Connection | null = null;
@@ -104,26 +105,6 @@ export class ConsumersComponent {
     return this.consumerGroups.filter((group: ConsumerGroup) => group.id.toLowerCase().includes(term));
   }
 
-  searchTopic(term: string): Topic[] {
-    const lower = term.toLowerCase();
-    return this.topics.filter(i => i.name.toLowerCase().includes(lower));
-  }
-
-  selectTopic(topic: Topic): void {
-    this.topicName = topic.name;
-    this.flags.set('showDropdown',false);
-  }
-
-  onInputChange(): void {
-    if (this.topicName.length < 2) {
-      this.suggestedTopics = [];
-      this.flags.set('showDropdown',false);
-      return;
-    }
-    this.suggestedTopics = this.searchTopic(this.topicName);
-    this.flags.set('showDropdown',this.suggestedTopics.length > 0);
-  }
-
   createAndListen(): void {
     const errors = this.validationService.validateRequiredFields(
       { id: this.newConsumerGroupId, topic: this.topicName }, ['id', 'topic']);
@@ -133,7 +114,31 @@ export class ConsumersComponent {
     }
     this.errors.delete('createConsumerGroup');
     this.commonService.hideModal('createConsumerGroupModal');
-    this.router.navigate(['/consumer', this.newConsumerGroupId, this.topicName]);
+    this.router.navigate(['/topic', this.topicName], {
+      queryParams: { groupId: this.newConsumerGroupId, listen: 'true' },
+      fragment: 'testTopic'
+    });
+  }
+
+  openListenDialog(consumerGroup: ConsumerGroup): void {
+    this.errors.delete('listenConsumerGroup');
+    this.listenGroupId = consumerGroup.id;
+    this.listenTopicName = '';
+  }
+
+  listenToExistingGroup(): void {
+    const errors = this.validationService.validateRequiredFields(
+      { topic: this.listenTopicName }, ['topic']);
+    if (errors.length > 0) {
+      this.errors.set("listenConsumerGroup",{code:'400',message:errors[0],datetime:''});
+      return;
+    }
+    this.errors.delete('listenConsumerGroup');
+    this.commonService.hideModal('listenConsumerGroupModal');
+    this.router.navigate(['/topic', this.listenTopicName], {
+      queryParams: { groupId: this.listenGroupId, listen: 'true' },
+      fragment: 'testTopic'
+    });
   }
 
 }

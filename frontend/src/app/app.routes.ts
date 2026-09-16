@@ -11,7 +11,6 @@ export const routes: Routes = [
       { path: 'topic', loadComponent: () => import('./components/topics/topics.component').then(m => m.TopicsComponent), title: 'Topics', data: { breadcrumb: { label: 'Topics', url: '/topic' } } },
       { path: 'topic/:name', loadComponent: () => import('./components/topic/topic.component').then(m => m.TopicComponent), title: 'Topics', data: { breadcrumb: { param: 'name' } } },
       { path: 'consumer', loadComponent: () => import('./components/consumers/consumers.component').then(m => m.ConsumersComponent), title: 'Consumers', data: { breadcrumb: { label: 'Consumers' } } },
-      { path: 'consumer/:groupId/:topic', loadComponent: () => import('./components/consumer/consumer.component').then(m => m.ConsumerComponent), title: 'Consumer Group', data: { breadcrumb: { param: 'groupId' } } },
       { path: 'access-control', loadComponent: () => import('./components/access-control/access-control.component').then(m => m.AccessControlComponent), title: 'Access Control', data: { breadcrumb: { label: 'Access Control' } } },
       { path: 'stream', loadComponent: () => import('./components/streams/streams.component').then(m => m.StreamsComponent), title: 'Streams', data: { breadcrumb: { label: 'Streams' } } },
       { path: 'ksqldb', loadComponent: () => import('./components/ksql-db/ksql-db.component').then(m => m.KsqlDBComponent), title: 'KsqlDB', data: { breadcrumb: { label: 'KsqlDB' } } },

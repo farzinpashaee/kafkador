@@ -78,8 +78,11 @@
             <td>{{consumerGroup.partitionAssignor}}</td>
             <td>{{consumerGroup.groupState}}</td>
             <td>
-              <i class="bi bi-box-arrow-in-down text-color-subtle" aria-hidden="true"
-                 title="Live message view is only available for groups started from 'New Consumer Group'"></i>
+              <button type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Listen with consumer group {{consumerGroup.id}}"
+                      title="Listen to a topic with this consumer group"
+                      (click)="openListenDialog(consumerGroup)" data-bs-toggle="modal" data-bs-target="#listenConsumerGroupModal">
+                <i class="bi bi-box-arrow-in-down" aria-hidden="true"></i>
+              </button>
             </td>
           </tr>
           } @empty {
@@ -111,13 +114,10 @@
         </div>
         <div class="mb-3">
           <label for="consumerGroupTopic" class="form-label">Topic:</label>
-          <input required type="text" class="form-control" id="consumerGroupTopic" placeholder="e.g. MyTopicName" autocomplete="off"
-                 [(ngModel)]="topicName" (input)="onInputChange()">
-          <ul class="dropdown-menu show w-100 mt-1" *ngIf="flags.get('showDropdown')" >
-            <li *ngFor="let topic of suggestedTopics" class="dropdown-item cursor-pointer" (click)="selectTopic(topic)">
-              {{ topic.name }}
-            </li>
-          </ul>
+          <select required class="form-select" id="consumerGroupTopic" [(ngModel)]="topicName">
+            <option value="" disabled selected>Select a topic</option>
+            <option *ngFor="let topic of topics" [value]="topic.name">{{ topic.name }}</option>
+          </select>
         </div>
 
         <div *ngIf="errors.get('createConsumerGroup')" class="alert alert-danger" role="alert">
@@ -133,6 +133,36 @@
             <span class="visually-hidden">Loading...</span>
           </div> Starting...&nbsp;
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Listen with Existing Consumer Group -->
+<div class="modal fade" id="listenConsumerGroupModal" tabindex="-1" aria-labelledby="listenConsumerGroupModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="listenConsumerGroupModalLabel">Listen with '{{listenGroupId}}'</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="listenConsumerGroupTopic" class="form-label">Topic:</label>
+          <select required class="form-select" id="listenConsumerGroupTopic" [(ngModel)]="listenTopicName">
+            <option value="" disabled selected>Select a topic</option>
+            <option *ngFor="let topic of topics" [value]="topic.name">{{ topic.name }}</option>
+          </select>
+        </div>
+
+        <div *ngIf="errors.get('listenConsumerGroup')" class="alert alert-danger" role="alert">
+          {{ errors.get('listenConsumerGroup')?.message }}
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="listenToExistingGroup()">Listen</button>
       </div>
     </div>
   </div>

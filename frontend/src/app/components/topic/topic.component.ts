@@ -1,4 +1,4 @@
-import { Component, OnDestroy, PipeTransform  } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, PipeTransform  } from '@angular/core';
 import { ActivatedRoute,RouterModule } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { CommonModule, AsyncPipe, DecimalPipe  } from '@angular/common';
@@ -32,6 +32,7 @@ export class TopicComponent implements OnDestroy {
   filterEditable$ = new BehaviorSubject<boolean>(false);
 
   listening: boolean = false;
+  activeGroupId: string = '';
   consumedMessages: string[] = [];
   producerEvent: string = '';
   private testTopicSubscription?: Subscription;
@@ -39,6 +40,7 @@ export class TopicComponent implements OnDestroy {
   constructor(private apiService: ApiService,
     private documentationService: DocumentationService,
     private commonService: CommonService,
+    private cdr: ChangeDetectorRef,
     private route: ActivatedRoute) {}
 
   ngOnInit() {
@@ -58,6 +60,12 @@ export class TopicComponent implements OnDestroy {
           this.topicConfig = filtered;
         });
 
+      if (this.route.snapshot.queryParamMap.get('listen') === 'true') {
+        const groupId = this.route.snapshot.queryParamMap.get('groupId') ?? undefined;
+        this.cdr.detectChanges();
+        this.commonService.showTab('test-topic-tab');
+        this.startListening(groupId);
+      }
     });
   }
 
@@ -118,11 +126,11 @@ export class TopicComponent implements OnDestroy {
     }
   }
 
-  startListening(): void {
+  startListening(groupId?: string): void {
     this.errors.delete('testTopicConsumer');
     this.listening = true;
-    const groupId = `kafkador-test-${Date.now()}`;
-    this.testTopicSubscription = this.apiService.consumeTopicMessages(this.topicName, groupId).subscribe({
+    this.activeGroupId = groupId || `kafkador-test-${Date.now()}`;
+    this.testTopicSubscription = this.apiService.consumeTopicMessages(this.topicName, this.activeGroupId).subscribe({
       next: (message: string) => {
         this.consumedMessages = [message, ...this.consumedMessages].slice(0, MAX_VISIBLE_TEST_MESSAGES);
       },

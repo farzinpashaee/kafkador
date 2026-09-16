@@ -7,6 +7,7 @@
   <div class="row">
     <h5>Connections</h5>
     <p class="text-s">List of Connection to connect to clusters</p>
+
     <div class="table-responsive">
       <table class="table">
         <thead>
@@ -22,10 +23,80 @@
             <th scope="row">{{connection.name}}</th>
             <td>{{connection.host}}</td>
             <td>{{connection.port}}</td>
-            <td><a><i class="bi bi-trash3"></i></a></td>
+            <td>
+              <button type="button" class="btn btn-link btn-icon p-0 me-2" attr.aria-label="Edit connection {{connection.name}}"
+                      (click)="openEditDialog(connection)" data-bs-toggle="modal" data-bs-target="#editConnectionModal">
+                <i class="bi bi-pencil" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Delete connection {{connection.name}}"
+                      (click)="openDeleteDialog(connection)" data-bs-toggle="modal" data-bs-target="#deleteConnectionModal">
+                <i class="bi bi-trash3" aria-hidden="true"></i>
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Connection -->
+<div class="modal fade" id="editConnectionModal" tabindex="-1" aria-labelledby="editConnectionModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+
+        <div class="mb-3">
+          <label for="editConnectionName" class="form-label">Cluster Name:</label>
+          <input required [(ngModel)]="editConnection.name" type="text" class="form-control" id="editConnectionName" placeholder="Cluster Name">
+        </div>
+        <div class="mb-3">
+          <label for="editConnectionHost" class="form-label">Host Address:</label>
+          <input required [(ngModel)]="editConnection.host" type="text" class="form-control" id="editConnectionHost" placeholder="e.g. 127.0.0.1">
+        </div>
+        <div class="mb-3">
+          <label for="editConnectionPort" class="form-label">Port Number:</label>
+          <input required [(ngModel)]="editConnection.port" type="number" class="form-control" id="editConnectionPort" placeholder="e.g. 9092">
+        </div>
+
+        <div *ngIf="errors.get('editConnection')" class="alert alert-danger" role="alert">
+          {{ errors.get('editConnection')?.message }}
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button *ngIf="!flags.get('editConnectionLoading')" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button *ngIf="!flags.get('editConnectionLoading')" type="button" class="btn btn-primary" (click)="updateConnection()">Save Changes</button>
+        <div *ngIf="flags.get('editConnectionLoading')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Saving...&nbsp;
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Connection -->
+<div class="modal fade" id="deleteConnectionModal" tabindex="-1" aria-labelledby="deleteConnectionModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        <h6 class="text-danger"><i class="bi bi-x-circle"></i> &nbsp;Connection Delete</h6>
+        Are you sure you want to delete connection to '{{deletedConnection.name}}'?
+        <div *ngIf="errors.get('deleteConnection')" class="alert alert-danger" role="alert">
+          {{ errors.get('deleteConnection')?.message }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button *ngIf="!flags.get('deleteConnectionLoading')" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button *ngIf="!flags.get('deleteConnectionLoading')" type="button" class="btn btn-danger" (click)="deleteConnection()">Delete</button>
+        <div *ngIf="flags.get('deleteConnectionLoading')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Deleting...&nbsp;
+        </div>
+      </div>
     </div>
   </div>
 </div>
