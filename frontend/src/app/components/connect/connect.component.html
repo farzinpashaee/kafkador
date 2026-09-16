@@ -1,62 +1,68 @@
-<div class="min-vh-100 d-flex align-items-center justify-content-center">
-  <div class="container connect-container">
-    <div class="row">
-      <h1 class="logo">
-        <img src="/images/logo-shape-v1.svg" class="logo-image-connect">
-        Kafkador
-      </h1>
-    </div>
-    <div class="row text-center mt-2">
-      <div *ngIf="!flags.get('getConnectionsEmpty')">
-        <h5>Connect to Cluster</h5>
-        <p class="text-gray-500" >
-          Or add another one by <a href="#" (click)="clearForm()" data-bs-toggle="modal" data-bs-target="#addClusterModal">Adding New Cluster</a>
-        </p>
-      </div>
-      <div *ngIf="flags.get('getConnectionsEmpty')">
-        <h5>Welcome to Kafkador</h5>
-        <p class="text-s">
-          You can start by creating a new connection to your Kafka cluster
-        </p>
-        <p>
-          <button type="button" (click)="clearForm()" data-bs-toggle="modal" data-bs-target="#addClusterModal" class="btn btn-primary btn-lg">Connect to a Kafka Cluster</button>
-        </p>
+<div class="connect-page d-flex align-items-center justify-content-center">
+  <div class="connect-wrapper">
+  <div class="connect-card">
+    <div class="connect-visual">
+      <img src="/images/kafkador-splash.png" class="connect-visual-image" alt="">
+      <div class="connect-logo">
+        <img src="/images/kafkador-logo-white-v1.svg" class="connect-logo-image" alt="Kafkador">
       </div>
     </div>
-    <div class="row" id="connection">
-      <div *ngFor="let conn of connections">
-        <div class="card m-1">
-          <div class="card-body">
-            <h5>{{ conn.name }}</h5>
-            <span class="text-gray-500">{{ conn.host }}:{{ conn.port }}</span>
-            <div class="btn-group connect float-end">
-              <button type="button" class="btn btn-primary" type="button" (click)="connect(conn.id)">
-                Connect
-              </button>
-              <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"
-                      data-bs-toggle="dropdown" aria-expanded="false">
-                <span class="visually-hidden">Toggle Dropdown</span>
-              </button>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" (click)="openDeleteDialog(conn)" data-bs-toggle="modal" data-bs-target="#deleteClusterModal"><i class="bi bi-trash3"></i> Delete</a></li>
-              </ul>
-            </div>
+
+    <div class="connect-panel">
+      <div class="connect-intro" *ngIf="flags.get('getConnectionsEmpty')">
+        <h1>Welcome to Kafkador!</h1>
+        <p class="text-muted">
+          You can start by creating a new connection to your Kafka cluster. Once connected, Kafkador lets you explore topics, inspect messages, monitor consumer groups, and manage broker configurations.
+        </p>
+      </div>
+      <div class="connect-intro" *ngIf="!flags.get('getConnectionsEmpty')">
+        <h1>Connect to Cluster</h1>
+        <p class="text-muted">
+          Select one of your saved connections below, or add a new one.
+        </p>
+      </div>
+
+      <button type="button" class="btn btn-primary btn-connect-new" (click)="clearForm()" data-bs-toggle="modal" data-bs-target="#addClusterModal">
+        Connect to New Kafka Cluster
+      </button>
+
+      <div class="connection-list" id="connection">
+        <div class="connection-item" *ngFor="let conn of connections">
+          <div class="connection-info">
+            <h6>{{ conn.name }}</h6>
+            <span class="text-muted">{{ conn.host }}:{{ conn.port }}</span>
+          </div>
+          <div class="btn-group connect">
+            <button type="button" class="btn btn-primary" (click)="connect(conn.id)">
+              Connect
+            </button>
+            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+              <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" (click)="openEditDialog(conn)" data-bs-toggle="modal" data-bs-target="#editClusterModal"><i class="bi bi-pencil"></i> Edit</a></li>
+              <li><a class="dropdown-item" (click)="openDeleteDialog(conn)" data-bs-toggle="modal" data-bs-target="#deleteClusterModal"><i class="bi bi-trash3"></i> Delete</a></li>
+            </ul>
           </div>
         </div>
-      </div>
-      <div *ngIf="flags.get('getConnectionsLoading')" class="text-center">
-        <div class="spinner-border" role="status">
-          <span class="visually-hidden">Loading...</span>
+
+        <div *ngIf="flags.get('getConnectionsLoading')" class="text-center">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+        <div *ngIf="errors.get('getConnections')" class="alert alert-danger" role="alert">
+          {{ errors.get('getConnections')?.message }}
+          <button type="button" class="btn btn-outline-danger btn-sm float-end mt-4" (click)="getConnections()">Retry</button>
         </div>
       </div>
-      <div *ngIf="errors.get('getConnections')" class="alert alert-danger" role="alert">
-        {{ errors.get('getConnections')?.message }}
-        <button type="button" class="btn btn-outline-danger btn-sm float-end mt-4" (click)="getConnections()">Retry</button>
-      </div>
     </div>
-    <div class="row text-center footer">
-      <p>Version 0.0.0 - © 2025 <a target="_blank" href="https://codestreamlab.com">CodeStreamLab Inc.</a></p>
-    </div>
+  </div>
+
+  <div class="connect-footer">
+    <p>Version 0.0.0 - © 2025 <a target="_blank" href="https://codestreamlab.com">Codestreamlab</a></p>
+  </div>
   </div>
 </div>
 
@@ -69,15 +75,18 @@
 
         <div class="mb-3">
           <label for="name" class="form-label">Cluster Name:</label>
-          <input required [(ngModel)]="newConnection.name" type="text" class="form-control" id="name" placeholder="Cluster Name">
+          <input required [(ngModel)]="newConnection.name" type="text" class="form-control" id="name" placeholder="Cluster Name" aria-describedby="nameHelp">
+          <div id="nameHelp" class="form-text">A friendly name to help you recognize this cluster later, e.g. "Local Dev" or "Production".</div>
         </div>
         <div class="mb-3">
           <label for="host" class="form-label">Host Address:</label>
-          <input required [(ngModel)]="newConnection.host" type="text" class="form-control" id="host" placeholder="e.g. 127.0.0.1">
+          <input required [(ngModel)]="newConnection.host" type="text" class="form-control" id="host" placeholder="e.g. 127.0.0.1" aria-describedby="hostHelp">
+          <div id="hostHelp" class="form-text">The hostname or IP address of a broker in your Kafka cluster.</div>
         </div>
         <div class="mb-3">
           <label for="port" class="form-label">Port Number:</label>
-          <input required [(ngModel)]="newConnection.port" type="number" class="form-control" id="port" placeholder="e.g. 9092">
+          <input required [(ngModel)]="newConnection.port" type="number" class="form-control" id="port" placeholder="e.g. 9092" aria-describedby="portHelp">
+          <div id="portHelp" class="form-text">The broker's listener port. Kafka defaults to 9092 if you're unsure.</div>
         </div>
 
         <div *ngIf="errors.get('addConnection')" class="alert alert-danger" role="alert">
@@ -92,6 +101,46 @@
           <div class="spinner-border spinner-border-sm" role="status">
             <span class="visually-hidden">Loading...</span>
           </div> Connecting...&nbsp;
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Cluster -->
+<div class="modal fade" id="editClusterModal" tabindex="-1" aria-labelledby="editClusterModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+
+        <div class="mb-3">
+          <label for="editName" class="form-label">Cluster Name:</label>
+          <input required [(ngModel)]="editConnection.name" type="text" class="form-control" id="editName" placeholder="Cluster Name" aria-describedby="editNameHelp">
+          <div id="editNameHelp" class="form-text">A friendly name to help you recognize this cluster later, e.g. "Local Dev" or "Production".</div>
+        </div>
+        <div class="mb-3">
+          <label for="editHost" class="form-label">Host Address:</label>
+          <input required [(ngModel)]="editConnection.host" type="text" class="form-control" id="editHost" placeholder="e.g. 127.0.0.1" aria-describedby="editHostHelp">
+          <div id="editHostHelp" class="form-text">The hostname or IP address of a broker in your Kafka cluster.</div>
+        </div>
+        <div class="mb-3">
+          <label for="editPort" class="form-label">Port Number:</label>
+          <input required [(ngModel)]="editConnection.port" type="number" class="form-control" id="editPort" placeholder="e.g. 9092" aria-describedby="editPortHelp">
+          <div id="editPortHelp" class="form-text">The broker's listener port. Kafka defaults to 9092 if you're unsure.</div>
+        </div>
+
+        <div *ngIf="errors.get('editConnection')" class="alert alert-danger" role="alert">
+          {{ errors.get('editConnection')?.message }}
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button *ngIf="!flags.get('editConnectionLoading')" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button *ngIf="!flags.get('editConnectionLoading')" type="button" class="btn btn-primary" (click)="updateConnection()">Save Changes</button>
+        <div *ngIf="flags.get('editConnectionLoading')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Saving...&nbsp;
         </div>
       </div>
     </div>

@@ -102,6 +102,39 @@ public class ConnectionServiceImp implements ConnectionService {
     }
 
     @Override
+    public ConnectionDto update(String id, ConnectionDto connection) throws ClusterNotFoundException, KafkaAdminApiException, DuplicatedClusterException {
+        Optional<Cluster> clusterOptional = clusterRepository.findById(id);
+        if(clusterOptional.isEmpty()) throw new ClusterNotFoundException("Connection with given cluster ID not found!");
+        Cluster cluster = clusterOptional.get();
+
+        boolean endpointChanged = !cluster.getHost().equals(connection.getHost()) || !cluster.getPort().equals(connection.getPort());
+        if(endpointChanged) {
+            Optional<Cluster> duplicateOptional = clusterRepository.findByHostAndPort(connection.getHost(), connection.getPort());
+            if(duplicateOptional.isPresent() && !duplicateOptional.get().getId().equals(cluster.getId()))
+                throw new DuplicatedClusterException("There is a cluster created with this ip and port number!");
+
+            Admin admin = null;
+            try {
+                admin = Admin.create(KafkaHelper.getConnectionProperties(connection.getHost(), connection.getPort()));
+                KafkaFuture<String> clusterIdFuture = admin.describeCluster().clusterId();
+                String clusterId = clusterIdFuture.get();
+                adminClientMap.remove(cluster.getClusterId());
+                cluster.setClusterId(clusterId);
+                cluster.setHost(connection.getHost());
+                cluster.setPort(connection.getPort());
+            } catch (Exception e) {
+                throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
+            } finally {
+                if(admin!=null) admin.close();
+            }
+        }
+
+        cluster.setName(connection.getName());
+        clusterRepository.save(cluster);
+        return DtoMapper.connectionMapper(cluster);
+    }
+
+    @Override
     public ConnectionDto connect(String id) throws ClusterNotFoundException {
         Optional<Cluster> clusterOptional = clusterRepository.findById(id);
         if(clusterOptional.isEmpty()) throw new ClusterNotFoundException("Connection with given cluster ID not found!");

@@ -189,9 +189,10 @@ span.placeholder{
 }
 
 .modal-backdrop.show {
-  backdrop-filter: blur(5px)!important;      /* Blurs everything behind */
-  -webkit-backdrop-filter: blur(5px)!important;
-  opacity: 0.8 !important;
+  background-color: rgba(0, 0, 0, 0.55) !important;
+  backdrop-filter: blur(8px)!important;      /* Blurs everything behind */
+  -webkit-backdrop-filter: blur(8px)!important;
+  opacity: 1 !important;      /* opacity here would fade the blur itself out; use the rgba alpha above instead */
 }
 
 /* Utility classes extracted from inline styles */

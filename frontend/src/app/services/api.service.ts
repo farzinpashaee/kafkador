@@ -32,6 +32,11 @@ export class ApiService {
       { withCredentials: true ,observe: 'response' });
   }
 
+  public updateConnection(id:string, connection:Connection): Observable<HttpResponse<GenericResponse<Connection>>> {
+    return this.http.put<GenericResponse<Connection>>(`${ApiService.ApiBaseUrl}/connections/`+id,connection,
+      { withCredentials: true ,observe: 'response' });
+  }
+
   public deleteConnection(id:string): Observable<HttpResponse<void>> {
     return this.http.delete<void>(`${ApiService.ApiBaseUrl}/connections/`+id,
       { withCredentials: true ,observe: 'response' });

@@ -14,6 +14,7 @@ public interface ConnectionService {
 
     AdminClusterWrapper getAdminClient(String id) throws ClusterNotFoundException;
     ConnectionDto create( ConnectionDto connectionDto ) throws KafkaAdminApiException, DuplicatedClusterException;
+    ConnectionDto update( String id, ConnectionDto connectionDto ) throws ClusterNotFoundException, KafkaAdminApiException, DuplicatedClusterException;
     void delete( String id ) throws ClusterNotFoundException;
     ConnectionDto connect( String clusterId ) throws ClusterNotFoundException;
     ConnectionDto disconnect() throws ClusterNotFoundException;

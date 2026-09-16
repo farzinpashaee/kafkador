@@ -19,6 +19,7 @@ export class ConnectComponent  {
   connections: Connection[] = [];
   connection!: Connection;
   newConnection!: Connection;
+  editConnection!: Connection;
   deletedConnection!: Connection;
   baseUrl = environment.baseUrl;
   router = inject(Router);
@@ -32,6 +33,7 @@ export class ConnectComponent  {
 
   ngOnInit() {
     this.newConnection = { id:'', clusterId:'', name: '', host: '', port: '9092' };
+    this.editConnection = { id:'', clusterId:'', name: '', host: '', port: '' };
     this.deletedConnection = { id:'', clusterId:'', name: '', host: '', port: '' };
     this.flags.set('getConnectionsEmpty',false);
     this.getConnections();
@@ -73,7 +75,7 @@ export class ConnectComponent  {
     this.flags.set('addConnectionLoading',true);
     this.apiService.addConnection(this.newConnection).subscribe({
       next: (res: HttpResponse<GenericResponse<Connection>>) => {
-        this.connections.push(this.newConnection);
+        this.connections.push(res.body?.data ?? this.newConnection);
         this.flags.set('addConnectionLoading',false);
         this.flags.set('getConnectionsEmpty',false);
         this.commonService.hideModal('addClusterModal');
@@ -91,6 +93,35 @@ export class ConnectComponent  {
       this.errors.delete('addConnection');
   }
 
+  openEditDialog(connection: Connection) {
+    this.errors.delete('editConnection');
+    this.editConnection = { ...connection };
+  }
+
+  updateConnection(){
+    const errors = this.validationService.validateRequiredFields(this.editConnection, ['name', 'host', 'port']);
+    if (errors.length > 0) {
+      this.errors.set("editConnection",{code:'400',message:errors[0],datetime:''});
+      return;
+    } else {
+      this.errors.delete('editConnection');
+    }
+    this.flags.set('editConnectionLoading',true);
+    this.apiService.updateConnection(this.editConnection.id, this.editConnection).subscribe({
+      next: (res: HttpResponse<GenericResponse<Connection>>) => {
+        const updated = res.body?.data ?? this.editConnection;
+        const index = this.connections.findIndex(c => c.id === updated.id);
+        if (index !== -1) this.connections[index] = updated;
+        this.flags.set('editConnectionLoading',false);
+        this.commonService.hideModal('editClusterModal');
+      },
+      error: (res:HttpErrorResponse) => {
+        this.errors.set("editConnection",this.commonService.prepareError(res.error.error,'500','Failed to update connection!'));
+        this.flags.set('editConnectionLoading',false);
+      }
+    });
+  }
+
   openDeleteDialog(connection: Connection) {
     this.errors.delete('deleteConnection');
     this.deletedConnection = connection;
@@ -103,7 +134,7 @@ export class ConnectComponent  {
         next: (res: HttpResponse<void>) => {
           this.connections = this.connections.filter(c => c.id !== this.deletedConnection.id);
           this.flags.set('deleteConnectionLoading',false);
-          this.commonService.hideModal('deleteConnectionModal');
+          this.commonService.hideModal('deleteClusterModal');
         },
         error: (res:HttpErrorResponse) => {
           this.errors.set("deleteConnection",this.commonService.prepareError(res.error.error,'500','Failed to delete connection!'));

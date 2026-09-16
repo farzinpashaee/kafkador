@@ -1,22 +1,134 @@
-.connect-container {
-    max-width: 540px;
+.connect-page {
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  background: var(--app-gray-200);
 }
-.connect-container h1 {
-    font-weight: bold;
-    text-align: center;
+
+.connect-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 900px;
 }
-.connect-container h4 {
-    margin-top: 0.5em;
-    margin-bottom: 0em;
+
+.connect-card {
+  display: flex;
+  width: 100%;
+  min-height: 560px;
+  background: #fff;
+  border-radius: 1.25rem;
+  overflow: hidden;
 }
-.connect-container h5 {
-    margin-bottom: 0em;
+
+.connect-visual {
+  position: relative;
+  flex: 0 0 42%;
+  background: #5b6168;
 }
-.connect-container .footer {
-  color: var(--app-gray-300);
+
+.connect-visual-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.connect-logo {
+  position: relative;
+  z-index: 1;
+  padding: 2rem;
+}
+
+.connect-logo-image {
+  height: 28px;
+  width: auto;
+}
+
+.connect-panel {
+  flex: 1 1 58%;
+  display: flex;
+  flex-direction: column;
+  padding: 2.5rem 2.75rem;
+}
+
+.connect-intro h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.connect-intro p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.btn-connect-new {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: fit-content;
+  margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding: 0.6rem 1.1rem;
+  font-weight: 400;
+  border-radius: 0.5rem;
+}
+
+.connection-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+}
+
+.connection-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--app-gray-300);
+  border-radius: 0.75rem;
+}
+
+.connection-item h6 {
+  margin-bottom: 0.15rem;
+  font-weight: 600;
+}
+
+.connection-item .text-muted {
+  font-size: 0.85rem;
+}
+
+#addClusterModal .form-text {
+  color: #adb5bd;
+}
+
+.connect-footer {
+  margin-top: 5px;
+  margin-right: 1.25rem;
+  align-self: flex-end;
+  color: #999;
   font-size: 0.7em;
-  margin-top: 0.8em;
 }
-#connection .connect {
-   margin-top: -1.2em;
+
+@media (max-width: 720px) {
+  .connect-card {
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .connect-visual {
+    flex-basis: 160px;
+  }
+
+  .connect-panel {
+    padding: 1.75rem;
+  }
+
+  .connect-footer {
+    align-self: center;
+    margin-right: 0;
+  }
 }

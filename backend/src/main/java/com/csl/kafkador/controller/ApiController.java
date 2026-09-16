@@ -164,6 +164,15 @@ public class ApiController {
                 .success(HttpStatus.CREATED, headers);
     }
 
+    @PutMapping("/connections/{id}")
+    public ResponseEntity<GenericResponse<ConnectionDto>> updateConnection(@PathVariable @NotBlank String id, @Valid @RequestBody ConnectionDto connection)
+            throws ClusterNotFoundException, KafkaAdminApiException, DuplicatedClusterException {
+        ConnectionDto updated = connectionService.update(id, connection);
+        return new GenericResponse.Builder<ConnectionDto>()
+                .data(updated)
+                .success(HttpStatus.OK);
+    }
+
     @DeleteMapping("/connections/{id}")
     public ResponseEntity<Void> deleteConnection(@PathVariable @NotBlank String id) throws ClusterNotFoundException {
         log.info("Deleting connection {}", id);
