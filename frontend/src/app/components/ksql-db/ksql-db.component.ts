@@ -4,10 +4,11 @@ import { RouterLink } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { ApiService, CommonService } from '../../services';
 import { GenericResponse, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery, Error } from '../../models';
+import { PaginationComponent } from '../pagination/pagination.component';
 
 @Component({
   selector: 'app-ksql-db',
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, PaginationComponent],
   templateUrl: './ksql-db.component.html',
   styleUrl: './ksql-db.component.scss'
 })
@@ -22,6 +23,22 @@ export class KsqlDBComponent implements OnInit {
 
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
+  readonly pageSize = 10;
+  streamsPage = 1;
+  tablesPage = 1;
+  queriesPage = 1;
+
+  get pagedStreams(): KsqlStream[] {
+    return this.streams.slice((this.streamsPage - 1) * this.pageSize, this.streamsPage * this.pageSize);
+  }
+
+  get pagedTables(): KsqlTable[] {
+    return this.tables.slice((this.tablesPage - 1) * this.pageSize, this.tablesPage * this.pageSize);
+  }
+
+  get pagedQueries(): KsqlQuery[] {
+    return this.queries.slice((this.queriesPage - 1) * this.pageSize, this.queriesPage * this.pageSize);
+  }
 
   constructor(private apiService: ApiService, private commonService: CommonService) {}
 
@@ -93,6 +110,7 @@ export class KsqlDBComponent implements OnInit {
     this.apiService.terminateKsqlDbQuery(this.terminatedQuery.id).subscribe({
       next: () => {
         this.queries = this.queries.filter(q => q.id !== this.terminatedQuery.id);
+        this.queriesPage = Math.min(this.queriesPage, Math.max(1, Math.ceil(this.queries.length / this.pageSize)));
         this.flags.set('terminateQueryLoading', false);
         this.commonService.hideModal('terminateQueryModal');
       },

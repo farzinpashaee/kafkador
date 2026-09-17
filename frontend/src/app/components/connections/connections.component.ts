@@ -6,10 +6,11 @@ import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
 import { ApiService, ValidationService, CommonService } from '../../services';
 import { GenericResponse, Connection, Error } from '../../models';
+import { PaginationComponent } from '../pagination/pagination.component';
 
 @Component({
   selector: 'app-connections',
-  imports: [CommonModule,RouterModule,FormsModule],
+  imports: [CommonModule,RouterModule,FormsModule,PaginationComponent],
   templateUrl: './connections.component.html',
   styleUrl: './connections.component.scss'
 })
@@ -19,6 +20,12 @@ export class ConnectionsComponent {
   editConnection: Connection = { id:'', clusterId:'', name: '', host: '', port: '' };
   deletedConnection: Connection = { id:'', clusterId:'', name: '', host: '', port: '' };
   isLoading: boolean = true;
+  readonly pageSize = 10;
+  page = 1;
+
+  get pagedConnections(): Connection[] {
+    return this.connections.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+  }
 
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
@@ -78,6 +85,7 @@ export class ConnectionsComponent {
     this.apiService.deleteConnection(this.deletedConnection.id).subscribe({
       next: (res: HttpResponse<void>) => {
         this.connections = this.connections.filter(c => c.id !== this.deletedConnection.id);
+        this.page = Math.min(this.page, Math.max(1, Math.ceil(this.connections.length / this.pageSize)));
         this.flags.set('deleteConnectionLoading',false);
         this.commonService.hideModal('deleteConnectionModal');
       },

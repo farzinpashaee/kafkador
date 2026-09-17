@@ -8,10 +8,11 @@ import { GenericResponse, Topic, Chart, Error } from '../../models';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { combineLatest } from 'rxjs';
 import { startWith, map, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { PaginationComponent } from '../pagination/pagination.component';
 
 @Component({
   selector: 'app-topics',
-  imports: [CommonModule,RouterModule,NgxChartsModule,FormsModule,ReactiveFormsModule],
+  imports: [CommonModule,RouterModule,NgxChartsModule,FormsModule,ReactiveFormsModule,PaginationComponent],
   templateUrl: './topics.component.html',
   styleUrl: './topics.component.scss'
 })
@@ -39,6 +40,12 @@ export class TopicsComponent {
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
   filter = new FormControl('', { nonNullable: true });
+  readonly pageSize = 10;
+  page = 1;
+
+  get pagedTopics(): Topic[] {
+    return this.filteredTopics.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+  }
 
   constructor(private apiService: ApiService,
     private commonService: CommonService,
@@ -57,11 +64,13 @@ export class TopicsComponent {
       .pipe(map(([text]) => this.search(text)))
       .subscribe((filtered: Topic[]) => {
         this.filteredTopics = filtered;
+        this.page = 1;
       });
 
     this.apiService.getTopics().subscribe({ next: (res: HttpResponse<GenericResponse<Topic[]>>) => {
         this.topics = res.body?.data ?? [];
         this.filteredTopics = this.search(this.filter.value);
+        this.page = 1;
         this.errors.delete('getTopics');
         this.flags.set('getTopicLoading',false);
       },
@@ -125,6 +134,7 @@ export class TopicsComponent {
         next: () => {
           this.topics = this.topics.filter(c => c.name !== this.deletedTopic.name);
           this.filteredTopics = this.search(this.filter.value);
+          this.page = Math.min(this.page, Math.max(1, Math.ceil(this.filteredTopics.length / this.pageSize)));
           this.flags.set('deleteTopicLoading',false);
           this.commonService.hideModal('deleteTopicModal');
         },

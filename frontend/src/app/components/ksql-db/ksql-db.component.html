@@ -73,7 +73,7 @@
             </tr>
             </thead>
             <tbody>
-            @for (stream of streams; track stream.name) {
+            @for (stream of pagedStreams; track stream.name) {
               <tr>
                 <td><span class="badge bg-dark">{{ stream.name }}</span></td>
                 <td>{{ stream.topic }}</td>
@@ -87,6 +87,7 @@
             }
             </tbody>
           </table>
+          <app-pagination [totalItems]="streams.length" [pageSize]="pageSize" [page]="streamsPage" (pageChange)="streamsPage = $event"></app-pagination>
         </div>
       </div>
 
@@ -102,7 +103,7 @@
             </tr>
             </thead>
             <tbody>
-            @for (table of tables; track table.name) {
+            @for (table of pagedTables; track table.name) {
               <tr>
                 <td><span class="badge bg-dark">{{ table.name }}</span></td>
                 <td>{{ table.topic }}</td>
@@ -116,6 +117,7 @@
             }
             </tbody>
           </table>
+          <app-pagination [totalItems]="tables.length" [pageSize]="pageSize" [page]="tablesPage" (pageChange)="tablesPage = $event"></app-pagination>
         </div>
       </div>
 
@@ -133,7 +135,7 @@
             </tr>
             </thead>
             <tbody>
-            @for (query of queries; track query.id) {
+            @for (query of pagedQueries; track query.id) {
               <tr>
                 <td>{{ query.id }}</td>
                 <td>{{ query.queryType }}</td>
@@ -154,6 +156,7 @@
             }
             </tbody>
           </table>
+          <app-pagination [totalItems]="queries.length" [pageSize]="pageSize" [page]="queriesPage" (pageChange)="queriesPage = $event"></app-pagination>
         </div>
       </div>
     </div>

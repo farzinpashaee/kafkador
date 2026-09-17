@@ -69,15 +69,15 @@ export class TopicComponent implements OnDestroy {
     });
   }
 
-  documentationMod(index: number){
+  documentationMod(config: Config){
       this.documentation = this.documentationService.createDocumentationHtml(
-                                 this.topicConfig[index].documentation,
-                                 this.topicConfig[index].documentationLink
+                                 config.documentation,
+                                 config.documentationLink
                                );
   }
 
-  editMod(index: number){
-    this.selectedEditConfig =  this.topicConfig[index];
+  editMod(config: Config){
+    this.selectedEditConfig = config;
   }
 
   updateConfig(){

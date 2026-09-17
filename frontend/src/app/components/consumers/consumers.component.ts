@@ -8,11 +8,12 @@ import { combineLatest } from 'rxjs';
 import { startWith, map, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ApiService, CommonService, ValidationService, LocalStorageService } from '../../services';
 import { ConsumerGroup, Chart, Error, Connection, GenericResponse, Topic } from '../../models';
+import { PaginationComponent } from '../pagination/pagination.component';
 
 
 @Component({
   selector: 'app-consumers',
-  imports: [CommonModule,RouterModule,NgxChartsModule,FormsModule,ReactiveFormsModule],
+  imports: [CommonModule,RouterModule,NgxChartsModule,FormsModule,ReactiveFormsModule,PaginationComponent],
   templateUrl: './consumers.component.html',
   styleUrl: './consumers.component.scss'
 })
@@ -43,6 +44,12 @@ export class ConsumersComponent {
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
   filter = new FormControl('', { nonNullable: true });
+  readonly pageSize = 10;
+  page = 1;
+
+  get pagedConsumerGroups(): ConsumerGroup[] {
+    return this.filteredConsumerGroups.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+  }
 
   constructor(private apiService: ApiService,
     private commonService: CommonService,
@@ -62,11 +69,13 @@ export class ConsumersComponent {
       .pipe(map(([text]) => this.search(text)))
       .subscribe((filtered: ConsumerGroup[]) => {
         this.filteredConsumerGroups = filtered;
+        this.page = 1;
       });
 
     this.apiService.getConsumerGroups().subscribe({ next: (res: HttpResponse<GenericResponse<ConsumerGroup[]>>) => {
         this.consumerGroups = res.body?.data ?? [];
         this.filteredConsumerGroups = this.search(this.filter.value);
+        this.page = 1;
         this.errors.delete('getConsumerGroups');
         this.flags.set('getConsumerGroupsLoading',false);
       },

@@ -19,7 +19,7 @@
         </tr>
         </thead>
         <tbody >
-        <tr *ngFor="let schema of schemaRegistry.subjects">
+        <tr *ngFor="let schema of pagedSubjects">
           <th scope="row">
               <span class="badge bg-dark">
                 <a routerLink="/subject/{{schema.name}}" routerLinkActive="active" class="badge-link">{{schema.name}}</a>
@@ -28,6 +28,7 @@
         </tr>
         </tbody>
       </table>
+      <app-pagination [totalItems]="schemaRegistry.subjects.length" [pageSize]="pageSize" [page]="page" (pageChange)="page = $event"></app-pagination>
     </div>
   </div>
 </div>

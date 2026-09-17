@@ -1,6 +1,8 @@
+@use "../abstracts/variables" as vars;
+
 :root,
 [data-bs-theme="light"] {
-  --bs-primary: #00D3D3;
+  --bs-primary: #{vars.$primary};
   --bs-body-bg: #fff;
   --bs-body-color: #666;
 
@@ -16,7 +18,7 @@
   --app-outline-button-border: 1px solid #cfd4da;
   --app-outline-button-background: #fff;
 
-  --app-active-menu: #00D3D3;
+  --app-active-menu: #{vars.$primary};
   --app-inactive-menu: #999;
 
   --app-surface: #666;
@@ -29,7 +31,7 @@
 }
 
 [data-bs-theme="dark"] {
-  --bs-primary: #00D3D3;
+  --bs-primary: #{vars.$primary};
   --bs-body-bg: #121212;
   --bs-body-color: #e0e0e0;
 
@@ -45,7 +47,7 @@
   --app-outline-button-border: 1px solid #353a40;
   --app-outline-button-background: #222529;
 
-  --app-active-menu: #00D3D3;
+  --app-active-menu: #{vars.$primary};
   --app-inactive-menu: #888;
 
   --app-surface: #1e1e1e;

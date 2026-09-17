@@ -188,12 +188,12 @@
           </tr>
           </thead>
           <tbody>
-          @for (config of brokerConfig; track config.name; let i = $index) {
+          @for (config of brokerConfig; track config.name) {
           <tr id="{{config.name}}">
             <th scope="row" class="text-s">{{config.name}} &nbsp;<a *ngIf="config.documentation" data-name="${name}"
                                                                     href="#" data-bs-toggle="modal"
                                                                     data-bs-target="#documentationModal"
-                                                                    (click)="documentationMod(i)"><i
+                                                                    (click)="documentationMod(config)"><i
               class="bi bi-question-circle opacity-75 cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="top"
               data-bs-title="Check Documentation"></i></a></th>
             <td class="text-truncate text-s">
@@ -202,7 +202,7 @@
             </td>
             <td class="text-center">
               <i *ngIf="!config.readOnly" class="bi bi-pencil-square opacity-75 cursor-pointer" data-bs-toggle="modal"
-                 data-bs-target="#editModal" (click)="editMod(i)"></i>
+                 data-bs-target="#editModal" (click)="editMod(config)"></i>
             </td>
           </tr>
           }

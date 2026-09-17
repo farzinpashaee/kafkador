@@ -1,8 +1,4 @@
 <div class="row align-items-start">
-  <div class="alert alert-light text-s p-2" role="alert" *ngIf="!activeConnection?.agentEnabled">
-    &nbsp; To enable statistical visualizations and related feature enable Kafkador Agent
-    <button type="button" class="btn btn-outline-light btn-sm text-s float-end">Configure Agent</button>
-  </div>
   <div class="alert alert-danger text-s p-2" role="alert" *ngIf="errors.get('getCluster')">
     {{ errors.get('getCluster')?.message }}
   </div>
@@ -103,7 +99,7 @@
     <h6><i class="bi bi-bell"></i>&nbsp; Alerts</h6>
     <div class="spinner-border" role="status" *ngIf="flags.get('getAlertLoading')"></div>
     <div class="list-group" *ngIf="!flags.get('getAlertLoading')">
-      @for (alert of alerts; track alert.title; let i = $index) {
+      @for (alert of pagedAlerts; track alert.title; let i = $index) {
       <a href="#" class="list-group-item list-group-item-action danger" aria-current="true">
         <div>
           <p class="alert-text mb-0">
@@ -117,6 +113,7 @@
       </a>
       }
     </div>
+    <app-pagination *ngIf="!flags.get('getAlertLoading')" [totalItems]="alerts.length" [pageSize]="pageSize" [page]="alertPage" (pageChange)="alertPage = $event"></app-pagination>
   </div>
 </div>
 
@@ -136,7 +133,7 @@
         </tr>
         </thead>
         <tbody id="clusterBrokers">
-        <tr *ngFor="let broker of cluster.brokers" routerLink="/broker/{{broker.id}}" class="cursor-pointer">
+        <tr *ngFor="let broker of pagedBrokers" routerLink="/broker/{{broker.id}}" class="cursor-pointer">
           <th scope="row">{{broker.id}}</th>
           <td><span class="badge bg-dark "><a class="badge-link" >{{broker.host}}</a></span></td>
           <td>{{broker.port}}</td>
@@ -146,5 +143,6 @@
         </tbody>
       </table>
     </div>
+    <app-pagination [totalItems]="cluster.brokers.length" [pageSize]="pageSize" [page]="brokerPage" (pageChange)="brokerPage = $event"></app-pagination>
   </div>
 </div>

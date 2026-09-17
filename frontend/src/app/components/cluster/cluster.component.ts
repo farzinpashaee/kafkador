@@ -5,11 +5,12 @@ import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 import { Observable } from 'rxjs';
 import { ApiService, CommonService, LocalStorageService } from '../../services';
-import { Cluster, Chart, Error, Connection, GenericResponse } from '../../models';
+import { Cluster, Chart, Error, Connection, GenericResponse, Broker } from '../../models';
+import { PaginationComponent } from '../pagination/pagination.component';
 
 @Component({
   selector: 'app-cluster',
-  imports: [CommonModule,RouterModule,NgxChartsModule],
+  imports: [CommonModule,RouterModule,NgxChartsModule,PaginationComponent],
   templateUrl: './cluster.component.html',
   styleUrl: './cluster.component.scss'
 })
@@ -34,6 +35,12 @@ export class ClusterComponent{
   activeConnection: Connection | null = null;
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
+  readonly pageSize = 10;
+  page = 1;
+
+  get pagedBrokers(): Broker[] {
+    return this.cluster.brokers.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+  }
 
   constructor(private commonService: CommonService,
     private localStorageService: LocalStorageService,

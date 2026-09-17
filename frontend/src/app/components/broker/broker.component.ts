@@ -56,15 +56,15 @@ export class BrokerComponent {
 
   }
 
-  documentationMod(index: number){
+  documentationMod(config: Config){
       this.documentation = this.documentationService.createDocumentationHtml(
-                                 this.brokerConfig[index].documentation,
-                                 this.brokerConfig[index].documentationLink
+                                 config.documentation,
+                                 config.documentationLink
                                );
   }
 
-  editMod(index: number){
-    this.selectedEditConfig =  this.brokerConfig[index];
+  editMod(config: Config){
+    this.selectedEditConfig = config;
   }
 
   updateConfig(){

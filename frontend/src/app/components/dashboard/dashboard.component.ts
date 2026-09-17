@@ -4,13 +4,14 @@ import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 import * as shape from 'd3-shape';
-import { ConsumerGroup, GenericResponse, Alert, Cluster, Topic, Error, Connection } from '../../models';
+import { ConsumerGroup, GenericResponse, Alert, Cluster, Topic, Error, Connection, Broker } from '../../models';
 import { ApiService, CommonService, DateTimeService, LocalStorageService } from '../../services';
+import { PaginationComponent } from '../pagination/pagination.component';
 
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule,RouterModule,NgxChartsModule],
+  imports: [CommonModule,RouterModule,NgxChartsModule,PaginationComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -23,6 +24,17 @@ export class DashboardComponent {
   consumerGroups!: ConsumerGroup[];
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
+  readonly pageSize = 10;
+  brokerPage = 1;
+  alertPage = 1;
+
+  get pagedBrokers(): Broker[] {
+    return this.cluster.brokers.slice((this.brokerPage - 1) * this.pageSize, this.brokerPage * this.pageSize);
+  }
+
+  get pagedAlerts(): Alert[] {
+    return this.alerts.slice((this.alertPage - 1) * this.pageSize, this.alertPage * this.pageSize);
+  }
   maxWithPadding: number = 0;
   curve = shape.curveMonotoneX;
   data4: {

@@ -66,7 +66,7 @@
         </tr>
         </thead>
         <tbody>
-        @for (topic of filteredTopics; track topic.name; let i = $index) {
+        @for (topic of pagedTopics; track topic.name; let i = $index) {
           <tr>
             <th scope="row" class="cursor-pointer" routerLink="/topic/{{topic.name}}">
               <span class="badge bg-dark"><a class="badge-link">{{topic.name}}</a></span>
@@ -90,6 +90,7 @@
         </tbody>
       </table>
     </div>
+    <app-pagination [totalItems]="filteredTopics.length" [pageSize]="pageSize" [page]="page" (pageChange)="page = $event"></app-pagination>
   </div>
 </div>
 

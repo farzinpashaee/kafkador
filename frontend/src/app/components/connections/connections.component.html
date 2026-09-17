@@ -19,7 +19,7 @@
         </tr>
         </thead>
         <tbody>
-          <tr  *ngFor="let connection of connections">
+          <tr  *ngFor="let connection of pagedConnections">
             <th scope="row">{{connection.name}}</th>
             <td>{{connection.host}}</td>
             <td>{{connection.port}}</td>
@@ -37,6 +37,7 @@
         </tbody>
       </table>
     </div>
+    <app-pagination [totalItems]="connections.length" [pageSize]="pageSize" [page]="page" (pageChange)="page = $event"></app-pagination>
   </div>
 </div>
 

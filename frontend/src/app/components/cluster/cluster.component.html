@@ -47,7 +47,7 @@
         </tr>
         </thead>
         <tbody id="clusterBrokers">
-          <tr *ngFor="let broker of cluster.brokers" routerLink="/broker/{{broker.id}}" class="cursor-pointer">
+          <tr *ngFor="let broker of pagedBrokers" routerLink="/broker/{{broker.id}}" class="cursor-pointer">
             <th scope="row">{{broker.id}}</th>
             <td>
               <span class="badge bg-dark"> <a class="badge-link">{{broker.host}}</a></span>
@@ -60,5 +60,6 @@
         </tbody>
       </table>
     </div>
+    <app-pagination [totalItems]="cluster.brokers.length" [pageSize]="pageSize" [page]="page" (pageChange)="page = $event"></app-pagination>
   </div>
 </div>
