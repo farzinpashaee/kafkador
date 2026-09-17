@@ -5,8 +5,10 @@ import com.csl.kafkador.domain.dto.KsqlQueryDto;
 import com.csl.kafkador.domain.dto.KsqlServerInfoDto;
 import com.csl.kafkador.domain.dto.KsqlStreamDto;
 import com.csl.kafkador.domain.dto.KsqlTableDto;
+import com.csl.kafkador.domain.model.Cluster;
 import com.csl.kafkador.exception.ConfigNotFoundException;
 import com.csl.kafkador.exception.KsqlDbApiException;
+import com.csl.kafkador.repository.ClusterRepository;
 import com.csl.kafkador.service.config.KafkadorConfigService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,21 +34,62 @@ import java.util.stream.Collectors;
 public class KsqlDbServiceImp implements KsqlDbService {
 
     private static final String CONFIG_KEY = "kafkador.ksql-db.url";
+    private static final String DEFAULT_PORT = "8088";
     private static final MediaType KSQL_MEDIA_TYPE = MediaType.valueOf("application/vnd.ksql.v1+json; charset=utf-8");
 
     private final RestTemplate restTemplate;
     private final KafkadorConfigService<String, Map.Entry<String, String>> kafkadorConfigService;
+    private final ClusterRepository clusterRepository;
 
     @Override
     public KsqlDbConfigDto getConfig(String clusterId) {
         KsqlDbConfigDto config = new KsqlDbConfigDto();
         try {
-            config.setUrl(kafkadorConfigService.get(CONFIG_KEY, clusterId));
+            config.setUrl(resolveUrl(clusterId));
             config.setConfigured(true);
         } catch (ConfigNotFoundException e) {
             log.warn(e.toString());
         }
         return config;
+    }
+
+    /**
+     * Returns the configured URL, or — if none is saved yet — probes the cluster's own
+     * host on the default ksqlDB port and, if a server answers there, persists that as
+     * the config so the user isn't asked to set it up manually.
+     */
+    private String resolveUrl(String clusterId) throws ConfigNotFoundException {
+        try {
+            return kafkadorConfigService.get(CONFIG_KEY, clusterId);
+        } catch (ConfigNotFoundException e) {
+            String discovered = discoverUrl(clusterId);
+            if (discovered == null) throw e;
+            kafkadorConfigService.save(new AbstractMap.SimpleEntry<>(CONFIG_KEY, discovered), clusterId);
+            return discovered;
+        }
+    }
+
+    private String discoverUrl(String clusterId) {
+        return clusterRepository.findByClusterId(clusterId)
+                .map(Cluster::getHost)
+                .map(host -> "http://" + host + ":" + DEFAULT_PORT)
+                .filter(this::isKsqlDbReachable)
+                .orElse(null);
+    }
+
+    private boolean isKsqlDbReachable(String candidateUrl) {
+        try {
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    candidateUrl + "/info",
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<Map<String, Object>>() {}
+            );
+            return response.getStatusCode().is2xxSuccessful();
+        } catch (Exception e) {
+            log.debug("ksqlDB auto-discovery at {} failed: {}", candidateUrl, e.getMessage());
+            return false;
+        }
     }
 
     @Override
@@ -57,7 +100,7 @@ public class KsqlDbServiceImp implements KsqlDbService {
 
     @Override
     public KsqlServerInfoDto getServerInfo(String clusterId) throws ConfigNotFoundException, KsqlDbApiException {
-        String url = kafkadorConfigService.get(CONFIG_KEY, clusterId);
+        String url = resolveUrl(clusterId);
         try {
             ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
                     url + "/info",
@@ -124,7 +167,7 @@ public class KsqlDbServiceImp implements KsqlDbService {
     }
 
     private Map<String, Object> executeStatement(String statement, String clusterId) throws ConfigNotFoundException, KsqlDbApiException {
-        String url = kafkadorConfigService.get(CONFIG_KEY, clusterId);
+        String url = resolveUrl(clusterId);
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(KSQL_MEDIA_TYPE);

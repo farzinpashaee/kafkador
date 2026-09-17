@@ -128,8 +128,26 @@ export class TopicComponent implements OnDestroy {
 
   startListening(groupId?: string): void {
     this.errors.delete('testTopicConsumer');
+    if (groupId) {
+      this.beginListening(groupId);
+      return;
+    }
+    // No group id was explicitly given (a plain "Start Listening" click, not a
+    // navigation from the Consumers page) — reuse the saved default group id,
+    // creating one on the first-ever listen if none exists yet.
+    this.apiService.getDefaultConsumerGroupId().subscribe({
+      next: (res: HttpResponse<GenericResponse<string>>) => {
+        this.beginListening(res.body?.data || `kafkador-test-${Date.now()}`);
+      },
+      error: () => {
+        this.beginListening(`kafkador-test-${Date.now()}`);
+      }
+    });
+  }
+
+  private beginListening(groupId: string): void {
     this.listening = true;
-    this.activeGroupId = groupId || `kafkador-test-${Date.now()}`;
+    this.activeGroupId = groupId;
     this.testTopicSubscription = this.apiService.consumeTopicMessages(this.topicName, this.activeGroupId).subscribe({
       next: (message: string) => {
         this.consumedMessages = [message, ...this.consumedMessages].slice(0, MAX_VISIBLE_TEST_MESSAGES);

@@ -70,6 +70,11 @@ export class ApiService {
       { withCredentials: true ,observe: 'response'} );
   }
 
+  public getDefaultConsumerGroupId(): Observable<HttpResponse<GenericResponse<string>>> {
+    return this.http.get<GenericResponse<string>>(`${ApiService.ApiBaseUrl}/consumer-groups/default-id`,
+      { withCredentials: true, observe: 'response' });
+  }
+
   public getSchemaSubjects(): Observable<GenericResponse<SchemaRegistry>> {
     return this.http.get<GenericResponse<SchemaRegistry>>(`${ApiService.ApiBaseUrl}/schema-registry/subjects`,{ withCredentials: true });
   }

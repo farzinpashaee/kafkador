@@ -3,8 +3,10 @@ package com.csl.kafkador.service;
 import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.domain.ConsumerGroup;
+import com.csl.kafkador.exception.ConfigNotFoundException;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
+import com.csl.kafkador.service.config.KafkadorConfigService;
 import com.csl.kafkador.util.DtoMapper;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -22,10 +24,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.Duration;
+import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -37,10 +41,29 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ConsumerService {
 
+    private static final String DEFAULT_GROUP_ID_CONFIG_KEY = "kafkador.consumer.instance.id";
+
     private final ApplicationContext applicationContext;
     private final ApplicationConfig applicationConfig;
     private final ConnectionService connectionService;
+    private final KafkadorConfigService<String, Map.Entry<String, String>> kafkadorConfigService;
     private final ExecutorService executor = Executors.newCachedThreadPool();
+
+    /**
+     * Returns the saved default consumer group id for the "Start Listening" quick-action
+     * on the topic Test tab. The first call for a cluster generates and persists one;
+     * every later call returns that same id, so repeat listens on any topic reuse it
+     * unless the user explicitly picks a different group id from the Consumers page.
+     */
+    public String getOrCreateDefaultGroupId(String clusterId) {
+        try {
+            return kafkadorConfigService.get(DEFAULT_GROUP_ID_CONFIG_KEY, clusterId);
+        } catch (ConfigNotFoundException e) {
+            String generated = "kafkador-" + UUID.randomUUID();
+            kafkadorConfigService.save(new AbstractMap.SimpleEntry<>(DEFAULT_GROUP_ID_CONFIG_KEY, generated), clusterId);
+            return generated;
+        }
+    }
 
     public Properties getProperties(String groupId) {
         ConnectionService connectionService = (ConnectionService) applicationContext

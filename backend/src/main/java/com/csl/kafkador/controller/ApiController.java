@@ -218,6 +218,16 @@ public class ApiController {
                 .success(HttpStatus.OK);
     }
 
+    @GetMapping("/consumer-groups/default-id")
+    public ResponseEntity<GenericResponse<String>> getDefaultConsumerGroupId() {
+        ConsumerService consumersService = (ConsumerService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONSUMER));
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<String>()
+                .data(consumersService.getOrCreateDefaultGroupId(connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
     @GetMapping("/metrics/{metric}/{entityId}")
     public ResponseEntity<GenericResponse<MetricChartDto>> getMetrics(@PathVariable MetricEnum metric,
                                                                        @PathVariable String entityId,

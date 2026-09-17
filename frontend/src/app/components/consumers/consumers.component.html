@@ -112,6 +112,9 @@
         <div class="mb-3">
           <label for="consumerGroupId" class="form-label">Consumer Group ID:</label>
           <input required type="text" class="form-control" id="consumerGroupId" placeholder="e.g. MyConsumerId" [(ngModel)]="newConsumerGroupId">
+          <div class="form-text">
+            <a href="#" (click)="useInstanceConsumerId(); $event.preventDefault()">Use Instance Consumer ID</a>
+          </div>
         </div>
         <div class="mb-3">
           <label for="consumerGroupTopic" class="form-label">Topic:</label>

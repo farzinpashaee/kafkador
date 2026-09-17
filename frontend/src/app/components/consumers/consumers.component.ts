@@ -114,6 +114,17 @@ export class ConsumersComponent {
     return this.consumerGroups.filter((group: ConsumerGroup) => group.id.toLowerCase().includes(term));
   }
 
+  useInstanceConsumerId(): void {
+    this.apiService.getDefaultConsumerGroupId().subscribe({
+      next: (res: HttpResponse<GenericResponse<string>>) => {
+        if (res.body?.data) this.newConsumerGroupId = res.body.data;
+      },
+      error: (res:HttpErrorResponse) => {
+        this.errors.set("createConsumerGroup",this.commonService.prepareError(res.error.error,'500','Failed to get instance consumer ID!'));
+      }
+    });
+  }
+
   createAndListen(): void {
     const errors = this.validationService.validateRequiredFields(
       { id: this.newConsumerGroupId, topic: this.topicName }, ['id', 'topic']);

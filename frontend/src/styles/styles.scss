@@ -184,10 +184,14 @@ span.placeholder{
   color: var(--app-inactive-menu);
   font-size: 0.9em;
   font-weight: 500;
+  border-left: 3px solid transparent;
+  border-radius: 0;
 }
 
 .sidebar .nav-link.active {
   color: var(--app-active-menu);
+  background-color: rgba($primary, 0.12);
+  border-left: 3px solid var(--app-active-menu);
 }
 
 .sidebar-heading {
@@ -219,12 +223,12 @@ span.placeholder{
 
 /* Utility classes extracted from inline styles */
 .header-dark {
-  background-color: #181818;
+  background-color: #2b2f31;
 }
 
 .logo-image {
-  width: 1.7em;
-  margin-top: -0.3em;
+  height: 1.4em;
+  width: auto;
 }
 
 .search-input-small {
