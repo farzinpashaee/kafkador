@@ -49,15 +49,37 @@ header {
   font-size:1.3em;
   text-decoration: none;
 }
-.nav-link.active {
-  color: var(--app-active-menu) !important;
-}
-.nav-link {
-  color: var(--app-inactive-menu) !important;
-}
-
 .dropdown-item{
   font-size:0.8em;
+}
+
+/* Underline-style tabs: flat, no boxed borders, colored active indicator */
+.nav-tabs {
+  border-bottom: 1px solid var(--bs-border-color);
+  gap: 1.5rem;
+}
+
+.nav-tabs .nav-link {
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 0.75rem 0.125rem;
+  color: var(--bs-secondary-color);
+  font-weight: 500;
+  background: transparent;
+}
+
+.nav-tabs .nav-link:hover,
+.nav-tabs .nav-link:focus {
+  border-color: transparent;
+  color: var(--bs-body-color);
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--bs-primary);
+  background: transparent;
+  border-color: var(--bs-primary);
+  font-weight: 600;
 }
 
 .outline-button {
@@ -159,13 +181,13 @@ span.placeholder{
 }
 
 .sidebar .nav-link {
-  color: #555;
+  color: var(--app-inactive-menu);
   font-size: 0.9em;
   font-weight: 500;
 }
 
 .sidebar .nav-link.active {
-  color: #0d6efd;
+  color: var(--app-active-menu);
 }
 
 .sidebar-heading {
