@@ -18,11 +18,12 @@
       <div class="connect-intro" *ngIf="!flags.get('getConnectionsEmpty')">
         <h1>Connect to Cluster</h1>
         <p class="text-muted">
-          Select one of your saved connections below, or add a new one.
+          Select one of your saved connections below, or
+          <a href="javascript:void(0)" class="link-add-connection" (click)="clearForm()" data-bs-toggle="modal" data-bs-target="#addClusterModal">add a new one</a>.
         </p>
       </div>
 
-      <button type="button" class="btn btn-primary btn-connect-new" (click)="clearForm()" data-bs-toggle="modal" data-bs-target="#addClusterModal">
+      <button *ngIf="flags.get('getConnectionsEmpty')" type="button" class="btn btn-primary btn-connect-new" (click)="clearForm()" data-bs-toggle="modal" data-bs-target="#addClusterModal">
         Connect to New Kafka Cluster
       </button>
 
