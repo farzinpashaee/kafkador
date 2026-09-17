@@ -47,6 +47,14 @@ public class RestExceptionController {
                 .failed(HttpStatus.PRECONDITION_REQUIRED);
     }
 
+    @ExceptionHandler(AuthorizerNotConfiguredException.class)
+    public ResponseEntity<GenericResponse<Void>> handleAuthorizerNotConfigured(AuthorizerNotConfiguredException ex) {
+        return new GenericResponse.Builder<Void>()
+                .code(String.valueOf(HttpStatus.PRECONDITION_REQUIRED.value()))
+                .message(ex.getMessage())
+                .failed(HttpStatus.PRECONDITION_REQUIRED);
+    }
+
     @ExceptionHandler({ClusterNotFoundException.class, BrokerNotFoundException.class,
             AlertNotFoundException.class, ConfigNotFoundException.class, TopicNotFoundException.class})
     public ResponseEntity<GenericResponse<Void>> handleNotFound(Exception ex) {

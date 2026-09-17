@@ -106,7 +106,9 @@ export class DashboardLayoutComponent {
   goTo(route: string) {
     this.isSearching = false;
     this.searchQuery = "";
-    this.router.navigate([route]);
+    // navigateByUrl (not navigate([route])) so a route with an embedded
+    // query string, e.g. "/consumer?q=my-group", is parsed correctly.
+    this.router.navigateByUrl(route);
   }
 
 }

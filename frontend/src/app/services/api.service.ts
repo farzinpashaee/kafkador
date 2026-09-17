@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse,HttpResponse   } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Cluster, Connection, Config, Broker, Alert, Topic, SearchResult, ConsumerGroup, GenericResponse,
-  SchemaRegistry, SchemaRegistryConfig, Chart, Event, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery } from '../models';
+  SchemaRegistry, SchemaRegistryConfig, Chart, Event, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery,
+  AclBinding } from '../models';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -44,6 +45,21 @@ export class ApiService {
 
   public getAlerts(): Observable<GenericResponse<Alert[]>> {
     return this.http.get<GenericResponse<Alert[]>>(`${ApiService.ApiBaseUrl}/alerts`,{ withCredentials: true });
+  }
+
+  public getAclBindings(): Observable<HttpResponse<GenericResponse<AclBinding[]>>> {
+    return this.http.get<GenericResponse<AclBinding[]>>(`${ApiService.ApiBaseUrl}/acl`,
+      { withCredentials: true ,observe: 'response'});
+  }
+
+  public createAclBinding(binding:AclBinding): Observable<HttpResponse<GenericResponse<AclBinding>>> {
+    return this.http.post<GenericResponse<AclBinding>>(`${ApiService.ApiBaseUrl}/acl`,binding,
+      { withCredentials: true ,observe: 'response' });
+  }
+
+  public deleteAclBinding(binding:AclBinding): Observable<HttpResponse<void>> {
+    return this.http.delete<void>(`${ApiService.ApiBaseUrl}/acl`,
+      { withCredentials: true, observe: 'response', body: binding });
   }
 
   public getTopics(): Observable<HttpResponse<GenericResponse<Topic[]>>> {

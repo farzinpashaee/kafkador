@@ -63,8 +63,11 @@ export class ConsumersComponent {
     this.flags.set('getConsumerGroupsLoading',true);
     this.flags.set('agentEnabled',true);
 
+    const searchQuery = this.route.snapshot.queryParamMap.get('q');
+    if (searchQuery) this.filter.setValue(searchQuery);
+
     combineLatest([
-      this.filter.valueChanges.pipe(startWith(''), debounceTime(200), distinctUntilChanged())
+      this.filter.valueChanges.pipe(startWith(this.filter.value), debounceTime(200), distinctUntilChanged())
     ])
       .pipe(map(([text]) => this.search(text)))
       .subscribe((filtered: ConsumerGroup[]) => {

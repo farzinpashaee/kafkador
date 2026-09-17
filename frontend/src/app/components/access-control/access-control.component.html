@@ -1,3 +1,241 @@
-<div class="alert alert-warning" role="alert">
-  This Service is Not Enabled!
+<p class="placeholder-glow" *ngIf="flags.get('getAclBindingsLoading')">
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-8"></span>
+</p>
+<div class="row" *ngIf="!flags.get('getAclBindingsLoading')">
+  <div class="row">
+    <h5>Access Control</h5>
+    <p class="text-s">List of ACL bindings on this cluster</p>
+  </div>
+
+  <div *ngIf="errors.get('getAclBindings')" class="alert alert-danger mt-2" role="alert">
+    {{ errors.get('getAclBindings')?.message }}
+    <span *ngIf="flags.get('authorizerNotConfigured')">
+      <a href="#" data-bs-toggle="modal" data-bs-target="#authorizerHelpModal" (click)="$event.preventDefault()">
+        Learn how to enable ACL authorization on your broker
+      </a>.
+    </span>
+  </div>
+
+  <div class="row mt-2">
+    <div class="col-12">
+      <div class="d-flex align-items-center justify-content-between">
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-bs-toggle="modal"
+          data-bs-target="#createAclBindingModal">
+          <i class="bi bi-plus-circle me-1"></i>
+          New ACL Binding
+        </button>
+        <label class="visually-hidden" for="acl-filtering-search">Search ACL bindings</label>
+        <input
+          placeholder="Search"
+          id="acl-filtering-search"
+          class="form-control form-control-sm search-input-compact search-input-compact-width"
+          type="search"
+          [formControl]="filter"/>
+      </div>
+    </div>
+  </div>
+  <div class="row mt-2">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+        <tr>
+          <th scope="col">Resource Type</th>
+          <th scope="col">Resource Name</th>
+          <th scope="col">Pattern</th>
+          <th scope="col">Principal</th>
+          <th scope="col">Host</th>
+          <th scope="col">Operation</th>
+          <th scope="col">Permission</th>
+          <th scope="col"></th>
+        </tr>
+        </thead>
+        <tbody>
+        @for (binding of pagedBindings; track binding; let i = $index) {
+          <tr>
+            <td>{{binding.resourceType}}</td>
+            <td>{{binding.resourceName}}</td>
+            <td>{{binding.patternType}}</td>
+            <td>{{binding.principal}}</td>
+            <td>{{binding.host}}</td>
+            <td>{{binding.operation}}</td>
+            <td>
+              <span class="badge" [class.text-bg-success]="binding.permissionType === 'ALLOW'" [class.text-bg-danger]="binding.permissionType === 'DENY'">
+                {{binding.permissionType}}
+              </span>
+            </td>
+            <td>
+              <button type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Delete ACL binding for {{binding.principal}}"
+                      (click)="openDeleteDialog(binding)" data-bs-toggle="modal" data-bs-target="#deleteAclBindingModal">
+                <i class="bi bi-trash3" aria-hidden="true"></i>
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="8" class="text-center text-s text-color-subtle py-3">
+              {{ filter.value ? 'No ACL bindings match your search.' : 'No ACL bindings found.' }}
+            </td>
+          </tr>
+        }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination [totalItems]="filteredBindings.length" [pageSize]="pageSize" [page]="page" (pageChange)="page = $event"></app-pagination>
+  </div>
+</div>
+
+<!-- Create ACL Binding -->
+<div class="modal fade" id="createAclBindingModal" tabindex="-1" aria-labelledby="createAclBindingModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="createAclBindingModalLabel">New ACL Binding</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="aclResourceType" class="form-label">Resource Type:</label>
+          <select required class="form-select" id="aclResourceType" [(ngModel)]="newBinding.resourceType">
+            <option value="TOPIC">TOPIC</option>
+            <option value="GROUP">GROUP</option>
+            <option value="CLUSTER">CLUSTER</option>
+            <option value="TRANSACTIONAL_ID">TRANSACTIONAL_ID</option>
+            <option value="DELEGATION_TOKEN">DELEGATION_TOKEN</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="aclResourceName" class="form-label">Resource Name:</label>
+          <input required type="text" class="form-control" id="aclResourceName" placeholder="e.g. MyTopicName" [(ngModel)]="newBinding.resourceName">
+        </div>
+        <div class="mb-3">
+          <label for="aclPatternType" class="form-label">Pattern Type:</label>
+          <select required class="form-select" id="aclPatternType" [(ngModel)]="newBinding.patternType">
+            <option value="LITERAL">LITERAL</option>
+            <option value="PREFIXED">PREFIXED</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="aclPrincipal" class="form-label">Principal:</label>
+          <input required type="text" class="form-control" id="aclPrincipal" placeholder="e.g. User:alice" [(ngModel)]="newBinding.principal">
+          <div class="form-text">The principal this rule applies to, e.g. "User:alice" or "User:*" for any user.</div>
+        </div>
+        <div class="mb-3">
+          <label for="aclHost" class="form-label">Host:</label>
+          <input required type="text" class="form-control" id="aclHost" placeholder="e.g. * or 10.0.0.5" [(ngModel)]="newBinding.host">
+          <div class="form-text">The host this rule applies to, e.g. "*" for any host or a specific IP.</div>
+        </div>
+        <div class="mb-3">
+          <label for="aclOperation" class="form-label">Operation:</label>
+          <select required class="form-select" id="aclOperation" [(ngModel)]="newBinding.operation">
+            <option value="ALL">ALL</option>
+            <option value="READ">READ</option>
+            <option value="WRITE">WRITE</option>
+            <option value="CREATE">CREATE</option>
+            <option value="DELETE">DELETE</option>
+            <option value="ALTER">ALTER</option>
+            <option value="DESCRIBE">DESCRIBE</option>
+            <option value="CLUSTER_ACTION">CLUSTER_ACTION</option>
+            <option value="DESCRIBE_CONFIGS">DESCRIBE_CONFIGS</option>
+            <option value="ALTER_CONFIGS">ALTER_CONFIGS</option>
+            <option value="IDEMPOTENT_WRITE">IDEMPOTENT_WRITE</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="aclPermissionType" class="form-label">Permission Type:</label>
+          <select required class="form-select" id="aclPermissionType" [(ngModel)]="newBinding.permissionType">
+            <option value="ALLOW">ALLOW</option>
+            <option value="DENY">DENY</option>
+          </select>
+        </div>
+
+        <div *ngIf="errors.get('createAclBinding')" class="alert alert-danger" role="alert">
+          {{ errors.get('createAclBinding')?.message }}
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button *ngIf="!flags.get('createAclBindingLoading')" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button *ngIf="!flags.get('createAclBindingLoading')" type="button" class="btn btn-primary" (click)="createAclBinding()">Create Binding</button>
+        <div *ngIf="flags.get('createAclBindingLoading')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Creating Binding...&nbsp;
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete ACL Binding -->
+<div class="modal fade" id="deleteAclBindingModal" tabindex="-1" aria-labelledby="deleteAclBindingModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5 text-danger" id="deleteAclBindingModalLabel"><i class="bi bi-x-circle"></i> Delete ACL Binding</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete the '{{deletedBinding.permissionType}} {{deletedBinding.operation}}' rule for
+        '{{deletedBinding.principal}}' on {{deletedBinding.resourceType}} '{{deletedBinding.resourceName}}'? This cannot be undone.
+        <div *ngIf="errors.get('deleteAclBinding')" class="alert alert-danger" role="alert">
+          {{ errors.get('deleteAclBinding')?.message }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button *ngIf="!flags.get('deleteAclBindingLoading')"  type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button *ngIf="!flags.get('deleteAclBindingLoading')"  type="button" class="btn btn-danger" (click)="deleteAclBinding()" >Delete</button>
+        <div *ngIf="flags.get('deleteAclBindingLoading')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Deleting...&nbsp;
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Authorizer Help -->
+<div class="modal fade" id="authorizerHelpModal" tabindex="-1" aria-labelledby="authorizerHelpModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="authorizerHelpModalLabel">Enable ACL Authorization</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-s">
+          Kafka reported that this broker has no ACL authorizer configured. Until one is enabled, brokers reject
+          every ACL request — listing, creating, and deleting are all unavailable, regardless of what this app does.
+          Enabling one is a broker-side change:
+        </p>
+
+        <h6 class="text-s">1. Add an authorizer to the broker's <code>server.properties</code></h6>
+        <p class="text-s mb-1">If your cluster runs in KRaft mode (Kafka 3.3+, no ZooKeeper):</p>
+        <pre class="p-2 bg-body-tertiary text-s"><code>authorizer.class.name=org.apache.kafka.metadata.authorizer.StandardAuthorizer
+super.users=User:ANONYMOUS</code></pre>
+        <p class="text-s mb-1">If your cluster still uses ZooKeeper:</p>
+        <pre class="p-2 bg-body-tertiary text-s"><code>authorizer.class.name=kafka.security.authorizer.AclAuthorizer
+super.users=User:ANONYMOUS</code></pre>
+        <p class="text-s text-color-subtle">
+          Adjust <code>super.users</code> to match whichever principal your cluster actually authenticates as —
+          it's shown here as <code>ANONYMOUS</code> because that's Kafka's default when no authentication is
+          configured either.
+        </p>
+
+        <h6 class="text-s">2. Restart the broker</h6>
+        <p class="text-s">
+          The authorizer is only read at startup, so the broker needs a restart before this page (or any ACL
+          command) will work.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it</button>
+      </div>
+    </div>
+  </div>
 </div>

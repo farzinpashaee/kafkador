@@ -282,12 +282,32 @@ public class ApiController {
     }
 
     @GetMapping("/acl")
-    public ResponseEntity<GenericResponse<List<AclBindingDto>>> getAclBindings() throws ClusterNotFoundException, KafkaAdminApiException {
+    public ResponseEntity<GenericResponse<List<AclBindingDto>>> getAclBindings() throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException {
         AclService aclService = (AclService) applicationContext.getBean("AclService");
         ConnectionDto connection = connectionService.getActiveConnection();
         return new GenericResponse.Builder<List<AclBindingDto>>()
                 .data(aclService.getAclBindings(connection.getClusterId()))
                 .success(HttpStatus.OK);
+    }
+
+    @PostMapping("/acl")
+    public ResponseEntity<GenericResponse<AclBindingDto>> createAclBinding(@Valid @RequestBody AclBindingDto binding)
+            throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException {
+        AclService aclService = (AclService) applicationContext.getBean("AclService");
+        ConnectionDto connection = connectionService.getActiveConnection();
+        AclBindingDto created = aclService.createAclBinding(connection.getClusterId(), binding);
+        return new GenericResponse.Builder<AclBindingDto>()
+                .data(created)
+                .success(HttpStatus.CREATED);
+    }
+
+    @DeleteMapping("/acl")
+    public ResponseEntity<Void> deleteAclBinding(@Valid @RequestBody AclBindingDto binding)
+            throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException {
+        AclService aclService = (AclService) applicationContext.getBean("AclService");
+        ConnectionDto connection = connectionService.getActiveConnection();
+        aclService.deleteAclBinding(connection.getClusterId(), binding);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/schema-registry/subjects")
