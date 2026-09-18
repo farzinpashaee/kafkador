@@ -16,14 +16,14 @@
       <button class="nav-link" id="configurations-tab" data-bs-toggle="tab"
               data-bs-target="#configurations" type="button" role="tab"
               aria-controls="configurations" aria-selected="true">
-        Configurations
+        <i class="bi bi-gear"></i> Configurations
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="test-topic-tab" data-bs-toggle="tab"
               data-bs-target="#testTopic" type="button" role="tab"
               aria-controls="testTopic" aria-selected="false">
-        <i class="bi bi-file-earmark-code"></i> Test Topic
+        <i class="bi bi-arrow-left-right"></i> Produce &amp; Consume
       </button>
     </li>
   </ul>
@@ -134,46 +134,85 @@
       </div>
     </div>
     <div class="tab-pane fade" id="testTopic" role="tabpanel" aria-labelledby="test-topic-tab" tabindex="0">
-      <div class="row">
-        <div class="col-12 col-lg-6">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="mb-0">
-              <i class="bi bi-arrow-down-circle"></i>&nbsp; Consumer
-              <span *ngIf="listening" class="badge bg-dark ms-2">{{ activeGroupId }}</span>
-            </h6>
-            <button type="button" class="btn btn-sm"
-                    [class.btn-primary]="!listening" [class.btn-outline-danger]="listening"
-                    (click)="toggleListening()">
-              <i class="bi" [class.bi-play-circle]="!listening" [class.bi-stop-circle]="listening"></i>
-              {{ listening ? 'Stop Listening' : 'Start Listening' }}
-            </button>
-          </div>
-          <div *ngIf="errors.get('testTopicConsumer')" class="alert alert-danger py-1 px-2 text-s" role="alert">
-            {{ errors.get('testTopicConsumer')?.message }}
-          </div>
-          <div class="test-topic-log border rounded p-2">
-            @for (message of consumedMessages; track $index) {
-              <div class="test-topic-message text-s font-monospace">{{ message }}</div>
-            } @empty {
-              <div class="text-center text-s text-color-subtle py-3">
-                {{ listening ? 'Waiting for events...' : 'Not listening.' }}
-              </div>
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="badge bg-dark" *ngIf="activeGroupId">{{ activeGroupId }}</span>
+        <span *ngIf="!activeGroupId"></span>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-sm"
+                  [class.btn-primary]="!listening" [class.btn-outline-danger]="listening"
+                  (click)="toggleListening()">
+            <i class="bi" [class.bi-play-circle]="!listening" [class.bi-stop-circle]="listening"></i>
+            {{ listening ? 'Stop Listening' : 'Start Listening' }}
+          </button>
+          <button type="button" class="btn btn-sm"
+                  [class.btn-outline-primary]="!showMessageFilter" [class.btn-primary]="showMessageFilter"
+                  (click)="toggleFilter()">
+            <i class="bi bi-funnel"></i> Filter
+          </button>
+          <button type="button" class="btn btn-sm btn-primary"
+                  (click)="openProduceDialog()" data-bs-toggle="modal" data-bs-target="#produceEventModal">
+            <i class="bi bi-upload"></i> Produce
+          </button>
+        </div>
+      </div>
+
+      <div class="mb-2" *ngIf="showMessageFilter">
+        <label class="visually-hidden" for="testTopicMessageFilter">Contains</label>
+        <input type="text" class="form-control form-control-sm" id="testTopicMessageFilter"
+               placeholder="Contains:" [(ngModel)]="messageFilter" name="messageFilter">
+      </div>
+
+      <div *ngIf="errors.get('testTopicConsumer')" class="alert alert-danger py-1 px-2 text-s" role="alert">
+        {{ errors.get('testTopicConsumer')?.message }}
+      </div>
+
+      <div class="test-topic-log border rounded p-2">
+        @for (message of filteredMessages; track $index) {
+          <div class="test-topic-message text-s font-monospace">{{ message }}</div>
+        } @empty {
+          <div class="text-center text-s text-color-subtle py-3">
+            @if (!listening) {
+              Not listening.
+            } @else if (messageFilter) {
+              No events match your filter.
+            } @else {
+              Waiting for events...
             }
           </div>
-        </div>
-        <div class="col-12 col-lg-6">
-          <h6 class="mb-2"><i class="bi bi-arrow-up-circle"></i>&nbsp; Producer</h6>
-          <textarea class="form-control test-topic-input text-s font-monospace" placeholder="{ Event to send }"
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Produce Event -->
+<div class="modal fade" id="produceEventModal" tabindex="-1" aria-labelledby="produceEventModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="produceEventModalLabel">Produce Event</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="producerEventBody" class="form-label">Event:</label>
+          <textarea class="form-control text-s font-monospace" id="producerEventBody" rows="8" placeholder="{ Event to send }"
                     [(ngModel)]="producerEvent" name="producerEvent"></textarea>
-          <div *ngIf="errors.get('sendEvent')" class="alert alert-danger py-1 px-2 mt-2 text-s" role="alert">
-            {{ errors.get('sendEvent')?.message }}
-          </div>
-          <div class="d-flex justify-content-end mt-2">
-            <button type="button" class="btn btn-sm btn-primary" [disabled]="!producerEvent.trim() || flags.get('sendingEvent')"
-                    (click)="sendEvent()">
-              <i class="bi bi-send"></i> Send Event
-            </button>
-          </div>
+        </div>
+        <div *ngIf="errors.get('sendEvent')" class="alert alert-danger" role="alert">
+          {{ errors.get('sendEvent')?.message }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button *ngIf="!flags.get('sendingEvent')" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button *ngIf="!flags.get('sendingEvent')" type="button" class="btn btn-primary"
+                [disabled]="!producerEvent.trim()" (click)="sendEvent()">
+          <i class="bi bi-send"></i> Send Event
+        </button>
+        <div *ngIf="flags.get('sendingEvent')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Sending...&nbsp;
         </div>
       </div>
     </div>

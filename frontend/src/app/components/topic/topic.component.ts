@@ -35,7 +35,15 @@ export class TopicComponent implements OnDestroy {
   activeGroupId: string = '';
   consumedMessages: string[] = [];
   producerEvent: string = '';
+  showMessageFilter: boolean = false;
+  messageFilter: string = '';
   private testTopicSubscription?: Subscription;
+
+  get filteredMessages(): string[] {
+    if (!this.showMessageFilter || !this.messageFilter.trim()) return this.consumedMessages;
+    const term = this.messageFilter.toLowerCase();
+    return this.consumedMessages.filter(message => message.toLowerCase().includes(term));
+  }
 
   constructor(private apiService: ApiService,
     private documentationService: DocumentationService,
@@ -65,6 +73,12 @@ export class TopicComponent implements OnDestroy {
         this.cdr.detectChanges();
         this.commonService.showTab('test-topic-tab');
         this.startListening(groupId);
+      } else {
+        // Show the group id that "Start Listening" would use, before the user clicks it.
+        this.apiService.getDefaultConsumerGroupId().subscribe({
+          next: (res: HttpResponse<GenericResponse<string>>) => { this.activeGroupId = res.body?.data ?? ''; },
+          error: () => {}
+        });
       }
     });
   }
@@ -164,6 +178,16 @@ export class TopicComponent implements OnDestroy {
     this.listening = false;
   }
 
+  toggleFilter(): void {
+    this.showMessageFilter = !this.showMessageFilter;
+    if (!this.showMessageFilter) this.messageFilter = '';
+  }
+
+  openProduceDialog(): void {
+    this.errors.delete('sendEvent');
+    this.producerEvent = '';
+  }
+
   sendEvent(): void {
     if (!this.producerEvent.trim()) {
       return;
@@ -174,6 +198,7 @@ export class TopicComponent implements OnDestroy {
       next: () => {
         this.flags.set('sendingEvent', false);
         this.producerEvent = '';
+        this.commonService.hideModal('produceEventModal');
       },
       error: (res: HttpErrorResponse) => {
         this.errors.set('sendEvent', this.commonService.prepareError(res.error?.error, '500', 'Failed to send event!'));
