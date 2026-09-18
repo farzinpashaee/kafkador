@@ -116,8 +116,39 @@
       </div>
     </div>
 
-    <div class="tab-pane fade" id="connectors" role="tabpanel" aria-labelledby="cluster-tab" tabindex="0">
-      <h6>Connectors Settings</h6>
+    <div class="tab-pane fade" id="connectors" role="tabpanel" aria-labelledby="connectors-tab" tabindex="0">
+      <h6>Kafka Connect Settings</h6>
+
+      <div *ngIf="flags.get('kafkaConnectConfigLoading')" class="text-center">
+        <div class="spinner-border spinner-border-sm" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <div *ngIf="!flags.get('kafkaConnectConfigLoading')">
+        <div class="mb-3">
+          <label for="kafkaConnectUrl" class="form-label">Kafka Connect Worker URL:</label>
+          <input required [(ngModel)]="kafkaConnectConfig.url" (ngModelChange)="savedAt.delete('kafkaConnectConfig')" type="text" class="form-control" id="kafkaConnectUrl" placeholder="e.g. http://localhost:8083" aria-describedby="kafkaConnectUrlHelp">
+          <div id="kafkaConnectUrlHelp" class="form-text">The base URL of your Kafka Connect worker's REST API.</div>
+        </div>
+
+        <div *ngIf="errors.get('getKafkaConnectConfig')" class="alert alert-danger" role="alert">
+          {{ errors.get('getKafkaConnectConfig')?.message }}
+        </div>
+        <div *ngIf="errors.get('saveKafkaConnectConfig')" class="alert alert-danger" role="alert">
+          {{ errors.get('saveKafkaConnectConfig')?.message }}
+        </div>
+        <div *ngIf="savedAt.get('kafkaConnectConfig')" class="alert alert-success" role="alert">
+          Successfully updated at {{ savedAt.get('kafkaConnectConfig') | date:'medium' }}.
+        </div>
+
+        <button *ngIf="!flags.get('kafkaConnectConfigSaving')" type="button" class="btn btn-primary" (click)="saveKafkaConnectConfig()">Save</button>
+        <div *ngIf="flags.get('kafkaConnectConfigSaving')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Saving...&nbsp;
+        </div>
+      </div>
     </div>
   </div>
 </div>

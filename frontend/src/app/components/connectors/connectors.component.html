@@ -1,3 +1,303 @@
-<div class="alert alert-warning" role="alert">
-  This Service is Not Enabled!
+<p class="placeholder-glow" *ngIf="flags.get('configLoading')">
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-8"></span>
+</p>
+
+<div *ngIf="!flags.get('configLoading') && errors.get('getConfig')" class="alert alert-danger" role="alert">
+  {{ errors.get('getConfig')?.message }}
+</div>
+
+<div class="alert alert-warning d-flex" role="alert" *ngIf="!flags.get('configLoading') && !errors.get('getConfig') && !config.configured">
+  <div class="me-auto">
+    Kafka Connect configuration is not set!
+  </div>
+  <button type="button" class="btn btn-sm btn-warning ms-auto" routerLink="/settings" fragment="connectors">Config Now</button>
+</div>
+
+<div *ngIf="config.configured">
+
+  <div class="d-flex align-items-center justify-content-between">
+    <h5 class="mb-0">Connectors</h5>
+    <button type="button" class="btn btn-primary" (click)="openCreateDialog()" data-bs-toggle="modal" data-bs-target="#createConnectorModal">
+      <i class="bi bi-plus-circle me-1"></i>
+      New Connector
+    </button>
+  </div>
+
+  <div *ngIf="errors.get('getConnectors')" class="alert alert-danger mt-2" role="alert">
+    {{ errors.get('getConnectors')?.message }}
+  </div>
+
+  <p class="placeholder-glow mt-2" *ngIf="flags.get('connectorsLoading')">
+    <span class="placeholder col-12"></span>
+    <span class="placeholder col-12"></span>
+  </p>
+
+  <div class="mt-2" *ngIf="!flags.get('connectorsLoading')">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">Type</th>
+          <th scope="col">State</th>
+          <th scope="col">Tasks</th>
+          <th scope="col"></th>
+        </tr>
+        </thead>
+        <tbody>
+        @for (connector of pagedConnectors; track connector.name) {
+          <tr>
+            <th scope="row">
+              <span class="badge bg-dark">{{ connector.name }}</span>
+              <i *ngIf="hasFailedTasks(connector)" class="bi bi-exclamation-triangle-fill text-danger ms-1 cursor-pointer"
+                 title="View failure details" data-bs-toggle="modal" data-bs-target="#connectorDetailsModal" (click)="openDetailsDialog(connector)"></i>
+            </th>
+            <td>{{ connector.type || '-' }}</td>
+            <td>
+              <span class="badge"
+                    [class.text-bg-success]="connector.state === 'RUNNING'"
+                    [class.text-bg-warning]="connector.state === 'PAUSED'"
+                    [class.text-bg-danger]="connector.state === 'FAILED'"
+                    [class.text-bg-secondary]="connector.state !== 'RUNNING' && connector.state !== 'PAUSED' && connector.state !== 'FAILED'">
+                {{ connector.state || 'UNKNOWN' }}
+              </span>
+            </td>
+            <td>{{ taskSummary(connector) }}</td>
+            <td class="text-nowrap">
+              <div *ngIf="isConnectorActionLoading(connector.name)" class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <ng-container *ngIf="!isConnectorActionLoading(connector.name)">
+                <button *ngIf="connector.state !== 'PAUSED'" type="button" class="btn btn-link btn-icon p-0 me-2"
+                        attr.aria-label="Pause connector {{connector.name}}" title="Pause" (click)="pauseConnector(connector)">
+                  <i class="bi bi-pause-circle" aria-hidden="true"></i>
+                </button>
+                <button *ngIf="connector.state === 'PAUSED'" type="button" class="btn btn-link btn-icon p-0 me-2"
+                        attr.aria-label="Resume connector {{connector.name}}" title="Resume" (click)="resumeConnector(connector)">
+                  <i class="bi bi-play-circle" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="btn btn-link btn-icon p-0 me-2"
+                        attr.aria-label="Restart connector {{connector.name}}" title="Restart" (click)="restartConnector(connector)">
+                  <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="btn btn-link btn-icon p-0 me-2"
+                        attr.aria-label="Edit connector {{connector.name}}" title="Edit configuration"
+                        (click)="openEditDialog(connector)" data-bs-toggle="modal" data-bs-target="#editConnectorModal">
+                  <i class="bi bi-pencil" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="btn btn-link btn-icon p-0"
+                        attr.aria-label="Delete connector {{connector.name}}" title="Delete"
+                        (click)="openDeleteDialog(connector)" data-bs-toggle="modal" data-bs-target="#deleteConnectorModal">
+                  <i class="bi bi-trash3" aria-hidden="true"></i>
+                </button>
+              </ng-container>
+              <div *ngIf="connectorActionError(connector.name)" class="text-danger text-s mt-1">
+                {{ connectorActionError(connector.name)?.message }}
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="text-center text-s text-color-subtle py-3">No connectors found.</td>
+          </tr>
+        }
+        </tbody>
+      </table>
+      <app-pagination [totalItems]="connectors.length" [pageSize]="pageSize" [page]="page" (pageChange)="page = $event"></app-pagination>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <h6>Available Connector Plugins</h6>
+    <div *ngIf="errors.get('getPlugins')" class="alert alert-danger" role="alert">
+      {{ errors.get('getPlugins')?.message }}
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm">
+        <thead>
+        <tr>
+          <th scope="col">Class</th>
+          <th scope="col">Type</th>
+          <th scope="col">Version</th>
+        </tr>
+        </thead>
+        <tbody>
+        @for (plugin of plugins; track plugin.className) {
+          <tr>
+            <td class="text-s">{{ plugin.className }}</td>
+            <td class="text-s">{{ plugin.type }}</td>
+            <td class="text-s">{{ plugin.version || '-' }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="3" class="text-center text-s text-color-subtle py-3">No connector plugins installed on this worker.</td>
+          </tr>
+        }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Create Connector -->
+<div class="modal fade" id="createConnectorModal" tabindex="-1" aria-labelledby="createConnectorModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="createConnectorModalLabel">New Connector</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="connectorName" class="form-label">Connector Name:</label>
+          <input required type="text" class="form-control" id="connectorName" placeholder="e.g. my-jdbc-sink" [(ngModel)]="newConnectorName">
+        </div>
+        <div class="mb-3">
+          <label for="connectorPlugin" class="form-label">Plugin:</label>
+          <select required class="form-select" id="connectorPlugin" [(ngModel)]="newConnectorPluginClass" (ngModelChange)="onPluginChange()">
+            <option value="" disabled selected>Select a connector plugin</option>
+            <option *ngFor="let plugin of plugins" [value]="plugin.className">{{ plugin.className }} ({{ plugin.type }})</option>
+          </select>
+        </div>
+
+        <div class="mb-2 d-flex align-items-center justify-content-between">
+          <label class="form-label mb-0">Configuration:</label>
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="addConfigEntry()">
+            <i class="bi bi-plus-circle me-1"></i>Add property
+          </button>
+        </div>
+        <div class="row g-2 mb-2" *ngFor="let entry of configEntries; let i = index">
+          <div class="col-5">
+            <input type="text" class="form-control form-control-sm" placeholder="key" [(ngModel)]="entry.key" [name]="'create-key-' + i">
+          </div>
+          <div class="col-6">
+            <input type="text" class="form-control form-control-sm" placeholder="value" [(ngModel)]="entry.value" [name]="'create-value-' + i">
+          </div>
+          <div class="col-1">
+            <button type="button" class="btn btn-link btn-icon p-0" aria-label="Remove property" (click)="removeConfigEntry(i)">
+              <i class="bi bi-x-circle" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="errors.get('createConnector')" class="alert alert-danger" role="alert">
+          {{ errors.get('createConnector')?.message }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button *ngIf="!flags.get('createConnectorLoading')" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button *ngIf="!flags.get('createConnectorLoading')" type="button" class="btn btn-primary" (click)="createConnector()">Create Connector</button>
+        <div *ngIf="flags.get('createConnectorLoading')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Creating...&nbsp;
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Connector Config -->
+<div class="modal fade" id="editConnectorModal" tabindex="-1" aria-labelledby="editConnectorModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="editConnectorModalLabel">Edit '{{ selectedConnector?.name }}'</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2 d-flex align-items-center justify-content-between">
+          <label class="form-label mb-0">Configuration:</label>
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="addConfigEntry()">
+            <i class="bi bi-plus-circle me-1"></i>Add property
+          </button>
+        </div>
+        <div class="row g-2 mb-2" *ngFor="let entry of configEntries; let i = index">
+          <div class="col-5">
+            <input type="text" class="form-control form-control-sm" placeholder="key" [(ngModel)]="entry.key" [name]="'edit-key-' + i">
+          </div>
+          <div class="col-6">
+            <input type="text" class="form-control form-control-sm" placeholder="value" [(ngModel)]="entry.value" [name]="'edit-value-' + i">
+          </div>
+          <div class="col-1">
+            <button type="button" class="btn btn-link btn-icon p-0" aria-label="Remove property" (click)="removeConfigEntry(i)">
+              <i class="bi bi-x-circle" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="errors.get('editConnector')" class="alert alert-danger" role="alert">
+          {{ errors.get('editConnector')?.message }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button *ngIf="!flags.get('editConnectorLoading')" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button *ngIf="!flags.get('editConnectorLoading')" type="button" class="btn btn-primary" (click)="updateConnectorConfig()">Save Configuration</button>
+        <div *ngIf="flags.get('editConnectorLoading')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Saving...&nbsp;
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Connector -->
+<div class="modal fade" id="deleteConnectorModal" tabindex="-1" aria-labelledby="deleteConnectorModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5 text-danger" id="deleteConnectorModalLabel"><i class="bi bi-x-circle"></i> Delete Connector</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete connector '{{ deletedConnectorName }}'? This cannot be undone.
+        <div *ngIf="errors.get('deleteConnector')" class="alert alert-danger" role="alert">
+          {{ errors.get('deleteConnector')?.message }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button *ngIf="!flags.get('deleteConnectorLoading')" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button *ngIf="!flags.get('deleteConnectorLoading')" type="button" class="btn btn-danger" (click)="deleteConnector()">Delete</button>
+        <div *ngIf="flags.get('deleteConnectorLoading')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Deleting...&nbsp;
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Connector Details / Failure Trace -->
+<div class="modal fade" id="connectorDetailsModal" tabindex="-1" aria-labelledby="connectorDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="connectorDetailsModalLabel">'{{ selectedConnector?.name }}' Status</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedConnector as c">
+        <p class="text-s mb-1"><strong>Connector state:</strong> {{ c.state }}</p>
+        <p class="text-s mb-1" *ngIf="c.workerId"><strong>Worker:</strong> {{ c.workerId }}</p>
+        <pre *ngIf="c.trace" class="p-2 bg-body-tertiary text-s text-danger"><code>{{ c.trace }}</code></pre>
+
+        <h6 class="mt-3">Tasks</h6>
+        @for (task of c.tasks; track task.id) {
+          <div class="mb-2">
+            <p class="text-s mb-1"><strong>Task {{ task.id }}:</strong> {{ task.state }} <span class="text-color-subtle" *ngIf="task.workerId">({{ task.workerId }})</span></p>
+            <pre *ngIf="task.trace" class="p-2 bg-body-tertiary text-s text-danger"><code>{{ task.trace }}</code></pre>
+          </div>
+        } @empty {
+          <p class="text-s text-color-subtle">No tasks.</p>
+        }
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
 </div>

@@ -101,6 +101,15 @@ public class RestExceptionController {
                 .failed(HttpStatus.BAD_GATEWAY);
     }
 
+    @ExceptionHandler(KafkaConnectApiException.class)
+    public ResponseEntity<GenericResponse<Void>> handleKafkaConnectApiException(KafkaConnectApiException ex) {
+        log.error("Kafka Connect API call failed", ex);
+        return new GenericResponse.Builder<Void>()
+                .code(String.valueOf(HttpStatus.BAD_GATEWAY.value()))
+                .message("The Kafka Connect server could not complete this request. Please try again.")
+                .failed(HttpStatus.BAD_GATEWAY);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<GenericResponse<Void>> anyOtherException(Exception ex) {
         log.error("Unhandled exception in API request", ex);

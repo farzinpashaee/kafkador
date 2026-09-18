@@ -10,6 +10,7 @@ import com.csl.kafkador.record.ConfigEntry;
 import com.csl.kafkador.service.*;
 import com.csl.kafkador.service.agent.AgentService;
 import com.csl.kafkador.service.alert.AlertService;
+import com.csl.kafkador.service.connect.KafkaConnectService;
 import com.csl.kafkador.service.ksqldb.KsqlDbService;
 import com.csl.kafkador.service.registry.SchemaRegistryService;
 import com.csl.kafkador.service.search.SearchService;
@@ -37,6 +38,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -407,6 +409,122 @@ public class ApiController {
         KsqlDbService ksqlDbService = (KsqlDbService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KSQL_DB));
         ksqlDbService.terminateQuery(id, connection.getClusterId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/kafka-connect/config")
+    public ResponseEntity<GenericResponse<KafkaConnectConfigDto>> getKafkaConnectConfig() {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        KafkaConnectService kafkaConnectService = (KafkaConnectService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KAFKA_CONNECT));
+        return new GenericResponse.Builder<KafkaConnectConfigDto>()
+                .data(kafkaConnectService.getConfig(connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @PutMapping("/kafka-connect/config")
+    public ResponseEntity<GenericResponse<KafkaConnectConfigDto>> saveKafkaConnectConfig(@Valid @RequestBody KafkaConnectConfigDto config) {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        KafkaConnectService kafkaConnectService = (KafkaConnectService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KAFKA_CONNECT));
+        return new GenericResponse.Builder<KafkaConnectConfigDto>()
+                .data(kafkaConnectService.saveConfig(config.getUrl(), connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @GetMapping("/kafka-connect/plugins")
+    public ResponseEntity<GenericResponse<List<ConnectorPluginDto>>> getConnectorPlugins() throws ConfigNotFoundException, KafkaConnectApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        KafkaConnectService kafkaConnectService = (KafkaConnectService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KAFKA_CONNECT));
+        return new GenericResponse.Builder<List<ConnectorPluginDto>>()
+                .data(kafkaConnectService.getPlugins(connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @GetMapping("/kafka-connect/connectors")
+    public ResponseEntity<GenericResponse<List<ConnectorDto>>> getConnectors() throws ConfigNotFoundException, KafkaConnectApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        KafkaConnectService kafkaConnectService = (KafkaConnectService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KAFKA_CONNECT));
+        return new GenericResponse.Builder<List<ConnectorDto>>()
+                .data(kafkaConnectService.getConnectors(connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @GetMapping("/kafka-connect/connectors/{name}")
+    public ResponseEntity<GenericResponse<ConnectorDto>> getConnector(@PathVariable @NotBlank String name) throws ConfigNotFoundException, KafkaConnectApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        KafkaConnectService kafkaConnectService = (KafkaConnectService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KAFKA_CONNECT));
+        return new GenericResponse.Builder<ConnectorDto>()
+                .data(kafkaConnectService.getConnector(name, connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @PostMapping("/kafka-connect/connectors")
+    public ResponseEntity<GenericResponse<ConnectorDto>> createConnector(@Valid @RequestBody ConnectorCreateRequestDto request)
+            throws ConfigNotFoundException, KafkaConnectApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        KafkaConnectService kafkaConnectService = (KafkaConnectService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KAFKA_CONNECT));
+        ConnectorDto created = kafkaConnectService.createConnector(request, connection.getClusterId());
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequestUri()
+                .path("/{name}")
+                .buildAndExpand(created.getName())
+                .toUri();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(location);
+        return new GenericResponse.Builder<ConnectorDto>()
+                .data(created)
+                .success(HttpStatus.CREATED, headers);
+    }
+
+    @PutMapping("/kafka-connect/connectors/{name}/config")
+    public ResponseEntity<GenericResponse<ConnectorDto>> updateConnectorConfig(@PathVariable @NotBlank String name, @RequestBody Map<String, String> config)
+            throws ConfigNotFoundException, KafkaConnectApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        KafkaConnectService kafkaConnectService = (KafkaConnectService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KAFKA_CONNECT));
+        return new GenericResponse.Builder<ConnectorDto>()
+                .data(kafkaConnectService.updateConnectorConfig(name, config, connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @PutMapping("/kafka-connect/connectors/{name}/pause")
+    public ResponseEntity<Void> pauseConnector(@PathVariable @NotBlank String name) throws ConfigNotFoundException, KafkaConnectApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        KafkaConnectService kafkaConnectService = (KafkaConnectService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KAFKA_CONNECT));
+        kafkaConnectService.pauseConnector(name, connection.getClusterId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/kafka-connect/connectors/{name}/resume")
+    public ResponseEntity<Void> resumeConnector(@PathVariable @NotBlank String name) throws ConfigNotFoundException, KafkaConnectApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        KafkaConnectService kafkaConnectService = (KafkaConnectService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KAFKA_CONNECT));
+        kafkaConnectService.resumeConnector(name, connection.getClusterId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/kafka-connect/connectors/{name}/restart")
+    public ResponseEntity<Void> restartConnector(@PathVariable @NotBlank String name) throws ConfigNotFoundException, KafkaConnectApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        KafkaConnectService kafkaConnectService = (KafkaConnectService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KAFKA_CONNECT));
+        kafkaConnectService.restartConnector(name, connection.getClusterId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/kafka-connect/connectors/{name}")
+    public ResponseEntity<Void> deleteConnector(@PathVariable @NotBlank String name) throws ConfigNotFoundException, KafkaConnectApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        KafkaConnectService kafkaConnectService = (KafkaConnectService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KAFKA_CONNECT));
+        kafkaConnectService.deleteConnector(name, connection.getClusterId());
         return ResponseEntity.noContent().build();
     }
 

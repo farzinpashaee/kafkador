@@ -3,7 +3,7 @@ import { HttpClient, HttpParams, HttpErrorResponse,HttpResponse   } from '@angul
 import { Observable } from 'rxjs';
 import { Cluster, Connection, Config, Broker, Alert, Topic, SearchResult, ConsumerGroup, GenericResponse,
   SchemaRegistry, SchemaRegistryConfig, Chart, Event, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery,
-  AclBinding } from '../models';
+  AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest } from '../models';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -195,6 +195,56 @@ export class ApiService {
     return this.http.post<GenericResponse<Event>>(
       `${ApiService.ApiBaseUrl}/topics/${encodeURIComponent(topic)}/messages`, event,
       { withCredentials: true });
+  }
+
+  public getKafkaConnectConfig(): Observable<HttpResponse<GenericResponse<KafkaConnectConfig>>> {
+    return this.http.get<GenericResponse<KafkaConnectConfig>>(`${ApiService.ApiBaseUrl}/kafka-connect/config`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public saveKafkaConnectConfig(url:string): Observable<HttpResponse<GenericResponse<KafkaConnectConfig>>> {
+    return this.http.put<GenericResponse<KafkaConnectConfig>>(`${ApiService.ApiBaseUrl}/kafka-connect/config`,{ url },
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public getConnectorPlugins(): Observable<HttpResponse<GenericResponse<ConnectorPlugin[]>>> {
+    return this.http.get<GenericResponse<ConnectorPlugin[]>>(`${ApiService.ApiBaseUrl}/kafka-connect/plugins`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public getConnectors(): Observable<HttpResponse<GenericResponse<Connector[]>>> {
+    return this.http.get<GenericResponse<Connector[]>>(`${ApiService.ApiBaseUrl}/kafka-connect/connectors`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public createConnector(request:ConnectorCreateRequest): Observable<HttpResponse<GenericResponse<Connector>>> {
+    return this.http.post<GenericResponse<Connector>>(`${ApiService.ApiBaseUrl}/kafka-connect/connectors`,request,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public updateConnectorConfig(name:string, config:{ [key: string]: string }): Observable<HttpResponse<GenericResponse<Connector>>> {
+    return this.http.put<GenericResponse<Connector>>(`${ApiService.ApiBaseUrl}/kafka-connect/connectors/${encodeURIComponent(name)}/config`,config,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public pauseConnector(name:string): Observable<HttpResponse<void>> {
+    return this.http.put<void>(`${ApiService.ApiBaseUrl}/kafka-connect/connectors/${encodeURIComponent(name)}/pause`,null,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public resumeConnector(name:string): Observable<HttpResponse<void>> {
+    return this.http.put<void>(`${ApiService.ApiBaseUrl}/kafka-connect/connectors/${encodeURIComponent(name)}/resume`,null,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public restartConnector(name:string): Observable<HttpResponse<void>> {
+    return this.http.post<void>(`${ApiService.ApiBaseUrl}/kafka-connect/connectors/${encodeURIComponent(name)}/restart`,null,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public deleteConnector(name:string): Observable<HttpResponse<void>> {
+    return this.http.delete<void>(`${ApiService.ApiBaseUrl}/kafka-connect/connectors/${encodeURIComponent(name)}`,
+      { withCredentials: true, observe: 'response' });
   }
 
 }
