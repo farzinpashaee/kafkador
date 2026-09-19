@@ -16,9 +16,8 @@
               Cluster ID: {{cluster.id}}
             </p>
           </div>
-          <div class="ms-auto chart-container-medium" >
+          <div class="ms-auto chart-container-medium" *ngIf="activeConnection?.agentEnabled">
             <ngx-charts-bar-vertical
-              *ngIf="activeConnection?.agentEnabled"
               [results]="data"
               [scheme]="cartTopWidgetWhiteScheme"
               [xAxis]="false"
