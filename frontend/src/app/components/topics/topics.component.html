@@ -14,9 +14,8 @@
               Total Number of Topics: {{topics.length}}
             </p>
           </div>
-          <div class="ms-auto chart-container-medium">
+          <div class="ms-auto chart-container-medium" *ngIf="flags.get('agentEnabled')">
             <ngx-charts-bar-vertical
-              *ngIf="flags.get('agentEnabled')"
               [results]="data"
               [scheme]="cartTopWidgetWhiteScheme"
               [xAxis]="false"

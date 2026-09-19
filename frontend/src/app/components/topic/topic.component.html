@@ -144,14 +144,14 @@
             <i class="bi" [class.bi-play-circle]="!listening" [class.bi-stop-circle]="listening"></i>
             {{ listening ? 'Stop Listening' : 'Start Listening' }}
           </button>
+          <button type="button" class="btn btn-sm btn-primary"
+                  (click)="openProduceDialog()" data-bs-toggle="modal" data-bs-target="#produceEventModal">
+            <i class="bi bi-upload"></i> Produce
+          </button>
           <button type="button" class="btn btn-sm"
                   [class.btn-outline-primary]="!showMessageFilter" [class.btn-primary]="showMessageFilter"
                   (click)="toggleFilter()">
             <i class="bi bi-funnel"></i> Filter
-          </button>
-          <button type="button" class="btn btn-sm btn-primary"
-                  (click)="openProduceDialog()" data-bs-toggle="modal" data-bs-target="#produceEventModal">
-            <i class="bi bi-upload"></i> Produce
           </button>
         </div>
       </div>
