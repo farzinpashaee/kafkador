@@ -78,6 +78,32 @@
             <span class="visually-hidden">Loading...</span>
           </div> Saving...&nbsp;
         </div>
+
+        <hr class="my-3">
+
+        <h6>Default Compatibility Level</h6>
+        <p class="text-s text-color-subtle">Applies cluster-wide to every subject that has no override of its own.</p>
+
+        <div class="mb-3" style="max-width: 300px;">
+          <label for="globalCompatibilityLevel" class="form-label">Compatibility Level:</label>
+          <select class="form-select" id="globalCompatibilityLevel" [(ngModel)]="selectedCompatibilityLevel" (ngModelChange)="savedAt.delete('globalCompatibility')">
+            <option *ngFor="let level of compatibilityLevels" [value]="level">{{ level }}</option>
+          </select>
+        </div>
+
+        <div *ngIf="errors.get('saveGlobalCompatibility')" class="alert alert-danger" role="alert">
+          {{ errors.get('saveGlobalCompatibility')?.message }}
+        </div>
+        <div *ngIf="savedAt.get('globalCompatibility')" class="alert alert-success" role="alert">
+          Successfully updated at {{ savedAt.get('globalCompatibility') | date:'medium' }}.
+        </div>
+
+        <button *ngIf="!flags.get('globalCompatibilitySaving')" type="button" class="btn btn-primary" (click)="saveGlobalCompatibility()">Save</button>
+        <div *ngIf="flags.get('globalCompatibilitySaving')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Saving...&nbsp;
+        </div>
       </div>
     </div>
 

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { ApiService, CommonService } from '../../services';
-import { GenericResponse, KsqlDbConfig, SchemaRegistryConfig, KafkaConnectConfig, Error } from '../../models';
+import { GenericResponse, KsqlDbConfig, SchemaRegistryConfig, KafkaConnectConfig, CompatibilityConfig, Error } from '../../models';
 
 @Component({
   selector: 'app-settings',
@@ -14,9 +14,13 @@ import { GenericResponse, KsqlDbConfig, SchemaRegistryConfig, KafkaConnectConfig
 })
 export class SettingsComponent implements OnInit {
 
+  readonly compatibilityLevels = ['BACKWARD', 'BACKWARD_TRANSITIVE', 'FORWARD', 'FORWARD_TRANSITIVE', 'FULL', 'FULL_TRANSITIVE', 'NONE'];
+
   ksqlDbConfig: KsqlDbConfig = { configured: false, url: '' };
   schemaRegistryConfig: SchemaRegistryConfig = { configured: false, url: '' };
   kafkaConnectConfig: KafkaConnectConfig = { configured: false, url: '' };
+  globalCompatibility: CompatibilityConfig = {};
+  selectedCompatibilityLevel = 'BACKWARD';
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
   savedAt: Map<string, Date> = new Map();
@@ -33,6 +37,7 @@ export class SettingsComponent implements OnInit {
     this.getKsqlDbConfig();
     this.getSchemaRegistryConfig();
     this.getKafkaConnectConfig();
+    this.getGlobalCompatibility();
   }
 
   getKsqlDbConfig() {
@@ -113,6 +118,39 @@ export class SettingsComponent implements OnInit {
         this.savedAt.delete('schemaRegistryConfig');
         this.errors.set('saveSchemaRegistryConfig', this.commonService.prepareError(res.error.error,'500','Failed to save Schema Registry configuration!'));
         this.flags.set('schemaRegistryConfigSaving', false);
+      }
+    });
+  }
+
+  getGlobalCompatibility() {
+    this.errors.delete('getGlobalCompatibility');
+    this.flags.set('globalCompatibilityLoading', true);
+    this.apiService.getGlobalCompatibility().subscribe({
+      next: (res: HttpResponse<GenericResponse<CompatibilityConfig>>) => {
+        this.globalCompatibility = res.body?.data ?? {};
+        this.selectedCompatibilityLevel = this.globalCompatibility.level || 'BACKWARD';
+        this.flags.set('globalCompatibilityLoading', false);
+      },
+      error: (res:HttpErrorResponse) => {
+        // Schema Registry not configured yet, or unreachable — leave the default selection in place.
+        this.flags.set('globalCompatibilityLoading', false);
+      }
+    });
+  }
+
+  saveGlobalCompatibility() {
+    this.errors.delete('saveGlobalCompatibility');
+    this.savedAt.delete('globalCompatibility');
+    this.flags.set('globalCompatibilitySaving', true);
+    this.apiService.saveGlobalCompatibility(this.selectedCompatibilityLevel).subscribe({
+      next: (res: HttpResponse<GenericResponse<CompatibilityConfig>>) => {
+        this.globalCompatibility = res.body?.data ?? { level: this.selectedCompatibilityLevel };
+        this.savedAt.set('globalCompatibility', new Date());
+        this.flags.set('globalCompatibilitySaving', false);
+      },
+      error: (res:HttpErrorResponse) => {
+        this.errors.set('saveGlobalCompatibility', this.commonService.prepareError(res.error?.error,'500','Failed to save compatibility level!'));
+        this.flags.set('globalCompatibilitySaving', false);
       }
     });
   }

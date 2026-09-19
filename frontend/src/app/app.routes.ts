@@ -15,7 +15,8 @@ export const routes: Routes = [
       { path: 'stream', loadComponent: () => import('./components/streams/streams.component').then(m => m.StreamsComponent), title: 'Streams', data: { breadcrumb: { label: 'Streams' } } },
       { path: 'ksqldb', loadComponent: () => import('./components/ksql-db/ksql-db.component').then(m => m.KsqlDBComponent), title: 'KsqlDB', data: { breadcrumb: { label: 'KsqlDB' } } },
       { path: 'connector', loadComponent: () => import('./components/connectors/connectors.component').then(m => m.ConnectorsComponent), title: 'Connectors', data: { breadcrumb: { label: 'Connectors' } } },
-      { path: 'schema-registry', loadComponent: () => import('./components/schema-registry/schema-registry.component').then(m => m.SchemaRegistryComponent), title: 'Schema Registry', data: { breadcrumb: { label: 'Schema Registry' } } },
+      { path: 'schema-registry', loadComponent: () => import('./components/schema-registry/schema-registry.component').then(m => m.SchemaRegistryComponent), title: 'Schema Registry', data: { breadcrumb: { label: 'Schema Registry', url: '/schema-registry' } } },
+      { path: 'subject/:name', loadComponent: () => import('./components/subject/subject.component').then(m => m.SubjectComponent), title: 'Subject', data: { breadcrumb: { param: 'name' } } },
       { path: 'connection', loadComponent: () => import('./components/connections/connections.component').then(m => m.ConnectionsComponent), title: 'Connections', data: { breadcrumb: { label: 'Connections' } } },
       { path: 'settings', loadComponent: () => import('./components/settings/settings.component').then(m => m.SettingsComponent), title: 'Settings', data: { breadcrumb: { label: 'Settings' } } }
     ]

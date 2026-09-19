@@ -315,31 +315,137 @@ public class ApiController {
     @GetMapping("/schema-registry/subjects")
     public ResponseEntity<GenericResponse<SchemaRegistryDto>> getSubjects() {
         ConnectionDto connection = connectionService.getActiveConnection();
-        SchemaRegistryService schemaRegistryService = (SchemaRegistryService) applicationContext
-                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.SCHEMA_REGISTRY));
         return new GenericResponse.Builder<SchemaRegistryDto>()
-                .data(schemaRegistryService.getSubjects(connection.getClusterId()))
+                .data(schemaRegistryService().getSubjects(connection.getClusterId()))
                 .success(HttpStatus.OK);
     }
 
     @GetMapping("/schema-registry/config")
     public ResponseEntity<GenericResponse<SchemaRegistryConfigDto>> getSchemaRegistryConfig() {
         ConnectionDto connection = connectionService.getActiveConnection();
-        SchemaRegistryService schemaRegistryService = (SchemaRegistryService) applicationContext
-                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.SCHEMA_REGISTRY));
         return new GenericResponse.Builder<SchemaRegistryConfigDto>()
-                .data(schemaRegistryService.getConfig(connection.getClusterId()))
+                .data(schemaRegistryService().getConfig(connection.getClusterId()))
                 .success(HttpStatus.OK);
     }
 
     @PutMapping("/schema-registry/config")
     public ResponseEntity<GenericResponse<SchemaRegistryConfigDto>> saveSchemaRegistryConfig(@Valid @RequestBody SchemaRegistryConfigDto config) {
         ConnectionDto connection = connectionService.getActiveConnection();
-        SchemaRegistryService schemaRegistryService = (SchemaRegistryService) applicationContext
-                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.SCHEMA_REGISTRY));
         return new GenericResponse.Builder<SchemaRegistryConfigDto>()
-                .data(schemaRegistryService.saveConfig(config.getUrl(), connection.getClusterId()))
+                .data(schemaRegistryService().saveConfig(config.getUrl(), connection.getClusterId()))
                 .success(HttpStatus.OK);
+    }
+
+    @GetMapping("/schema-registry/subjects/{subject}/versions")
+    public ResponseEntity<GenericResponse<List<Integer>>> getSchemaVersions(@PathVariable @NotBlank String subject)
+            throws ConfigNotFoundException, SchemaRegistryApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<List<Integer>>()
+                .data(schemaRegistryService().getVersions(subject, connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @GetMapping("/schema-registry/subjects/{subject}/versions/{version}")
+    public ResponseEntity<GenericResponse<SchemaVersionDto>> getSchemaVersion(@PathVariable @NotBlank String subject, @PathVariable @NotBlank String version)
+            throws ConfigNotFoundException, SchemaRegistryApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<SchemaVersionDto>()
+                .data(schemaRegistryService().getVersion(subject, version, connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @PostMapping("/schema-registry/subjects/{subject}/versions")
+    public ResponseEntity<GenericResponse<SchemaVersionDto>> registerSchema(@PathVariable @NotBlank String subject, @Valid @RequestBody SchemaRegisterRequestDto request)
+            throws ConfigNotFoundException, SchemaRegistryApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        SchemaVersionDto created = schemaRegistryService().registerSchema(subject, request, connection.getClusterId());
+        return new GenericResponse.Builder<SchemaVersionDto>()
+                .data(created)
+                .success(HttpStatus.CREATED);
+    }
+
+    @PostMapping("/schema-registry/subjects/{subject}/compatibility-check")
+    public ResponseEntity<GenericResponse<CompatibilityCheckResultDto>> checkSchemaCompatibility(@PathVariable @NotBlank String subject, @Valid @RequestBody SchemaRegisterRequestDto request)
+            throws ConfigNotFoundException, SchemaRegistryApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<CompatibilityCheckResultDto>()
+                .data(schemaRegistryService().checkCompatibility(subject, request, connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @DeleteMapping("/schema-registry/subjects/{subject}")
+    public ResponseEntity<GenericResponse<List<Integer>>> deleteSchemaSubject(@PathVariable @NotBlank String subject, @RequestParam(defaultValue = "false") boolean permanent)
+            throws ConfigNotFoundException, SchemaRegistryApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<List<Integer>>()
+                .data(schemaRegistryService().deleteSubject(subject, permanent, connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @DeleteMapping("/schema-registry/subjects/{subject}/versions/{version}")
+    public ResponseEntity<Void> deleteSchemaVersion(@PathVariable @NotBlank String subject, @PathVariable @NotBlank String version, @RequestParam(defaultValue = "false") boolean permanent)
+            throws ConfigNotFoundException, SchemaRegistryApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        schemaRegistryService().deleteVersion(subject, version, permanent, connection.getClusterId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/schema-registry/compatibility")
+    public ResponseEntity<GenericResponse<CompatibilityConfigDto>> getGlobalCompatibility()
+            throws ConfigNotFoundException, SchemaRegistryApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<CompatibilityConfigDto>()
+                .data(schemaRegistryService().getGlobalCompatibility(connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @PutMapping("/schema-registry/compatibility")
+    public ResponseEntity<GenericResponse<CompatibilityConfigDto>> saveGlobalCompatibility(@Valid @RequestBody CompatibilityConfigDto config)
+            throws ConfigNotFoundException, SchemaRegistryApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<CompatibilityConfigDto>()
+                .data(schemaRegistryService().saveGlobalCompatibility(config, connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @GetMapping("/schema-registry/subjects/{subject}/compatibility")
+    public ResponseEntity<GenericResponse<CompatibilityConfigDto>> getSubjectCompatibility(@PathVariable @NotBlank String subject)
+            throws ConfigNotFoundException, SchemaRegistryApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<CompatibilityConfigDto>()
+                .data(schemaRegistryService().getSubjectCompatibility(subject, connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @PutMapping("/schema-registry/subjects/{subject}/compatibility")
+    public ResponseEntity<GenericResponse<CompatibilityConfigDto>> saveSubjectCompatibility(@PathVariable @NotBlank String subject, @Valid @RequestBody CompatibilityConfigDto config)
+            throws ConfigNotFoundException, SchemaRegistryApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<CompatibilityConfigDto>()
+                .data(schemaRegistryService().saveSubjectCompatibility(subject, config, connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @DeleteMapping("/schema-registry/subjects/{subject}/compatibility")
+    public ResponseEntity<Void> clearSubjectCompatibility(@PathVariable @NotBlank String subject)
+            throws ConfigNotFoundException, SchemaRegistryApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        schemaRegistryService().clearSubjectCompatibility(subject, connection.getClusterId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/schema-registry/schemas/{id}")
+    public ResponseEntity<GenericResponse<SchemaLookupResultDto>> lookupSchemaById(@PathVariable Integer id)
+            throws ConfigNotFoundException, SchemaRegistryApiException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<SchemaLookupResultDto>()
+                .data(schemaRegistryService().lookupById(id, connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    private SchemaRegistryService schemaRegistryService() {
+        return (SchemaRegistryService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.SCHEMA_REGISTRY));
     }
 
     @GetMapping("/ksqldb/config")

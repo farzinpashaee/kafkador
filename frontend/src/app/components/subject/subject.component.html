@@ -1,0 +1,224 @@
+<div class="d-flex align-items-center justify-content-between mb-2">
+  <h4 class="mb-0"><i class="bi bi-diagram-3"></i>&nbsp; {{ subjectName }}</h4>
+  <button type="button" class="btn btn-outline-danger btn-sm" (click)="openDeleteSubjectDialog()" data-bs-toggle="modal" data-bs-target="#deleteSubjectModal">
+    <i class="bi bi-trash3 me-1"></i> Delete Subject
+  </button>
+</div>
+
+<ul class="nav nav-tabs" id="subjectTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="versions-tab" data-bs-toggle="tab" data-bs-target="#versions" type="button" role="tab" aria-controls="versions" aria-selected="true">
+      Versions
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button" role="tab" aria-controls="register" aria-selected="false">
+      Register New Version
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="compatibility-tab" data-bs-toggle="tab" data-bs-target="#compatibility" type="button" role="tab" aria-controls="compatibility" aria-selected="false">
+      Compatibility
+    </button>
+  </li>
+</ul>
+
+<div class="tab-content border border-top-0 p-3" id="subjectTabsContent">
+
+  <!-- Versions -->
+  <div class="tab-pane fade show active" id="versions" role="tabpanel" aria-labelledby="versions-tab" tabindex="0">
+    <div *ngIf="errors.get('getVersions')" class="alert alert-danger" role="alert">
+      {{ errors.get('getVersions')?.message }}
+    </div>
+
+    <p class="placeholder-glow" *ngIf="flags.get('versionsLoading')">
+      <span class="placeholder col-12"></span>
+      <span class="placeholder col-8"></span>
+    </p>
+
+    <div *ngIf="!flags.get('versionsLoading')">
+      <div *ngIf="versions.length === 0" class="text-s text-color-subtle py-3 text-center">No versions found.</div>
+
+      @for (version of versions; track version) {
+        <div class="border rounded mb-2">
+          <div class="d-flex align-items-center justify-content-between p-2 cursor-pointer" (click)="toggleVersion(version)">
+            <div>
+              <i class="bi" [class.bi-chevron-down]="expandedVersion === version" [class.bi-chevron-right]="expandedVersion !== version"></i>
+              <span class="badge bg-dark ms-1">v{{ version }}</span>
+              <span class="text-s text-color-subtle ms-2" *ngIf="versionDetails.get(version) as detail">schema id {{ detail.id }} &middot; {{ detail.schemaType }}</span>
+            </div>
+            <div *ngIf="isDeletingVersion(version)" class="spinner-border spinner-border-sm" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <button *ngIf="!isDeletingVersion(version)" type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Delete version {{version}}"
+                    title="Delete this version" (click)="$event.stopPropagation(); deleteVersion(version)">
+              <i class="bi bi-trash3" aria-hidden="true"></i>
+            </button>
+          </div>
+          <pre *ngIf="expandedVersion === version && versionDetails.get(version) as detail" class="p-2 m-0 bg-body-tertiary text-s border-top"><code>{{ detail.schema }}</code></pre>
+        </div>
+      }
+
+      <div class="mt-4" *ngIf="versions.length > 1">
+        <h6>Compare Versions</h6>
+        <div class="row g-2 align-items-end mb-2">
+          <div class="col-auto">
+            <label class="form-label text-s mb-0" for="compareLeft">Version A</label>
+            <select class="form-select form-select-sm" id="compareLeft" [(ngModel)]="compareLeftVersion">
+              <option [ngValue]="null" disabled selected>Select</option>
+              <option *ngFor="let v of versions" [ngValue]="v">v{{ v }}</option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <label class="form-label text-s mb-0" for="compareRight">Version B</label>
+            <select class="form-select form-select-sm" id="compareRight" [(ngModel)]="compareRightVersion">
+              <option [ngValue]="null" disabled selected>Select</option>
+              <option *ngFor="let v of versions" [ngValue]="v">v{{ v }}</option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="compareLeftVersion === null || compareRightVersion === null" (click)="showDiff()">
+              Show Diff
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="errors.get('diff')" class="alert alert-danger" role="alert">{{ errors.get('diff')?.message }}</div>
+
+        <div *ngIf="diffRows.length > 0" class="table-responsive">
+          <p class="text-s text-color-subtle mb-1">Line-by-line comparison (not alignment-aware — an inserted line shifts everything after it).</p>
+          <table class="table table-sm">
+            <thead>
+            <tr>
+              <th scope="col">v{{ compareLeftVersion }}</th>
+              <th scope="col">v{{ compareRightVersion }}</th>
+            </tr>
+            </thead>
+            <tbody>
+            @for (row of diffRows; track $index) {
+              <tr [class.table-warning]="row.changed">
+                <td class="text-s font-monospace">{{ row.left }}</td>
+                <td class="text-s font-monospace">{{ row.right }}</td>
+              </tr>
+            }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Register New Version -->
+  <div class="tab-pane fade" id="register" role="tabpanel" aria-labelledby="register-tab" tabindex="0">
+    <div class="mb-3">
+      <label for="schemaType" class="form-label">Schema Type:</label>
+      <select class="form-select" id="schemaType" style="max-width: 200px;" [(ngModel)]="newSchemaType">
+        <option value="AVRO">AVRO</option>
+        <option value="JSON">JSON</option>
+        <option value="PROTOBUF">PROTOBUF</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="newSchema" class="form-label">Schema:</label>
+      <textarea class="form-control font-monospace text-s" id="newSchema" rows="12" placeholder="Paste the schema definition here" [(ngModel)]="newSchema"></textarea>
+    </div>
+
+    <div *ngIf="errors.get('register')" class="alert alert-danger" role="alert">{{ errors.get('register')?.message }}</div>
+
+    <div *ngIf="compatibilityResult as result" class="alert" [class.alert-success]="result.compatible" [class.alert-danger]="!result.compatible" role="alert">
+      <strong>{{ result.compatible ? 'Compatible' : 'Not compatible' }}</strong>
+      <ul class="mb-0 text-s" *ngIf="result.messages?.length">
+        <li *ngFor="let message of result.messages">{{ message }}</li>
+      </ul>
+    </div>
+
+    <div *ngIf="registeredVersion as v" class="alert alert-success" role="alert">
+      Registered as version {{ v.version }} (schema id {{ v.id }}).
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-outline-secondary" [disabled]="flags.get('checkingCompatibility')" (click)="checkCompatibility()">
+        <span *ngIf="flags.get('checkingCompatibility')" class="spinner-border spinner-border-sm me-1" role="status"></span>
+        Check Compatibility
+      </button>
+      <button type="button" class="btn btn-primary" [disabled]="flags.get('registering')" (click)="registerSchema()">
+        <span *ngIf="flags.get('registering')" class="spinner-border spinner-border-sm me-1" role="status"></span>
+        Register
+      </button>
+    </div>
+  </div>
+
+  <!-- Compatibility -->
+  <div class="tab-pane fade" id="compatibility" role="tabpanel" aria-labelledby="compatibility-tab" tabindex="0">
+    <div *ngIf="errors.get('getCompatibility')" class="alert alert-danger" role="alert">{{ errors.get('getCompatibility')?.message }}</div>
+
+    <p class="placeholder-glow" *ngIf="flags.get('compatibilityLoading')">
+      <span class="placeholder col-8"></span>
+    </p>
+
+    <div *ngIf="!flags.get('compatibilityLoading')">
+      <p class="text-s">
+        Cluster default: <strong>{{ globalCompatibility.level || 'not set' }}</strong>
+      </p>
+      <p class="text-s text-color-subtle" *ngIf="!subjectCompatibility.level">
+        This subject has no override and currently follows the cluster default.
+      </p>
+      <p class="text-s" *ngIf="subjectCompatibility.level">
+        This subject overrides the default with: <strong>{{ subjectCompatibility.level }}</strong>
+      </p>
+
+      <div class="mb-3" style="max-width: 300px;">
+        <label for="compatibilityLevel" class="form-label">Set subject-level override:</label>
+        <select class="form-select" id="compatibilityLevel" [(ngModel)]="selectedCompatibilityLevel">
+          <option *ngFor="let level of compatibilityLevels" [value]="level">{{ level }}</option>
+        </select>
+      </div>
+
+      <div *ngIf="errors.get('saveCompatibility')" class="alert alert-danger" role="alert">{{ errors.get('saveCompatibility')?.message }}</div>
+
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-primary" [disabled]="flags.get('savingCompatibility')" (click)="saveSubjectCompatibility()">
+          <span *ngIf="flags.get('savingCompatibility')" class="spinner-border spinner-border-sm me-1" role="status"></span>
+          Save Override
+        </button>
+        <button type="button" class="btn btn-outline-secondary" *ngIf="subjectCompatibility.level" [disabled]="flags.get('savingCompatibility')" (click)="clearSubjectCompatibility()">
+          Clear Override
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Delete Subject -->
+<div class="modal fade" id="deleteSubjectModal" tabindex="-1" aria-labelledby="deleteSubjectModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5 text-danger" id="deleteSubjectModalLabel"><i class="bi bi-x-circle"></i> Delete Subject</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete subject '{{ subjectName }}' and all its versions?
+        <div class="form-check mt-2">
+          <input class="form-check-input" type="checkbox" id="permanentDelete" [(ngModel)]="deletePermanent">
+          <label class="form-check-label text-s" for="permanentDelete">
+            Permanently delete (hard delete — cannot be undone, and the subject cannot be re-registered without first purging it from the registry's internal topic)
+          </label>
+        </div>
+        <div *ngIf="errors.get('deleteSubject')" class="alert alert-danger mt-2" role="alert">
+          {{ errors.get('deleteSubject')?.message }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button *ngIf="!flags.get('deletingSubject')" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button *ngIf="!flags.get('deletingSubject')" type="button" class="btn btn-danger" (click)="deleteSubject()">Delete</button>
+        <div *ngIf="flags.get('deletingSubject')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Deleting...&nbsp;
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

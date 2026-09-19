@@ -110,6 +110,21 @@ public class RestExceptionController {
                 .failed(HttpStatus.BAD_GATEWAY);
     }
 
+    /**
+     * Unlike the other upstream-API exceptions above, SchemaRegistryApiException's
+     * message is deliberately safe to show as-is: the service layer already extracts
+     * only the registry's own validation message for 4xx failures (invalid schema,
+     * incompatible change, etc.) or substitutes a generic sentence for anything else,
+     * so nothing internal (hosts, stack traces) ever reaches this handler in the message.
+     */
+    @ExceptionHandler(SchemaRegistryApiException.class)
+    public ResponseEntity<GenericResponse<Void>> handleSchemaRegistryApiException(SchemaRegistryApiException ex) {
+        return new GenericResponse.Builder<Void>()
+                .code(String.valueOf(HttpStatus.BAD_GATEWAY.value()))
+                .message(ex.getMessage())
+                .failed(HttpStatus.BAD_GATEWAY);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<GenericResponse<Void>> anyOtherException(Exception ex) {
         log.error("Unhandled exception in API request", ex);

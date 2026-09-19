@@ -11,27 +11,166 @@
       </div>
       <button type="button" class="btn btn-sm btn-warning ms-auto" routerLink="/settings" fragment="schema-Registry">Config Now</button>
     </div>
-    <div class="table-responsive" *ngIf="schemaRegistry.configured">
-      <table class="table">
-        <thead>
-        <tr>
-          <th scope="col">Subject Name</th>
-        </tr>
-        </thead>
-        <tbody >
-        <tr *ngFor="let schema of pagedSubjects">
-          <th scope="row">
-              <span class="badge bg-dark">
-                <a routerLink="/subject/{{schema.name}}" routerLinkActive="active" class="badge-link">{{schema.name}}</a>
-              </span>
-          </th>
-        </tr>
-        </tbody>
-      </table>
-      <app-pagination [totalItems]="schemaRegistry.subjects.length" [pageSize]="pageSize" [page]="page" (pageChange)="page = $event"></app-pagination>
+
+    <div *ngIf="schemaRegistry.configured">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <h5 class="mb-0">Subjects</h5>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-outline-secondary" (click)="openLookupDialog()" data-bs-toggle="modal" data-bs-target="#lookupSchemaModal">
+            <i class="bi bi-search me-1"></i> Lookup by ID
+          </button>
+          <button type="button" class="btn btn-primary" (click)="openCreateDialog()" data-bs-toggle="modal" data-bs-target="#createSubjectModal">
+            <i class="bi bi-plus-circle me-1"></i> New Subject
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+          <tr>
+            <th scope="col">Subject Name</th>
+            <th scope="col"></th>
+          </tr>
+          </thead>
+          <tbody>
+          @for (schema of pagedSubjects; track schema.name) {
+          <tr>
+            <th scope="row">
+                <span class="badge bg-dark">
+                  <a routerLink="/subject/{{schema.name}}" class="badge-link">{{schema.name}}</a>
+                </span>
+            </th>
+            <td>
+              <button type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Delete subject {{schema.name}}"
+                      (click)="openDeleteDialog(schema)" data-bs-toggle="modal" data-bs-target="#deleteSubjectModal">
+                <i class="bi bi-trash3" aria-hidden="true"></i>
+              </button>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="2" class="text-center text-s text-color-subtle py-3">No subjects found.</td>
+          </tr>
+          }
+          </tbody>
+        </table>
+        <app-pagination [totalItems]="schemaRegistry.subjects.length" [pageSize]="pageSize" [page]="page" (pageChange)="page = $event"></app-pagination>
+      </div>
     </div>
   </div>
 </div>
 
+<!-- New Subject -->
+<div class="modal fade" id="createSubjectModal" tabindex="-1" aria-labelledby="createSubjectModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="createSubjectModalLabel">New Subject</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="subjectName" class="form-label">Subject Name:</label>
+          <input required type="text" class="form-control" id="subjectName" placeholder="e.g. orders-value" [(ngModel)]="newSubjectName">
+        </div>
+        <div class="mb-3">
+          <label for="newSubjectSchemaType" class="form-label">Schema Type:</label>
+          <select class="form-select" id="newSubjectSchemaType" style="max-width: 200px;" [(ngModel)]="newSchemaType">
+            <option value="AVRO">AVRO</option>
+            <option value="JSON">JSON</option>
+            <option value="PROTOBUF">PROTOBUF</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="newSubjectSchema" class="form-label">Schema:</label>
+          <textarea class="form-control font-monospace text-s" id="newSubjectSchema" rows="10" placeholder="Paste the schema definition here" [(ngModel)]="newSchema"></textarea>
+        </div>
 
+        <div *ngIf="errors.get('createSubject')" class="alert alert-danger" role="alert">
+          {{ errors.get('createSubject')?.message }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button *ngIf="!flags.get('createSubjectLoading')" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button *ngIf="!flags.get('createSubjectLoading')" type="button" class="btn btn-primary" (click)="createSubject()">Register</button>
+        <div *ngIf="flags.get('createSubjectLoading')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Registering...&nbsp;
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
+<!-- Delete Subject -->
+<div class="modal fade" id="deleteSubjectModal" tabindex="-1" aria-labelledby="deleteSubjectModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5 text-danger" id="deleteSubjectModalLabel"><i class="bi bi-x-circle"></i> Delete Subject</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete subject '{{ deletedSubjectName }}' and all its versions?
+        <div class="form-check mt-2">
+          <input class="form-check-input" type="checkbox" id="listPermanentDelete" [(ngModel)]="deletePermanent">
+          <label class="form-check-label text-s" for="listPermanentDelete">
+            Permanently delete (hard delete — cannot be undone)
+          </label>
+        </div>
+        <div *ngIf="errors.get('deleteSubject')" class="alert alert-danger mt-2" role="alert">
+          {{ errors.get('deleteSubject')?.message }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button *ngIf="!flags.get('deleteSubjectLoading')" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button *ngIf="!flags.get('deleteSubjectLoading')" type="button" class="btn btn-danger" (click)="deleteSubject()">Delete</button>
+        <div *ngIf="flags.get('deleteSubjectLoading')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Deleting...&nbsp;
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Lookup Schema by ID -->
+<div class="modal fade" id="lookupSchemaModal" tabindex="-1" aria-labelledby="lookupSchemaModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="lookupSchemaModalLabel">Lookup Schema by ID</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex gap-2 mb-3">
+          <input type="number" class="form-control" placeholder="e.g. 42" [(ngModel)]="lookupId" (keyup.enter)="lookupSchema()">
+          <button type="button" class="btn btn-primary text-nowrap" [disabled]="flags.get('lookupLoading')" (click)="lookupSchema()">
+            <span *ngIf="flags.get('lookupLoading')" class="spinner-border spinner-border-sm me-1" role="status"></span>
+            Lookup
+          </button>
+        </div>
+
+        <div *ngIf="errors.get('lookup')" class="alert alert-danger" role="alert">{{ errors.get('lookup')?.message }}</div>
+
+        <div *ngIf="lookupResult as result">
+          <p class="text-s mb-1"><strong>Type:</strong> {{ result.schemaType || 'AVRO' }}</p>
+          <p class="text-s mb-1" *ngIf="result.locations?.length">
+            <strong>Used by:</strong>
+            @for (loc of result.locations; track loc.subject + loc.version) {
+              <a class="badge bg-dark me-1" data-bs-dismiss="modal" routerLink="/subject/{{loc.subject}}">{{ loc.subject }} (v{{ loc.version }})</a>
+            }
+          </p>
+          <p class="text-s text-color-subtle mb-1" *ngIf="!result.locations?.length">Not currently attached to any subject version.</p>
+          <pre class="p-2 bg-body-tertiary text-s"><code>{{ result.schema }}</code></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

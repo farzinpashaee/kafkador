@@ -3,7 +3,8 @@ import { HttpClient, HttpParams, HttpErrorResponse,HttpResponse   } from '@angul
 import { Observable } from 'rxjs';
 import { Cluster, Connection, Config, Broker, Alert, Topic, SearchResult, ConsumerGroup, GenericResponse,
   SchemaRegistry, SchemaRegistryConfig, Chart, Event, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery,
-  AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest } from '../models';
+  AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest,
+  SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, SchemaLookupResult } from '../models';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -102,6 +103,68 @@ export class ApiService {
 
   public saveSchemaRegistryConfig(url:string): Observable<HttpResponse<GenericResponse<SchemaRegistryConfig>>> {
     return this.http.put<GenericResponse<SchemaRegistryConfig>>(`${ApiService.ApiBaseUrl}/schema-registry/config`,{ url },
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public getSchemaVersions(subject:string): Observable<HttpResponse<GenericResponse<number[]>>> {
+    return this.http.get<GenericResponse<number[]>>(`${ApiService.ApiBaseUrl}/schema-registry/subjects/${encodeURIComponent(subject)}/versions`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public getSchemaVersion(subject:string, version:string): Observable<HttpResponse<GenericResponse<SchemaVersion>>> {
+    return this.http.get<GenericResponse<SchemaVersion>>(`${ApiService.ApiBaseUrl}/schema-registry/subjects/${encodeURIComponent(subject)}/versions/${version}`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public registerSchema(subject:string, request:SchemaRegisterRequest): Observable<HttpResponse<GenericResponse<SchemaVersion>>> {
+    return this.http.post<GenericResponse<SchemaVersion>>(`${ApiService.ApiBaseUrl}/schema-registry/subjects/${encodeURIComponent(subject)}/versions`,request,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public checkSchemaCompatibility(subject:string, request:SchemaRegisterRequest): Observable<HttpResponse<GenericResponse<CompatibilityCheckResult>>> {
+    return this.http.post<GenericResponse<CompatibilityCheckResult>>(`${ApiService.ApiBaseUrl}/schema-registry/subjects/${encodeURIComponent(subject)}/compatibility-check`,request,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public deleteSchemaSubject(subject:string, permanent:boolean): Observable<HttpResponse<GenericResponse<number[]>>> {
+    let params = new HttpParams().set('permanent', permanent);
+    return this.http.delete<GenericResponse<number[]>>(`${ApiService.ApiBaseUrl}/schema-registry/subjects/${encodeURIComponent(subject)}`,
+      { params, withCredentials: true, observe: 'response' });
+  }
+
+  public deleteSchemaVersion(subject:string, version:string, permanent:boolean): Observable<HttpResponse<void>> {
+    let params = new HttpParams().set('permanent', permanent);
+    return this.http.delete<void>(`${ApiService.ApiBaseUrl}/schema-registry/subjects/${encodeURIComponent(subject)}/versions/${version}`,
+      { params, withCredentials: true, observe: 'response' });
+  }
+
+  public getGlobalCompatibility(): Observable<HttpResponse<GenericResponse<CompatibilityConfig>>> {
+    return this.http.get<GenericResponse<CompatibilityConfig>>(`${ApiService.ApiBaseUrl}/schema-registry/compatibility`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public saveGlobalCompatibility(level:string): Observable<HttpResponse<GenericResponse<CompatibilityConfig>>> {
+    return this.http.put<GenericResponse<CompatibilityConfig>>(`${ApiService.ApiBaseUrl}/schema-registry/compatibility`,{ level },
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public getSubjectCompatibility(subject:string): Observable<HttpResponse<GenericResponse<CompatibilityConfig>>> {
+    return this.http.get<GenericResponse<CompatibilityConfig>>(`${ApiService.ApiBaseUrl}/schema-registry/subjects/${encodeURIComponent(subject)}/compatibility`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public saveSubjectCompatibility(subject:string, level:string): Observable<HttpResponse<GenericResponse<CompatibilityConfig>>> {
+    return this.http.put<GenericResponse<CompatibilityConfig>>(`${ApiService.ApiBaseUrl}/schema-registry/subjects/${encodeURIComponent(subject)}/compatibility`,{ level },
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public clearSubjectCompatibility(subject:string): Observable<HttpResponse<void>> {
+    return this.http.delete<void>(`${ApiService.ApiBaseUrl}/schema-registry/subjects/${encodeURIComponent(subject)}/compatibility`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public lookupSchemaById(id:number): Observable<HttpResponse<GenericResponse<SchemaLookupResult>>> {
+    return this.http.get<GenericResponse<SchemaLookupResult>>(`${ApiService.ApiBaseUrl}/schema-registry/schemas/${id}`,
       { withCredentials: true, observe: 'response' });
   }
 
