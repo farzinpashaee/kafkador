@@ -103,6 +103,10 @@ export class DashboardLayoutComponent {
     this.destroy$.complete();
   }
 
+  isClusterActive(): boolean {
+    return this.router.url === '/cluster' || this.router.url.startsWith('/cluster/') || this.router.url.startsWith('/broker/');
+  }
+
   goTo(route: string) {
     this.isSearching = false;
     this.searchQuery = "";

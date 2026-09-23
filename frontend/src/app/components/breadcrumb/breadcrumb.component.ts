@@ -34,7 +34,7 @@ export class BreadcrumbComponent {
     this.breadcrumbs = segments.map(segment => {
       accumulatedUrl += `/${segment}`;
       return {
-        label: segment,
+        label: this.formatLabel(segment),
         url: accumulatedUrl
       };
     });

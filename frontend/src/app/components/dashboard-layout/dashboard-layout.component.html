@@ -45,7 +45,7 @@
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2" aria-current="page" routerLink="/cluster" routerLinkActive="active" (click)="isSearching = false">
+              <a class="nav-link d-flex align-items-center gap-2" aria-current="page" routerLink="/cluster" [class.active]="isClusterActive()" (click)="isSearching = false">
                 <i class="bi bi-diagram-3"></i> Cluster
               </a>
             </li>
