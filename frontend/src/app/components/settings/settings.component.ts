@@ -100,28 +100,6 @@ export class SettingsComponent implements OnInit {
     });
   }
 
-  saveSchemaRegistryConfig() {
-    if (!this.schemaRegistryConfig.url) {
-      this.errors.set('saveSchemaRegistryConfig', {code:'400',message:'URL is required',datetime:''});
-      return;
-    }
-    this.errors.delete('saveSchemaRegistryConfig');
-    this.savedAt.delete('schemaRegistryConfig');
-    this.flags.set('schemaRegistryConfigSaving', true);
-    this.apiService.saveSchemaRegistryConfig(this.schemaRegistryConfig.url).subscribe({
-      next: (res: HttpResponse<GenericResponse<SchemaRegistryConfig>>) => {
-        this.schemaRegistryConfig = res.body?.data ?? this.schemaRegistryConfig;
-        this.savedAt.set('schemaRegistryConfig', new Date());
-        this.flags.set('schemaRegistryConfigSaving', false);
-      },
-      error: (res:HttpErrorResponse) => {
-        this.savedAt.delete('schemaRegistryConfig');
-        this.errors.set('saveSchemaRegistryConfig', this.commonService.prepareError(res.error.error,'500','Failed to save Schema Registry configuration!'));
-        this.flags.set('schemaRegistryConfigSaving', false);
-      }
-    });
-  }
-
   getGlobalCompatibility() {
     this.errors.delete('getGlobalCompatibility');
     this.flags.set('globalCompatibilityLoading', true);
@@ -138,19 +116,32 @@ export class SettingsComponent implements OnInit {
     });
   }
 
-  saveGlobalCompatibility() {
-    this.errors.delete('saveGlobalCompatibility');
-    this.savedAt.delete('globalCompatibility');
-    this.flags.set('globalCompatibilitySaving', true);
-    this.apiService.saveGlobalCompatibility(this.selectedCompatibilityLevel).subscribe({
-      next: (res: HttpResponse<GenericResponse<CompatibilityConfig>>) => {
-        this.globalCompatibility = res.body?.data ?? { level: this.selectedCompatibilityLevel };
-        this.savedAt.set('globalCompatibility', new Date());
-        this.flags.set('globalCompatibilitySaving', false);
+  saveSchemaRegistrySettings() {
+    if (!this.schemaRegistryConfig.url) {
+      this.errors.set('saveSchemaRegistrySettings', {code:'400',message:'URL is required',datetime:''});
+      return;
+    }
+    this.errors.delete('saveSchemaRegistrySettings');
+    this.savedAt.delete('schemaRegistrySettings');
+    this.flags.set('schemaRegistrySettingsSaving', true);
+    this.apiService.saveSchemaRegistryConfig(this.schemaRegistryConfig.url).subscribe({
+      next: (res: HttpResponse<GenericResponse<SchemaRegistryConfig>>) => {
+        this.schemaRegistryConfig = res.body?.data ?? this.schemaRegistryConfig;
+        this.apiService.saveGlobalCompatibility(this.selectedCompatibilityLevel).subscribe({
+          next: (res2: HttpResponse<GenericResponse<CompatibilityConfig>>) => {
+            this.globalCompatibility = res2.body?.data ?? { level: this.selectedCompatibilityLevel };
+            this.savedAt.set('schemaRegistrySettings', new Date());
+            this.flags.set('schemaRegistrySettingsSaving', false);
+          },
+          error: (res2:HttpErrorResponse) => {
+            this.errors.set('saveSchemaRegistrySettings', this.commonService.prepareError(res2.error?.error,'500','Failed to save compatibility level!'));
+            this.flags.set('schemaRegistrySettingsSaving', false);
+          }
+        });
       },
       error: (res:HttpErrorResponse) => {
-        this.errors.set('saveGlobalCompatibility', this.commonService.prepareError(res.error?.error,'500','Failed to save compatibility level!'));
-        this.flags.set('globalCompatibilitySaving', false);
+        this.errors.set('saveSchemaRegistrySettings', this.commonService.prepareError(res.error.error,'500','Failed to save Schema Registry configuration!'));
+        this.flags.set('schemaRegistrySettingsSaving', false);
       }
     });
   }

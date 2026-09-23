@@ -62,23 +62,6 @@
           <div id="schemaRegistryUrlHelp" class="form-text">The base URL of your Schema Registry server's REST API.</div>
         </div>
 
-        <div *ngIf="errors.get('getSchemaRegistryConfig')" class="alert alert-danger" role="alert">
-          {{ errors.get('getSchemaRegistryConfig')?.message }}
-        </div>
-        <div *ngIf="errors.get('saveSchemaRegistryConfig')" class="alert alert-danger" role="alert">
-          {{ errors.get('saveSchemaRegistryConfig')?.message }}
-        </div>
-        <div *ngIf="savedAt.get('schemaRegistryConfig')" class="alert alert-success" role="alert">
-          Successfully updated at {{ savedAt.get('schemaRegistryConfig') | date:'medium' }}.
-        </div>
-
-        <button *ngIf="!flags.get('schemaRegistryConfigSaving')" type="button" class="btn btn-primary" (click)="saveSchemaRegistryConfig()">Save</button>
-        <div *ngIf="flags.get('schemaRegistryConfigSaving')">
-          <div class="spinner-border spinner-border-sm" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div> Saving...&nbsp;
-        </div>
-
         <hr class="my-3">
 
         <h6>Default Compatibility Level</h6>
@@ -86,20 +69,23 @@
 
         <div class="mb-3" style="max-width: 300px;">
           <label for="globalCompatibilityLevel" class="form-label">Compatibility Level:</label>
-          <select class="form-select" id="globalCompatibilityLevel" [(ngModel)]="selectedCompatibilityLevel" (ngModelChange)="savedAt.delete('globalCompatibility')">
+          <select class="form-select" id="globalCompatibilityLevel" [(ngModel)]="selectedCompatibilityLevel" (ngModelChange)="savedAt.delete('schemaRegistrySettings')">
             <option *ngFor="let level of compatibilityLevels" [value]="level">{{ level }}</option>
           </select>
         </div>
 
-        <div *ngIf="errors.get('saveGlobalCompatibility')" class="alert alert-danger" role="alert">
-          {{ errors.get('saveGlobalCompatibility')?.message }}
+        <div *ngIf="errors.get('getSchemaRegistryConfig')" class="alert alert-danger" role="alert">
+          {{ errors.get('getSchemaRegistryConfig')?.message }}
         </div>
-        <div *ngIf="savedAt.get('globalCompatibility')" class="alert alert-success" role="alert">
-          Successfully updated at {{ savedAt.get('globalCompatibility') | date:'medium' }}.
+        <div *ngIf="errors.get('saveSchemaRegistrySettings')" class="alert alert-danger" role="alert">
+          {{ errors.get('saveSchemaRegistrySettings')?.message }}
+        </div>
+        <div *ngIf="savedAt.get('schemaRegistrySettings')" class="alert alert-success" role="alert">
+          Successfully updated at {{ savedAt.get('schemaRegistrySettings') | date:'medium' }}.
         </div>
 
-        <button *ngIf="!flags.get('globalCompatibilitySaving')" type="button" class="btn btn-primary" (click)="saveGlobalCompatibility()">Save</button>
-        <div *ngIf="flags.get('globalCompatibilitySaving')">
+        <button *ngIf="!flags.get('schemaRegistrySettingsSaving')" type="button" class="btn btn-primary" (click)="saveSchemaRegistrySettings()">Save</button>
+        <div *ngIf="flags.get('schemaRegistrySettingsSaving')">
           <div class="spinner-border spinner-border-sm" role="status">
             <span class="visually-hidden">Loading...</span>
           </div> Saving...&nbsp;
