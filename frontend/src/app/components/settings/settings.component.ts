@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { ApiService, CommonService } from '../../services';
-import { GenericResponse, KsqlDbConfig, SchemaRegistryConfig, KafkaConnectConfig, CompatibilityConfig, Error } from '../../models';
+import { GenericResponse, KsqlDbConfig, SchemaRegistryConfig, KafkaConnectConfig, CompatibilityConfig, ConnectorPlugin, Error } from '../../models';
 
 @Component({
   selector: 'app-settings',
@@ -19,6 +19,7 @@ export class SettingsComponent implements OnInit {
   ksqlDbConfig: KsqlDbConfig = { configured: false, url: '' };
   schemaRegistryConfig: SchemaRegistryConfig = { configured: false, url: '' };
   kafkaConnectConfig: KafkaConnectConfig = { configured: false, url: '' };
+  connectorPlugins: ConnectorPlugin[] = [];
   globalCompatibility: CompatibilityConfig = {};
   selectedCompatibilityLevel = 'BACKWARD';
   errors: Map<string, Error> = new Map();
@@ -153,6 +154,7 @@ export class SettingsComponent implements OnInit {
       next: (res: HttpResponse<GenericResponse<KafkaConnectConfig>>) => {
         this.kafkaConnectConfig = res.body?.data ?? { configured: false, url: '' };
         this.flags.set('kafkaConnectConfigLoading', false);
+        if (this.kafkaConnectConfig.configured) this.getConnectorPlugins();
       },
       error: (res:HttpErrorResponse) => {
         if (res.status === 404) {
@@ -178,11 +180,27 @@ export class SettingsComponent implements OnInit {
         this.kafkaConnectConfig = res.body?.data ?? this.kafkaConnectConfig;
         this.savedAt.set('kafkaConnectConfig', new Date());
         this.flags.set('kafkaConnectConfigSaving', false);
+        if (this.kafkaConnectConfig.configured) this.getConnectorPlugins();
       },
       error: (res:HttpErrorResponse) => {
         this.savedAt.delete('kafkaConnectConfig');
         this.errors.set('saveKafkaConnectConfig', this.commonService.prepareError(res.error.error,'500','Failed to save Kafka Connect configuration!'));
         this.flags.set('kafkaConnectConfigSaving', false);
+      }
+    });
+  }
+
+  getConnectorPlugins() {
+    this.errors.delete('getConnectorPlugins');
+    this.flags.set('connectorPluginsLoading', true);
+    this.apiService.getConnectorPlugins().subscribe({
+      next: (res: HttpResponse<GenericResponse<ConnectorPlugin[]>>) => {
+        this.connectorPlugins = res.body?.data ?? [];
+        this.flags.set('connectorPluginsLoading', false);
+      },
+      error: (res:HttpErrorResponse) => {
+        this.errors.set('getConnectorPlugins', this.commonService.prepareError(res.error?.error,'500','Failed to load connector plugins!'));
+        this.flags.set('connectorPluginsLoading', false);
       }
     });
   }

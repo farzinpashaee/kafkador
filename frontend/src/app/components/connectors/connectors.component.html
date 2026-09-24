@@ -108,37 +108,6 @@
     </div>
   </div>
 
-  <div class="mt-4">
-    <h6>Available Connector Plugins</h6>
-    <div *ngIf="errors.get('getPlugins')" class="alert alert-danger" role="alert">
-      {{ errors.get('getPlugins')?.message }}
-    </div>
-    <div class="table-responsive">
-      <table class="table table-sm">
-        <thead>
-        <tr>
-          <th scope="col">Class</th>
-          <th scope="col">Type</th>
-          <th scope="col">Version</th>
-        </tr>
-        </thead>
-        <tbody>
-        @for (plugin of plugins; track plugin.className) {
-          <tr>
-            <td class="text-s">{{ plugin.className }}</td>
-            <td class="text-s">{{ plugin.type }}</td>
-            <td class="text-s">{{ plugin.version || '-' }}</td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="3" class="text-center text-s text-color-subtle py-3">No connector plugins installed on this worker.</td>
-          </tr>
-        }
-        </tbody>
-      </table>
-    </div>
-  </div>
-
 </div>
 
 <!-- Create Connector -->
@@ -160,6 +129,9 @@
             <option value="" disabled selected>Select a connector plugin</option>
             <option *ngFor="let plugin of plugins" [value]="plugin.className">{{ plugin.className }} ({{ plugin.type }})</option>
           </select>
+          <div *ngIf="errors.get('getPlugins')" class="text-danger text-s mt-1">
+            {{ errors.get('getPlugins')?.message }}
+          </div>
         </div>
 
         <div class="mb-2 d-flex align-items-center justify-content-between">

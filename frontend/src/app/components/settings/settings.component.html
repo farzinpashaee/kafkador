@@ -160,6 +160,45 @@
             <span class="visually-hidden">Loading...</span>
           </div> Saving...&nbsp;
         </div>
+
+        <div class="mt-4" *ngIf="kafkaConnectConfig.configured">
+          <hr class="my-3">
+
+          <h6>Available Connector Plugins</h6>
+          <div *ngIf="errors.get('getConnectorPlugins')" class="alert alert-danger" role="alert">
+            {{ errors.get('getConnectorPlugins')?.message }}
+          </div>
+
+          <p class="placeholder-glow" *ngIf="flags.get('connectorPluginsLoading')">
+            <span class="placeholder col-12"></span>
+            <span class="placeholder col-8"></span>
+          </p>
+
+          <div class="table-responsive" *ngIf="!flags.get('connectorPluginsLoading')">
+            <table class="table table-sm">
+              <thead>
+              <tr>
+                <th scope="col">Class</th>
+                <th scope="col">Type</th>
+                <th scope="col">Version</th>
+              </tr>
+              </thead>
+              <tbody>
+              @for (plugin of connectorPlugins; track plugin.className) {
+                <tr>
+                  <td class="text-s">{{ plugin.className }}</td>
+                  <td class="text-s">{{ plugin.type }}</td>
+                  <td class="text-s">{{ plugin.version || '-' }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="3" class="text-center text-s text-color-subtle py-3">No connector plugins installed on this worker.</td>
+                </tr>
+              }
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
