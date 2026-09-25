@@ -75,6 +75,15 @@ class RestExceptionControllerTest {
     }
 
     @Test
+    void aiAssistantException_returns502WithItsSafeMessage() {
+        ResponseEntity<GenericResponse<Void>> response = controller.handleAiAssistantException(
+                new com.csl.kafkador.exception.AiAssistantException("The AI provider rejected the API key."));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
+        assertThat(response.getBody().getError().getMessage()).isEqualTo("The AI provider rejected the API key.");
+    }
+
+    @Test
     void errorResponse_doesNotExposeRawExceptionMessage() {
         // Raw exception messages (stack traces, class names, SQL) must not reach clients.
         // The catch-all handler should return a generic message, not ex.getMessage().

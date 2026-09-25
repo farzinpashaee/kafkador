@@ -4,7 +4,8 @@ import { Observable } from 'rxjs';
 import { Cluster, Connection, Config, Broker, Alert, Topic, SearchResult, ConsumerGroup, GenericResponse,
   SchemaRegistry, SchemaRegistryConfig, Chart, Event, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery,
   AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest,
-  SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, SchemaLookupResult } from '../models';
+  SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, SchemaLookupResult,
+  AiConfig, AiMessage, AiChatResponse } from '../models';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -307,6 +308,21 @@ export class ApiService {
 
   public deleteConnector(name:string): Observable<HttpResponse<void>> {
     return this.http.delete<void>(`${ApiService.ApiBaseUrl}/kafka-connect/connectors/${encodeURIComponent(name)}`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public getAiConfig(): Observable<HttpResponse<GenericResponse<AiConfig>>> {
+    return this.http.get<GenericResponse<AiConfig>>(`${ApiService.ApiBaseUrl}/ai/config`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public saveAiConfig(config: AiConfig): Observable<HttpResponse<GenericResponse<AiConfig>>> {
+    return this.http.put<GenericResponse<AiConfig>>(`${ApiService.ApiBaseUrl}/ai/config`, config,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public aiChat(messages: AiMessage[]): Observable<HttpResponse<GenericResponse<AiChatResponse>>> {
+    return this.http.post<GenericResponse<AiChatResponse>>(`${ApiService.ApiBaseUrl}/ai/chat`, { messages },
       { withCredentials: true, observe: 'response' });
   }
 

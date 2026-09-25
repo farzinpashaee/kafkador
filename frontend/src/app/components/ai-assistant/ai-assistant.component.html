@@ -1,0 +1,60 @@
+@if (assistant.available()) {
+  @if (!open()) {
+    <button type="button" class="ai-fab" aria-label="Open AI assistant" title="AI assistant" (click)="toggle()">
+      <i class="bi bi-robot"></i>
+    </button>
+  } @else {
+    <section class="ai-panel" role="dialog" aria-label="AI assistant" (keydown.escape)="toggle()">
+      <header class="ai-header">
+        <i class="bi bi-robot ai-header-logo" aria-hidden="true"></i>
+        <span class="ai-header-spacer"></span>
+        @if (messages().length) {
+          <button type="button" class="ai-icon-button" aria-label="Start a new chat" title="New chat" (click)="reset()">
+            <i class="bi bi-arrow-counterclockwise"></i>
+          </button>
+        }
+        <button type="button" class="ai-icon-button" aria-label="Close assistant" title="Close" (click)="toggle()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+
+      <div class="ai-body" #body aria-live="polite">
+        @if (!messages().length) {
+          <div class="ai-empty">
+            <div class="ai-orb" aria-hidden="true"></div>
+            <h2 class="ai-greeting">How can I help you today?</h2>
+          </div>
+        } @else {
+          @for (message of messages(); track $index) {
+            <div class="ai-message" [class.ai-message-user]="message.role === 'user'">
+              @for (segment of message.segments; track $index) {
+                @if (segment.code) {
+                  <pre class="ai-code"><code>{{ segment.text }}</code></pre>
+                } @else {
+                  <p class="ai-text">{{ segment.text }}</p>
+                }
+              }
+            </div>
+          }
+          @if (loading()) {
+            <div class="ai-message ai-typing" aria-label="The assistant is thinking">
+              <span></span><span></span><span></span>
+            </div>
+          }
+        }
+        @if (error()) {
+          <div class="alert alert-danger ai-error" role="alert">{{ error() }}</div>
+        }
+      </div>
+
+      <form class="ai-input" (ngSubmit)="send()">
+        <textarea #input class="ai-textarea" name="message" rows="2" maxlength="8000" placeholder="Ask me Anything..."
+                  aria-label="Message the AI assistant" [(ngModel)]="draft" [disabled]="loading()"
+                  (keydown.enter)="onEnter($event)"></textarea>
+        <button type="submit" class="ai-send" aria-label="Send message" [disabled]="loading() || !draft.trim()">
+          <i class="bi bi-send"></i>
+        </button>
+      </form>
+    </section>
+  }
+}

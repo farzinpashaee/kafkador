@@ -7,11 +7,12 @@ import { RouterModule, RouterOutlet, ActivatedRoute, Router } from '@angular/rou
 import { LocalStorageService, ApiService, CommonService } from '../../services';
 import { Connection, GenericResponse, SearchResult, Config } from '../../models';
 import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
+import { AiAssistantComponent } from '../ai-assistant/ai-assistant.component';
 
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterModule, CommonModule, BreadcrumbComponent,FormsModule],
+  imports: [RouterOutlet, RouterModule, CommonModule, BreadcrumbComponent, AiAssistantComponent, FormsModule],
   templateUrl: './dashboard-layout.component.html',
   styleUrl: './dashboard-layout.component.scss'
 })

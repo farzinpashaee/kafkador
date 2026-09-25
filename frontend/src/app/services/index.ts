@@ -1,4 +1,5 @@
 export * from './api.service';
+export * from './ai-assistant.service';
 export * from './breadcrumb.service';
 export * from './common.service';
 export * from './date-time.service';

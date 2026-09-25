@@ -35,6 +35,13 @@
         Connectors
       </button>
     </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="ai-assistant-tab" data-bs-toggle="tab"
+              data-bs-target="#ai-assistant" type="button" role="tab"
+              aria-controls="ai-assistant" aria-selected="false">
+        AI Assistant
+      </button>
+    </li>
   </ul>
 
   <div class="tab-content border border-top-0 p-3" id="profileTabsContent">
@@ -198,6 +205,72 @@
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="ai-assistant" role="tabpanel" aria-labelledby="ai-assistant-tab" tabindex="0">
+      <h6>AI Assistant Settings</h6>
+      <p class="text-s text-color-subtle">
+        Adds a chat assistant (bottom-right corner) that can answer questions about your cluster, topics, listeners,
+        schemas, ksqlDB and Kafkador setup. It has read-only access and can never change anything.
+        Cluster metadata (names, counts, non-secret configuration) is sent to the selected provider to answer each question.
+      </p>
+
+      <div *ngIf="flags.get('aiConfigLoading')" class="text-center">
+        <div class="spinner-border spinner-border-sm" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <div *ngIf="!flags.get('aiConfigLoading')">
+        <div class="form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" role="switch" id="aiEnabled" [(ngModel)]="aiConfig.enabled" (ngModelChange)="savedAt.delete('aiConfig')">
+          <label class="form-check-label" for="aiEnabled">Enable AI assistant</label>
+        </div>
+
+        <div class="mb-3" style="max-width: 400px;">
+          <label for="aiProvider" class="form-label">Provider:</label>
+          <select class="form-select" id="aiProvider" [(ngModel)]="aiConfig.provider" (ngModelChange)="savedAt.delete('aiConfig')">
+            <option *ngFor="let provider of aiProviders" [value]="provider.key">{{ provider.label }}</option>
+          </select>
+        </div>
+
+        <div class="mb-3" style="max-width: 400px;">
+          <label for="aiModel" class="form-label">Model:</label>
+          <input [(ngModel)]="aiConfig.model" (ngModelChange)="savedAt.delete('aiConfig')" type="text" class="form-control" id="aiModel" [placeholder]="'Default: ' + aiDefaultModel" aria-describedby="aiModelHelp" autocomplete="off">
+          <div id="aiModelHelp" class="form-text">Leave empty to use the provider's default model.</div>
+        </div>
+
+        <div class="mb-3">
+          <label for="aiApiKey" class="form-label">API Key:</label>
+          <input [(ngModel)]="aiApiKey" (ngModelChange)="savedAt.delete('aiConfig')" type="password" class="form-control" id="aiApiKey" autocomplete="new-password" [placeholder]="aiConfig.apiKeySet ? '•••••••••••• (saved)' : 'Paste your API key'" aria-describedby="aiApiKeyHelp">
+          <div id="aiApiKeyHelp" class="form-text">
+            {{ aiConfig.apiKeySet ? 'A key is saved. Leave empty to keep it, or paste a new one to replace it.' : 'Stored on the Kafkador server and never sent back to the browser.' }}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="aiBaseUrl" class="form-label">Base URL (optional):</label>
+          <input [(ngModel)]="aiConfig.baseUrl" (ngModelChange)="savedAt.delete('aiConfig')" type="text" class="form-control" id="aiBaseUrl" placeholder="e.g. https://my-proxy.example.com/v1" aria-describedby="aiBaseUrlHelp" autocomplete="off">
+          <div id="aiBaseUrlHelp" class="form-text">Override the provider endpoint, e.g. for a proxy or an OpenAI-compatible server. Leave empty for the official API.</div>
+        </div>
+
+        <div *ngIf="errors.get('getAiConfig')" class="alert alert-danger" role="alert">
+          {{ errors.get('getAiConfig')?.message }}
+        </div>
+        <div *ngIf="errors.get('saveAiConfig')" class="alert alert-danger" role="alert">
+          {{ errors.get('saveAiConfig')?.message }}
+        </div>
+        <div *ngIf="savedAt.get('aiConfig')" class="alert alert-success" role="alert">
+          Successfully updated at {{ savedAt.get('aiConfig') | date:'medium' }}.
+        </div>
+
+        <button *ngIf="!flags.get('aiConfigSaving')" type="button" class="btn btn-primary" (click)="saveAiConfig()">Save</button>
+        <div *ngIf="flags.get('aiConfigSaving')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Saving...&nbsp;
         </div>
       </div>
     </div>

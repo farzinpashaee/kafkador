@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  * to a generic message so internal details (hosts, stack traces, library errors)
  * never leak into an API response.
  */
-@ControllerAdvice(assignableTypes = ApiController.class)
+@ControllerAdvice(assignableTypes = {ApiController.class, AiController.class})
 @Slf4j
 public class RestExceptionController {
 
@@ -119,6 +119,15 @@ public class RestExceptionController {
      */
     @ExceptionHandler(SchemaRegistryApiException.class)
     public ResponseEntity<GenericResponse<Void>> handleSchemaRegistryApiException(SchemaRegistryApiException ex) {
+        return new GenericResponse.Builder<Void>()
+                .code(String.valueOf(HttpStatus.BAD_GATEWAY.value()))
+                .message(ex.getMessage())
+                .failed(HttpStatus.BAD_GATEWAY);
+    }
+
+    /** AiAssistantException messages are written to be safe to show (no keys or internals). */
+    @ExceptionHandler(AiAssistantException.class)
+    public ResponseEntity<GenericResponse<Void>> handleAiAssistantException(AiAssistantException ex) {
         return new GenericResponse.Builder<Void>()
                 .code(String.valueOf(HttpStatus.BAD_GATEWAY.value()))
                 .message(ex.getMessage())

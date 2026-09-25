@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
-import { ApiService, CommonService } from '../../services';
-import { GenericResponse, KsqlDbConfig, SchemaRegistryConfig, KafkaConnectConfig, CompatibilityConfig, ConnectorPlugin, Error } from '../../models';
+import { AiAssistantService, ApiService, CommonService } from '../../services';
+import { GenericResponse, KsqlDbConfig, SchemaRegistryConfig, KafkaConnectConfig, CompatibilityConfig, ConnectorPlugin, AiConfig, Error } from '../../models';
 
 @Component({
   selector: 'app-settings',
@@ -14,12 +14,20 @@ import { GenericResponse, KsqlDbConfig, SchemaRegistryConfig, KafkaConnectConfig
 })
 export class SettingsComponent implements OnInit {
 
-  readonly compatibilityLevels = ['BACKWARD', 'BACKWARD_TRANSITIVE', 'FORWARD', 'FORWARD_TRANSITIVE', 'FULL', 'FULL_TRANSITIVE', 'NONE'];
+  readonly aiProviders = [
+    { key: 'openai', label: 'OpenAI (ChatGPT)', defaultModel: 'gpt-4o-mini' },
+    { key: 'anthropic', label: 'Anthropic (Claude)', defaultModel: 'claude-sonnet-5' },
+    { key: 'gemini', label: 'Google (Gemini)', defaultModel: 'gemini-2.0-flash' }
+  ];
+
+  readonly compatibilityLevels =['BACKWARD', 'BACKWARD_TRANSITIVE', 'FORWARD', 'FORWARD_TRANSITIVE', 'FULL', 'FULL_TRANSITIVE', 'NONE'];
 
   ksqlDbConfig: KsqlDbConfig = { configured: false, url: '' };
   schemaRegistryConfig: SchemaRegistryConfig = { configured: false, url: '' };
   kafkaConnectConfig: KafkaConnectConfig = { configured: false, url: '' };
   connectorPlugins: ConnectorPlugin[] = [];
+  aiConfig: AiConfig = { provider: 'openai', enabled: false };
+  aiApiKey = '';
   globalCompatibility: CompatibilityConfig = {};
   selectedCompatibilityLevel = 'BACKWARD';
   errors: Map<string, Error> = new Map();
@@ -28,7 +36,7 @@ export class SettingsComponent implements OnInit {
 
   route = inject(ActivatedRoute);
 
-  constructor(private apiService: ApiService, private commonService: CommonService) {}
+  constructor(private apiService: ApiService, private commonService: CommonService, private aiAssistant: AiAssistantService) {}
 
   ngOnInit() {
     const fragment = this.route.snapshot.fragment;
@@ -39,6 +47,7 @@ export class SettingsComponent implements OnInit {
     this.getSchemaRegistryConfig();
     this.getKafkaConnectConfig();
     this.getGlobalCompatibility();
+    this.getAiConfig();
   }
 
   getKsqlDbConfig() {
@@ -186,6 +195,55 @@ export class SettingsComponent implements OnInit {
         this.savedAt.delete('kafkaConnectConfig');
         this.errors.set('saveKafkaConnectConfig', this.commonService.prepareError(res.error.error,'500','Failed to save Kafka Connect configuration!'));
         this.flags.set('kafkaConnectConfigSaving', false);
+      }
+    });
+  }
+
+  get aiDefaultModel(): string {
+    return this.aiProviders.find(p => p.key === this.aiConfig.provider)?.defaultModel ?? '';
+  }
+
+  getAiConfig() {
+    this.errors.delete('getAiConfig');
+    this.flags.set('aiConfigLoading', true);
+    this.apiService.getAiConfig().subscribe({
+      next: (res: HttpResponse<GenericResponse<AiConfig>>) => {
+        this.aiConfig = res.body?.data ?? { provider: 'openai', enabled: false };
+        this.flags.set('aiConfigLoading', false);
+      },
+      error: (res:HttpErrorResponse) => {
+        this.errors.set('getAiConfig', this.commonService.prepareError(res.error?.error,'500','Failed to load AI assistant configuration!'));
+        this.flags.set('aiConfigLoading', false);
+      }
+    });
+  }
+
+  saveAiConfig() {
+    if (this.aiConfig.enabled && !this.aiConfig.apiKeySet && !this.aiApiKey.trim()) {
+      this.errors.set('saveAiConfig', {code:'400',message:'An API key is required to enable the AI assistant.',datetime:''});
+      return;
+    }
+    this.errors.delete('saveAiConfig');
+    this.savedAt.delete('aiConfig');
+    this.flags.set('aiConfigSaving', true);
+    const payload: AiConfig = {
+      provider: this.aiConfig.provider,
+      model: (this.aiConfig.model ?? '').trim(),
+      baseUrl: (this.aiConfig.baseUrl ?? '').trim(),
+      enabled: this.aiConfig.enabled,
+      apiKey: this.aiApiKey.trim()
+    };
+    this.apiService.saveAiConfig(payload).subscribe({
+      next: (res: HttpResponse<GenericResponse<AiConfig>>) => {
+        this.aiConfig = res.body?.data ?? this.aiConfig;
+        this.aiApiKey = '';
+        this.aiAssistant.setAvailable(this.aiConfig.available === true);
+        this.savedAt.set('aiConfig', new Date());
+        this.flags.set('aiConfigSaving', false);
+      },
+      error: (res:HttpErrorResponse) => {
+        this.errors.set('saveAiConfig', this.commonService.prepareError(res.error?.error,'500','Failed to save AI assistant configuration!'));
+        this.flags.set('aiConfigSaving', false);
       }
     });
   }

@@ -1,0 +1,14 @@
+package com.csl.kafkador.domain.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class AiChatResponseDto {
+
+    private String reply;
+
+}
