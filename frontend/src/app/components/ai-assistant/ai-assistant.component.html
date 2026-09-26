@@ -1,12 +1,12 @@
 @if (assistant.available()) {
   @if (!open()) {
     <button type="button" class="ai-fab" aria-label="Open AI assistant" title="AI assistant" (click)="toggle()">
-      <i class="bi bi-robot"></i>
+      <span class="ai-icon" aria-hidden="true"></span>
     </button>
   } @else {
     <section class="ai-panel" role="dialog" aria-label="AI assistant" (keydown.escape)="toggle()">
       <header class="ai-header">
-        <i class="bi bi-robot ai-header-logo" aria-hidden="true"></i>
+        <span class="ai-icon ai-header-logo" aria-hidden="true"></span>
         <span class="ai-header-spacer"></span>
         @if (messages().length) {
           <button type="button" class="ai-icon-button" aria-label="Start a new chat" title="New chat" (click)="reset()">
@@ -21,8 +21,16 @@
       <div class="ai-body" #body aria-live="polite">
         @if (!messages().length) {
           <div class="ai-empty">
-            <div class="ai-orb" aria-hidden="true"></div>
+            <div class="ai-orb-wrap" aria-hidden="true">
+              <span class="ai-orb"></span>
+              <span class="ai-orb-blob ai-orb-blob-light"></span>
+              <span class="ai-orb-blob ai-orb-blob-dark"></span>
+            </div>
             <h2 class="ai-greeting">How can I help you today?</h2>
+            <p class="ai-description">
+              Ask about your cluster, brokers and listeners, topics, consumer groups, schemas, ksqlDB, connectors
+              and Kafkador setup. I have read-only access, so I can explain and troubleshoot but never change anything.
+            </p>
           </div>
         } @else {
           @for (message of messages(); track $index) {

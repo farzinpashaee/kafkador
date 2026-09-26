@@ -11,22 +11,46 @@ $panel-width: 380px;
   border-radius: 12px;
   background: #212529;
   color: #fff;
-  font-size: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  will-change: transform;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+              background-color 0.3s ease;
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  .ai-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  &:hover,
+  &:focus-visible {
+    transform: scale(1.14);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.32);
+  }
+
+  &:active {
+    transform: scale(1.06);
+    transition-duration: 0.15s;
   }
 
   &:focus-visible {
     outline: 3px solid var(--bs-primary, #5cb8a5);
-    outline-offset: 2px;
+    outline-offset: 3px;
   }
+}
+
+// The icon is a mask, so it takes the surrounding text colour (light/dark themes, hover states).
+.ai-icon {
+  display: inline-block;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  background-color: currentColor;
+  -webkit-mask: url('../../../assets/images/chat-bot-so.svg') center / contain no-repeat;
+  mask: url('../../../assets/images/chat-bot-so.svg') center / contain no-repeat;
 }
 
 :host-context([data-bs-theme='dark']) .ai-fab {
@@ -60,7 +84,8 @@ $panel-width: 380px;
 
 .ai-header-logo {
   opacity: 0.35;
-  font-size: 1.1rem;
+  width: 22px;
+  height: 22px;
 }
 
 .ai-header-spacer {
@@ -105,22 +130,65 @@ $panel-width: 380px;
   gap: 8px;
 }
 
-.ai-orb {
+.ai-orb-wrap {
+  position: relative;
   width: 210px;
   height: 210px;
   align-self: center;
+}
+
+.ai-orb,
+.ai-orb-blob {
+  position: absolute;
   border-radius: 50%;
+  will-change: transform, opacity;
+}
+
+.ai-orb {
+  inset: 0;
   background: radial-gradient(circle at 38% 34%, #8a8f94 0%, #4a4d50 48%, #1b1c1e 100%);
   filter: blur(14px);
   opacity: 0.85;
   animation: ai-orb-float 6s ease-in-out infinite;
 }
 
+// Two soft circles drifting over the orb; the long, mismatched durations keep the motion from ever looking looped.
+.ai-orb-blob {
+  filter: blur(16px);
+  opacity: 0.5;
+}
+
+.ai-orb-blob-light {
+  width: 150px;
+  height: 150px;
+  left: 6px;
+  top: 18px;
+  background: radial-gradient(circle at 40% 38%, rgba(214, 218, 222, 0.95) 0%, rgba(150, 155, 160, 0.8) 55%, rgba(110, 115, 120, 0.5) 100%);
+  animation: ai-blob-light 11s ease-in-out infinite;
+}
+
+.ai-orb-blob-dark {
+  width: 120px;
+  height: 120px;
+  right: 8px;
+  bottom: 14px;
+  background: radial-gradient(circle at 60% 40%, rgba(96, 100, 105, 0.95) 0%, rgba(48, 50, 54, 0.85) 60%, rgba(20, 21, 23, 0.6) 100%);
+  animation: ai-blob-dark 14s ease-in-out infinite;
+  animation-delay: -6s;
+}
+
 .ai-greeting {
-  margin: 16px 0 0;
+  margin: 40px 0 0;
   font-size: 1.9rem;
   font-weight: 700;
   line-height: 1.15;
+}
+
+.ai-description {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--bs-tertiary-color);
 }
 
 .ai-message {
@@ -266,6 +334,18 @@ $panel-width: 380px;
   50% { transform: translateY(-6px) scale(1.03); }
 }
 
+@keyframes ai-blob-light {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+  30% { transform: translate(34px, -18px) scale(1.12); opacity: 0.75; }
+  65% { transform: translate(22px, 26px) scale(0.94); opacity: 0.45; }
+}
+
+@keyframes ai-blob-dark {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.7; }
+  35% { transform: translate(-30px, -26px) scale(1.15); opacity: 0.3; }
+  70% { transform: translate(-12px, 20px) scale(0.92); opacity: 0.6; }
+}
+
 @keyframes ai-typing {
   0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
   30% { opacity: 1; transform: translateY(-3px); }
@@ -277,7 +357,18 @@ $panel-width: 380px;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ai-fab {
+    transition: none;
+
+    &:hover,
+    &:focus-visible,
+    &:active {
+      transform: none;
+    }
+  }
+
   .ai-orb,
+  .ai-orb-blob,
   .ai-mic-active,
   .ai-typing span {
     animation: none;
