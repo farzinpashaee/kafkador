@@ -20,6 +20,7 @@ public class ApplicationConfig {
     private String url;
     private Map<String,Service> services = new HashMap<String,Service>();
     private List<ConnectionDto> connections = new ArrayList<>();
+    private Session session = new Session();
 
     public String getServiceImplementation(KafkadorContext.Service service){
         if( !services.containsKey(service.getKey()) )
@@ -30,6 +31,12 @@ public class ApplicationConfig {
     @Data
     public static class Service {
         String implementation;
+    }
+
+    @Data
+    public static class Session {
+        /** Idle time before a connection session expires; the value saved in Settings overrides it. */
+        private int timeoutMinutes = 30;
     }
 
 }

@@ -16,6 +16,7 @@ import com.csl.kafkador.service.registry.SchemaRegistryService;
 import com.csl.kafkador.service.search.SearchService;
 import com.csl.kafkador.util.MetricEnum;
 import com.csl.kafkador.util.TimeUnitEnum;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -55,6 +56,24 @@ public class ApiController {
     private final ApplicationConfig applicationConfig;
     private final ConnectionService connectionService;
     private final MetricService metricService;
+    private final SessionSettingsService sessionSettingsService;
+
+    @GetMapping("/settings/session")
+    public ResponseEntity<GenericResponse<SessionConfigDto>> getSessionConfig() {
+        return new GenericResponse.Builder<SessionConfigDto>()
+                .data(new SessionConfigDto().setTimeoutMinutes(sessionSettingsService.getTimeoutMinutes()))
+                .success(HttpStatus.OK);
+    }
+
+    @PutMapping("/settings/session")
+    public ResponseEntity<GenericResponse<SessionConfigDto>> saveSessionConfig(@Valid @RequestBody SessionConfigDto config,
+                                                                              HttpSession session) {
+        int minutes = sessionSettingsService.saveTimeoutMinutes(config.getTimeoutMinutes());
+        sessionSettingsService.apply(session);
+        return new GenericResponse.Builder<SessionConfigDto>()
+                .data(new SessionConfigDto().setTimeoutMinutes(minutes))
+                .success(HttpStatus.OK);
+    }
 
     @GetMapping("/cluster")
     public ResponseEntity<GenericResponse<ClusterDto>> getCluster() throws KafkaAdminApiException, ClusterNotFoundException {

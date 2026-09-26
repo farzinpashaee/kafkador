@@ -75,6 +75,17 @@ class RestExceptionControllerTest {
     }
 
     @Test
+    void unreadableBody_returns400WithoutParserDetails() {
+        ResponseEntity<GenericResponse<Void>> response = controller.handleUnreadableBody(
+                new org.springframework.http.converter.HttpMessageNotReadableException(
+                        "JSON parse error: Cannot deserialize value of type `java.lang.Integer` from String \"abc\"",
+                        (org.springframework.http.HttpInputMessage) null));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getError().getMessage()).doesNotContain("Cannot deserialize").doesNotContain("Integer");
+    }
+
+    @Test
     void aiAssistantException_returns502WithItsSafeMessage() {
         ResponseEntity<GenericResponse<Void>> response = controller.handleAiAssistantException(
                 new com.csl.kafkador.exception.AiAssistantException("The AI provider rejected the API key."));

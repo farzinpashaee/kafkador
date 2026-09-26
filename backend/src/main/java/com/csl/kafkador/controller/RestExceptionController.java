@@ -5,6 +5,7 @@ import com.csl.kafkador.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -80,6 +81,15 @@ public class RestExceptionController {
         return new GenericResponse.Builder<Void>()
                 .code(String.valueOf(HttpStatus.BAD_REQUEST.value()))
                 .message(message.isBlank() ? "Invalid request" : message)
+                .failed(HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<GenericResponse<Void>> handleUnreadableBody(HttpMessageNotReadableException ex) {
+        log.debug("Unreadable request body: {}", ex.getMessage());
+        return new GenericResponse.Builder<Void>()
+                .code(String.valueOf(HttpStatus.BAD_REQUEST.value()))
+                .message("The request body is missing or malformed.")
                 .failed(HttpStatus.BAD_REQUEST);
     }
 

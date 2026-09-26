@@ -2,6 +2,8 @@ package com.csl.kafkador.config;
 
 import com.csl.kafkador.interceptor.ResourceInterceptor;
 import com.csl.kafkador.interceptor.SessionInterceptor;
+import com.csl.kafkador.interceptor.SessionTimeoutInterceptor;
+import com.csl.kafkador.service.SessionSettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,9 +24,12 @@ import java.util.Locale;
 public class WebConfig implements WebMvcConfigurer {
 
     private final ApplicationConfig applicationConfig;
+    private final SessionSettingsService sessionSettingsService;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor( new SessionTimeoutInterceptor(sessionSettingsService) )
+                .addPathPatterns("/api/**");
         registry.addInterceptor( new ResourceInterceptor(applicationConfig.getUrl()) )
                 .excludePathPatterns("/assets/**","/css/**","/js/**");
         InterceptorRegistration sessionInterceptor = registry.addInterceptor( new SessionInterceptor() )

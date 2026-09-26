@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { AiAssistantService, ApiService, CommonService } from '../../services';
-import { GenericResponse, KsqlDbConfig, SchemaRegistryConfig, KafkaConnectConfig, CompatibilityConfig, ConnectorPlugin, AiConfig, Error } from '../../models';
+import { GenericResponse, KsqlDbConfig, SchemaRegistryConfig, KafkaConnectConfig, CompatibilityConfig, ConnectorPlugin, AiConfig, SessionConfig, Error } from '../../models';
 
 @Component({
   selector: 'app-settings',
@@ -28,6 +28,9 @@ export class SettingsComponent implements OnInit {
   connectorPlugins: ConnectorPlugin[] = [];
   aiConfig: AiConfig = { provider: 'openai', enabled: false };
   aiApiKey = '';
+  readonly sessionTimeoutMin = 1;
+  readonly sessionTimeoutMax = 525600;
+  sessionTimeoutMinutes: number | null = null;
   globalCompatibility: CompatibilityConfig = {};
   selectedCompatibilityLevel = 'BACKWARD';
   errors: Map<string, Error> = new Map();
@@ -48,6 +51,57 @@ export class SettingsComponent implements OnInit {
     this.getKafkaConnectConfig();
     this.getGlobalCompatibility();
     this.getAiConfig();
+    this.getSessionConfig();
+  }
+
+  getSessionConfig() {
+    this.errors.delete('getSessionConfig');
+    this.flags.set('sessionConfigLoading', true);
+    this.apiService.getSessionConfig().subscribe({
+      next: (res: HttpResponse<GenericResponse<SessionConfig>>) => {
+        this.sessionTimeoutMinutes = res.body?.data?.timeoutMinutes ?? null;
+        this.flags.set('sessionConfigLoading', false);
+      },
+      error: (res:HttpErrorResponse) => {
+        this.errors.set('getSessionConfig', this.commonService.prepareError(res.error?.error,'500','Failed to load session settings!'));
+        this.flags.set('sessionConfigLoading', false);
+      }
+    });
+  }
+
+  saveSessionConfig() {
+    const minutes = this.sessionTimeoutMinutes;
+    if (minutes === null || !Number.isInteger(minutes) || minutes < this.sessionTimeoutMin || minutes > this.sessionTimeoutMax) {
+      this.errors.set('saveSessionConfig', {code:'400',message:`Session timeout must be a whole number between ${this.sessionTimeoutMin} and ${this.sessionTimeoutMax} minutes.`,datetime:''});
+      return;
+    }
+    this.errors.delete('saveSessionConfig');
+    this.savedAt.delete('sessionConfig');
+    this.flags.set('sessionConfigSaving', true);
+    this.apiService.saveSessionConfig(minutes).subscribe({
+      next: (res: HttpResponse<GenericResponse<SessionConfig>>) => {
+        this.sessionTimeoutMinutes = res.body?.data?.timeoutMinutes ?? minutes;
+        this.savedAt.set('sessionConfig', new Date());
+        this.flags.set('sessionConfigSaving', false);
+      },
+      error: (res:HttpErrorResponse) => {
+        this.errors.set('saveSessionConfig', this.commonService.prepareError(res.error?.error,'500','Failed to save session settings!'));
+        this.flags.set('sessionConfigSaving', false);
+      }
+    });
+  }
+
+  formatDuration(minutes: number | null): string {
+    if (minutes === null || !Number.isInteger(minutes) || minutes < 1) return '';
+    const days = Math.floor(minutes / 1440);
+    const hours = Math.floor((minutes % 1440) / 60);
+    const mins = minutes % 60;
+    const parts = [
+      days ? `${days} ${days === 1 ? 'day' : 'days'}` : '',
+      hours ? `${hours} ${hours === 1 ? 'hour' : 'hours'}` : '',
+      mins ? `${mins} ${mins === 1 ? 'minute' : 'minutes'}` : ''
+    ].filter(Boolean);
+    return parts.join(' ');
   }
 
   getKsqlDbConfig() {

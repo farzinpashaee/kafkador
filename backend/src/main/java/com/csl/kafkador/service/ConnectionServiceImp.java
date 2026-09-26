@@ -37,6 +37,7 @@ public class ConnectionServiceImp implements ConnectionService {
     private final ClusterRepository clusterRepository;
     private final AgentService agentService;
     private final SessionHolder sessionHolder;
+    private final SessionSettingsService sessionSettingsService;
     @Qualifier("ObserverConfigService")
     private final KafkadorConfigService<ObserverConfigDto,ObserverConfigDto> kafkadorConfigService;
 
@@ -140,6 +141,7 @@ public class ConnectionServiceImp implements ConnectionService {
         if(clusterOptional.isEmpty()) throw new ClusterNotFoundException("Connection with given cluster ID not found!");
         ConnectionDto connection = DtoMapper.connectionMapper(clusterOptional.get());
         sessionHolder.getSession().setAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString(),connection);
+        sessionSettingsService.apply(sessionHolder.getSession());
         if(!agentService.getAgents().isEmpty()) connection.setAgentEnabled(true);
         return connection;
     }

@@ -38,8 +38,49 @@
   </ul>
 
   <div class="tab-content border border-top-0 p-3" id="profileTabsContent">
-    <div class="tab-pane fade show active" id="generic" role="tabpanel" aria-labelledby="generic-tab" tabindex="0">
-      Generic
+    <div class="tab-pane fade show active" id="generic" role="tabpanel" aria-labelledby="overview-tab" tabindex="0">
+      <h5>Generic Settings</h5>
+
+      <div *ngIf="flags.get('sessionConfigLoading')" class="text-center">
+        <div class="spinner-border spinner-border-sm" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <div *ngIf="!flags.get('sessionConfigLoading')">
+        <h6>Connection Session</h6>
+        <p class="text-s text-color-subtle">
+          How long your connection to a cluster stays active while you're not using Kafkador. After that you're
+          disconnected and asked to connect again. The session also ends when the browser is closed. A new value applies
+          to every open session on its next request.
+        </p>
+
+        <div class="mb-3" style="max-width: 300px;">
+          <label for="sessionTimeoutMinutes" class="form-label">Session timeout (minutes):</label>
+          <input [(ngModel)]="sessionTimeoutMinutes" (ngModelChange)="savedAt.delete('sessionConfig')" type="number" class="form-control" id="sessionTimeoutMinutes"
+                 [min]="sessionTimeoutMin" [max]="sessionTimeoutMax" step="1" aria-describedby="sessionTimeoutHelp" (keydown.enter)="saveSessionConfig()">
+          <div id="sessionTimeoutHelp" class="form-text">
+            {{ formatDuration(sessionTimeoutMinutes) ? '= ' + formatDuration(sessionTimeoutMinutes) + '. ' : '' }}Between {{ sessionTimeoutMin }} minute and {{ sessionTimeoutMax }} minutes (365 days).
+          </div>
+        </div>
+
+        <div *ngIf="errors.get('getSessionConfig')" class="alert alert-danger" role="alert">
+          {{ errors.get('getSessionConfig')?.message }}
+        </div>
+        <div *ngIf="errors.get('saveSessionConfig')" class="alert alert-danger" role="alert">
+          {{ errors.get('saveSessionConfig')?.message }}
+        </div>
+        <div *ngIf="savedAt.get('sessionConfig')" class="alert alert-success" role="alert">
+          Successfully updated at {{ savedAt.get('sessionConfig') | date:'medium' }}.
+        </div>
+
+        <button *ngIf="!flags.get('sessionConfigSaving')" type="button" class="btn btn-primary" (click)="saveSessionConfig()">Save</button>
+        <div *ngIf="flags.get('sessionConfigSaving')">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div> Saving...&nbsp;
+        </div>
+      </div>
     </div>
 
     <div class="tab-pane fade" id="schema-Registry" role="tabpanel" aria-labelledby="schema-Registry-tab" tabindex="0">

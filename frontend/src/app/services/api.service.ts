@@ -5,7 +5,7 @@ import { Cluster, Connection, Config, Broker, Alert, Topic, SearchResult, Consum
   SchemaRegistry, SchemaRegistryConfig, Chart, Event, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery,
   AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest,
   SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, SchemaLookupResult,
-  AiConfig, AiMessage, AiChatResponse } from '../models';
+  AiConfig, AiMessage, AiChatResponse, SessionConfig } from '../models';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -308,6 +308,16 @@ export class ApiService {
 
   public deleteConnector(name:string): Observable<HttpResponse<void>> {
     return this.http.delete<void>(`${ApiService.ApiBaseUrl}/kafka-connect/connectors/${encodeURIComponent(name)}`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public getSessionConfig(): Observable<HttpResponse<GenericResponse<SessionConfig>>> {
+    return this.http.get<GenericResponse<SessionConfig>>(`${ApiService.ApiBaseUrl}/settings/session`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public saveSessionConfig(timeoutMinutes: number): Observable<HttpResponse<GenericResponse<SessionConfig>>> {
+    return this.http.put<GenericResponse<SessionConfig>>(`${ApiService.ApiBaseUrl}/settings/session`, { timeoutMinutes },
       { withCredentials: true, observe: 'response' });
   }
 
