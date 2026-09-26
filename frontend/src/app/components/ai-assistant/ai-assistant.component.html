@@ -48,9 +48,17 @@
       </div>
 
       <form class="ai-input" (ngSubmit)="send()">
-        <textarea #input class="ai-textarea" name="message" rows="2" maxlength="8000" placeholder="Ask me Anything..."
+        <textarea #input class="ai-textarea" [class.ai-textarea-with-mic]="speechSupported()" name="message" rows="2" maxlength="8000"
+                  [placeholder]="listening() ? 'Listening...' : 'Ask me Anything...'"
                   aria-label="Message the AI assistant" [(ngModel)]="draft" [disabled]="loading()"
                   (keydown.enter)="onEnter($event)"></textarea>
+        @if (speechSupported()) {
+          <button type="button" class="ai-mic" [class.ai-mic-active]="listening()" [disabled]="loading()"
+                  [attr.aria-pressed]="listening()" [attr.aria-label]="listening() ? 'Stop voice input' : 'Start voice input'"
+                  [title]="listening() ? 'Stop voice input' : 'Voice input'" (click)="toggleListening()">
+            <i class="bi" [class.bi-mic]="!listening()" [class.bi-mic-fill]="listening()"></i>
+          </button>
+        }
         <button type="submit" class="ai-send" aria-label="Send message" [disabled]="loading() || !draft.trim()">
           <i class="bi bi-send"></i>
         </button>

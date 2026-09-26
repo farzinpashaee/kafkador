@@ -208,6 +208,39 @@ $panel-width: 380px;
   }
 }
 
+.ai-textarea-with-mic {
+  padding-right: 78px;
+}
+
+.ai-mic {
+  position: absolute;
+  right: 40px;
+  bottom: 10px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+
+  &:hover:not(:disabled) {
+    background: var(--bs-tertiary-bg);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--bs-primary, #5cb8a5);
+  }
+
+  &.ai-mic-active {
+    color: var(--bs-danger, #dc3545);
+    animation: ai-mic-pulse 1.4s infinite ease-in-out;
+  }
+}
+
 .ai-send {
   position: absolute;
   right: 8px;
@@ -238,8 +271,14 @@ $panel-width: 380px;
   30% { opacity: 1; transform: translateY(-3px); }
 }
 
+@keyframes ai-mic-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ai-orb,
+  .ai-mic-active,
   .ai-typing span {
     animation: none;
   }
