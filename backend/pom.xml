@@ -78,12 +78,183 @@
 	</dependencies>
 
 	<build>
+		<!-- Predictable jar name (target/kafkador.jar) for the generated starter script and deployments. -->
+		<finalName>${project.artifactId}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>3.1.0</version>
+				<executions>
+					<execution>
+						<id>generate-starter-script</id>
+						<phase>package</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<echo file="${project.build.directory}/starter.sh">#!/bin/bash
+cd "$(dirname "$0")"
+
+JAR_NAME="${project.build.finalName}.jar"
+
+OLD_PID=
+if [ -f starter.pid ]; then
+  OLD_PID=$(cat starter.pid)
+else
+  # A rebuild with "mvn clean" wipes target/ (starter.pid included), so fall back to searching the
+  # process table for a "java -jar kafkador*.jar" process. The pattern isn't tied to this build's exact
+  # jar name so an older instance is found too, it requires -jar so an IDE or "mvn spring-boot:run"
+  # session (which uses -cp) is never stopped by mistake, and bracketing the first character keeps grep
+  # from matching its own command line.
+  OLD_PID=$(ps -ef | grep '[j]ava.* -jar .*kafkador[^ ]*\.jar' | awk '{print $2}' | head -n 1)
+  if [ -n "$OLD_PID" ]; then
+    echo "No starter.pid found; found PID $OLD_PID running a kafkador*.jar process instead."
+  fi
+fi
+
+if [ -n "$OLD_PID" ]; then
+  if ps -p "$OLD_PID" > /dev/null 2>&amp;1; then
+    echo "Existing process running with PID $OLD_PID. Stopping it..."
+    kill "$OLD_PID"
+    sleep 2
+    if ps -p "$OLD_PID" > /dev/null 2>&amp;1; then
+      echo "Process did not stop gracefully. Forcing kill..."
+      kill -9 "$OLD_PID"
+    fi
+  else
+    echo "PID $OLD_PID is not running. Nothing to stop."
+  fi
+fi
+rm -f starter.pid
+
+# Optional: ./starter.sh --config /path/to/override.yml
+# The file's values layer on top of (not instead of) the packaged application.yml through Spring's
+# additional-location mechanism, so it only lists what it overrides for this instance. Anything
+# else on the command line is still forwarded to java untouched.
+CONFIG_ARG=
+if [ "$1" = "--config" ]; then
+  if [ -z "$2" ] || [ ! -f "$2" ]; then
+    echo "--config requires a path to an existing file (got: '$2')" >&amp;2
+    exit 1
+  fi
+  CONFIG_ARG="--spring.config.additional-location=file:$2"
+  shift 2
+fi
+
+if [ -n "$CONFIG_ARG" ]; then
+  nohup java -jar "$JAR_NAME" "$CONFIG_ARG" "$@" > starter.log 2>&amp;1 &amp;
+else
+  nohup java -jar "$JAR_NAME" "$@" > starter.log 2>&amp;1 &amp;
+fi
+echo $! > starter.pid
+echo "Started with PID $(cat starter.pid)"
+</echo>
+								<chmod file="${project.build.directory}/starter.sh" perm="755"/>
+							</target>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<!--
+		Off by default: "./mvnw clean package" builds only the Spring Boot backend (target/kafkador.jar,
+		API-only); build the Angular app separately from frontend/ ("npm run build").
+		Activate with "-P with-frontend" to also build frontend/ and bundle its production output into
+		this jar as classpath:/static/, so the single jar serves both the API and the web UI.
+		-->
+		<profile>
+			<id>with-frontend</id>
+			<properties>
+				<frontend.dir>${project.basedir}/../frontend</frontend.dir>
+				<frontend.dist>${frontend.dir}/dist/kafkador/browser</frontend.dist>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.github.eirslett</groupId>
+						<artifactId>frontend-maven-plugin</artifactId>
+						<version>1.15.1</version>
+						<configuration>
+							<workingDirectory>${frontend.dir}</workingDirectory>
+						</configuration>
+						<executions>
+							<execution>
+								<id>install-node-and-npm</id>
+								<phase>generate-resources</phase>
+								<goals>
+									<goal>install-node-and-npm</goal>
+								</goals>
+								<configuration>
+									<!-- Angular 20 needs Node 20.19+/22.12+. npm is the one bundled with this Node. -->
+									<nodeVersion>v22.12.0</nodeVersion>
+								</configuration>
+							</execution>
+							<execution>
+								<id>npm-install</id>
+								<phase>generate-resources</phase>
+								<goals>
+									<goal>npm</goal>
+								</goals>
+								<configuration>
+									<!-- include=dev: the Angular CLI and build toolchain live in devDependencies, which npm
+									     skips when NODE_ENV=production is set (common on deploy/CI boxes), making ng build
+									     fail with MODULE_NOT_FOUND. -->
+									<arguments>ci --include=dev</arguments>
+								</configuration>
+							</execution>
+							<execution>
+								<id>npm-build</id>
+								<phase>generate-resources</phase>
+								<goals>
+									<goal>npm</goal>
+								</goals>
+								<configuration>
+									<arguments>run build</arguments>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-resources-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>copy-frontend-dist</id>
+								<phase>process-resources</phase>
+								<goals>
+									<goal>copy-resources</goal>
+								</goals>
+								<configuration>
+									<outputDirectory>${project.build.outputDirectory}/static</outputDirectory>
+									<resources>
+										<resource>
+											<directory>${frontend.dist}</directory>
+										</resource>
+									</resources>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>

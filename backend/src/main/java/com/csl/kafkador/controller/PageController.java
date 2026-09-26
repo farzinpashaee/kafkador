@@ -1,5 +1,6 @@
 package com.csl.kafkador.controller;
 
+import com.csl.kafkador.config.BundledFrontend;
 import com.csl.kafkador.domain.*;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.service.TopicService;
@@ -7,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,7 +16,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.Collection;
 
+// The legacy server-rendered pages share URLs (/, /settings, /topic/{name}...) with the Angular routes,
+// so they step aside when the Angular build is bundled into the jar.
 @Controller
+@Conditional(BundledFrontend.Absent.class)
 public class PageController {
 
     @Autowired

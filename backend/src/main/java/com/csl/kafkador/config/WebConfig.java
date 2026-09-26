@@ -5,9 +5,12 @@ import com.csl.kafkador.interceptor.SessionInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.CacheControl;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 import org.springframework.web.servlet.i18n.SessionLocaleResolver;
@@ -24,12 +27,28 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor( new ResourceInterceptor(applicationConfig.getUrl()) )
                 .excludePathPatterns("/assets/**","/css/**","/js/**");
-        registry.addInterceptor( new SessionInterceptor() )
+        InterceptorRegistration sessionInterceptor = registry.addInterceptor( new SessionInterceptor() )
                 .excludePathPatterns("/assets/**","/css/**","/js/**", "/error",
                         "/connect","/api/v1/apm/**",
                         "/api/v1/connections","/api/v1/connections/**",
                         "/kafkador-h2","/kafkador-h2/**");
+        if (BundledFrontend.isPresent()) {
+            // The bundled Angular files (index.html, hashed js/css, images) must load without a session;
+            // only the API is protected, and the UI handles a 401 itself.
+            sessionInterceptor.addPathPatterns("/api/**");
+        }
         registry.addInterceptor(localeChangeInterceptor());
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        if (BundledFrontend.isPresent()) {
+            registry.addResourceHandler("/**")
+                    .addResourceLocations("classpath:/static/")
+                    .setCacheControl(CacheControl.noCache())
+                    .resourceChain(true)
+                    .addResolver(new SpaFallbackResolver());
+        }
     }
 
     @Bean
