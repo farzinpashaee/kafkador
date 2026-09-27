@@ -1,5 +1,8 @@
 HELP.md
 target/
+
+### Kafkador runtime data (H2 database, generated first-run DB credentials) ###
+/backend/data/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

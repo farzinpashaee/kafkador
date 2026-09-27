@@ -25,7 +25,8 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('./components/base-layout/base-layout.component').then(m => m.BaseLayoutComponent),
     children: [
-      { path: 'connect', loadComponent: () => import('./components/connect/connect.component').then(m => m.ConnectComponent), title: 'Connect' }
+      { path: 'connect', loadComponent: () => import('./components/connect/connect.component').then(m => m.ConnectComponent), title: 'Connect' },
+      { path: 'setup', loadComponent: () => import('./components/setup/setup.component').then(m => m.SetupComponent), title: 'Setup' }
     ]
   },
   { path: '**', redirectTo: '' }

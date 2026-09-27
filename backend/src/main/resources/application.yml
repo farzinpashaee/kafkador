@@ -1,6 +1,11 @@
 kafkador:
   url: http://localhost:8080/
   connectionServiceImplementation:
+  # Where first-run setup (see DatabaseCredentialsService) saves the chosen embedded-database
+  # username/password, and where every later startup reads them from before the datasource connects
+  # (DbCredentialsEnvironmentPostProcessor). Deleting this file does NOT undo the change in the
+  # database itself — only the setup wizard's own ALTER USER can do that.
+  db-credentials-file: ./data/db-credentials.properties
   observerService: # TODO: move to database enable per cluster. the config record must create when the cluster record created
     enabled: false
     retentionPeriod: 30 # in days

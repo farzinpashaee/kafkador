@@ -46,6 +46,15 @@ public class PageController {
     }
 
 
+    @GetMapping("/setup")
+    public String setup(Model model) {
+        new PageView.Builder()
+                .title("Setup")
+                .build(model);
+        return "views/pages/setup.html";
+    }
+
+
     @GetMapping("/connect")
     public String connect(Model model, HttpSession session, HttpServletRequest request) {
         new PageView.Builder()

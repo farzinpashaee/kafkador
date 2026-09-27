@@ -1,0 +1,57 @@
+<div class="connect-page d-flex align-items-center justify-content-center">
+  <div class="connect-wrapper">
+    <div class="connect-card">
+      <div class="connect-visual">
+        <img src="/images/kafkador-splash.png" class="connect-visual-image" alt="">
+        <div class="connect-logo">
+          <img src="/images/kafkador-logo-white-v1.svg" class="connect-logo-image" alt="Kafkador">
+        </div>
+      </div>
+
+      <div class="connect-panel">
+        <div class="connect-intro">
+          <h1>Set Up the Database</h1>
+          <p class="text-muted">
+            This is the first time Kafkador has run. Choose a username and password for its embedded
+            database — this replaces the default, unprotected admin account.
+          </p>
+        </div>
+
+        <form (ngSubmit)="submit()">
+          <div class="mb-3">
+            <label for="username" class="form-label">Username:</label>
+            <input required [(ngModel)]="username" name="username" type="text" class="form-control" id="username"
+                   placeholder="e.g. kafkador-admin" pattern="[A-Za-z][A-Za-z0-9_]{2,63}" aria-describedby="usernameHelp" autocomplete="username">
+            <div id="usernameHelp" class="form-text">3-64 characters, starting with a letter. Letters, digits, and underscores only.</div>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Password:</label>
+            <input required [(ngModel)]="password" name="password" type="password" class="form-control" id="password"
+                   minlength="8" maxlength="128" autocomplete="new-password">
+            <div class="form-text">At least 8 characters.</div>
+          </div>
+          <div class="mb-3">
+            <label for="confirmPassword" class="form-label">Confirm password:</label>
+            <input required [(ngModel)]="confirmPassword" name="confirmPassword" type="password" class="form-control" id="confirmPassword"
+                   minlength="8" maxlength="128" autocomplete="new-password">
+          </div>
+
+          <div *ngIf="errors.get('setup')" class="alert alert-danger" role="alert">
+            {{ errors.get('setup')?.message }}
+          </div>
+
+          <button *ngIf="!flags.get('setupLoading')" type="submit" class="btn btn-primary">Save and Continue</button>
+          <div *ngIf="flags.get('setupLoading')">
+            <div class="spinner-border spinner-border-sm" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div> Saving...&nbsp;
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="connect-footer">
+      <p>Version 0.0.0 - © 2025 <a target="_blank" href="https://codestreamlab.com">Codestreamlab</a></p>
+    </div>
+  </div>
+</div>

@@ -16,6 +16,7 @@ export * from './acl-binding';
 export * from './kafka-connect';
 export * from './ai';
 export * from './session-config';
+export * from './database-setup';
 export * from './generic-response';
 export * from './link';
 export * from './meta';

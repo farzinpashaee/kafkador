@@ -1,8 +1,10 @@
 package com.csl.kafkador.config;
 
+import com.csl.kafkador.interceptor.DatabaseSetupInterceptor;
 import com.csl.kafkador.interceptor.ResourceInterceptor;
 import com.csl.kafkador.interceptor.SessionInterceptor;
 import com.csl.kafkador.interceptor.SessionTimeoutInterceptor;
+import com.csl.kafkador.service.DatabaseCredentialsService;
 import com.csl.kafkador.service.SessionSettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -25,9 +27,15 @@ public class WebConfig implements WebMvcConfigurer {
 
     private final ApplicationConfig applicationConfig;
     private final SessionSettingsService sessionSettingsService;
+    private final DatabaseCredentialsService databaseCredentialsService;
+
+    private static final String[] SETUP_PATHS = {"/setup", "/api/v1/setup/**"};
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        InterceptorRegistration databaseSetupInterceptor = registry.addInterceptor( new DatabaseSetupInterceptor(databaseCredentialsService) )
+                .excludePathPatterns("/assets/**","/css/**","/js/**", "/error", "/kafkador-h2","/kafkador-h2/**")
+                .excludePathPatterns(SETUP_PATHS);
         registry.addInterceptor( new SessionTimeoutInterceptor(sessionSettingsService) )
                 .addPathPatterns("/api/**");
         registry.addInterceptor( new ResourceInterceptor(applicationConfig.getUrl()) )
@@ -36,11 +44,13 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/assets/**","/css/**","/js/**", "/error",
                         "/connect","/api/v1/apm/**",
                         "/api/v1/connections","/api/v1/connections/**",
-                        "/kafkador-h2","/kafkador-h2/**");
+                        "/kafkador-h2","/kafkador-h2/**")
+                .excludePathPatterns(SETUP_PATHS);
         if (BundledFrontend.isPresent()) {
-            // The bundled Angular files (index.html, hashed js/css, images) must load without a session;
-            // only the API is protected, and the UI handles a 401 itself.
+            // The bundled Angular files (index.html, hashed js/css, images) must load without a session
+            // or completed setup; only the API is protected, and the UI reacts to 401/428 itself.
             sessionInterceptor.addPathPatterns("/api/**");
+            databaseSetupInterceptor.addPathPatterns("/api/**");
         }
         registry.addInterceptor(localeChangeInterceptor());
     }
@@ -79,6 +89,7 @@ public class WebConfig implements WebMvcConfigurer {
                         .allowedOrigins("http://localhost:4200")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
+                        .exposedHeaders(DatabaseSetupInterceptor.SETUP_REQUIRED_HEADER)
                         .allowCredentials(true);
             }
         };

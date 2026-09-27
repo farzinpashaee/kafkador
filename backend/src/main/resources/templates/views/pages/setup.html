@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="views/fragments/templates :: head"></head>
+<body class="bg-light">
+
+<div class="min-vh-100 d-flex align-items-center justify-content-center">
+    <div class="container connectContainer">
+        <h1><img th:src="${baseUrl + 'assets/images/logo-shape-v1.svg'}" style="width:1.7em; margin-top:-0.3em">
+            Kafkador </h1>
+
+        <h4>Set up the database</h4>
+        <p class="text-gray-500">
+            This is the first time Kafkador has run. Choose a username and password for its embedded database
+            (it replaces the default, unprotected admin account).
+        </p>
+
+        <form id="setupForm" style="max-width: 420px;">
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" name="username" required
+                       pattern="[A-Za-z][A-Za-z0-9_]{2,63}"
+                       title="3-64 characters, start with a letter, letters/digits/underscore only" autofocus>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required minlength="8" maxlength="128">
+            </div>
+            <div class="mb-3">
+                <label for="confirmPassword" class="form-label">Confirm password</label>
+                <input type="password" class="form-control" id="confirmPassword" required minlength="8" maxlength="128">
+            </div>
+            <div id="setupError" class="alert alert-danger d-none" role="alert"></div>
+            <button type="submit" class="btn btn-primary" id="setupSubmit">Save</button>
+        </form>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    document.getElementById('setupForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+        var errorBox = document.getElementById('setupError');
+        var submitButton = document.getElementById('setupSubmit');
+        errorBox.classList.add('d-none');
+
+        var password = document.getElementById('password').value;
+        if (password !== document.getElementById('confirmPassword').value) {
+            errorBox.textContent = 'Passwords do not match.';
+            errorBox.classList.remove('d-none');
+            return;
+        }
+
+        submitButton.disabled = true;
+        fetch(/*[[${baseUrl}]]*/ '/' + 'api/v1/setup/database', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ username: document.getElementById('username').value, password: password })
+        }).then(function (response) {
+            return response.json().then(function (body) { return { ok: response.ok, body: body }; });
+        }).then(function (result) {
+            if (result.ok) {
+                window.location.href = /*[[${baseUrl}]]*/ '/';
+            } else {
+                errorBox.textContent = (result.body && result.body.error && result.body.error.message) || 'Failed to save database credentials.';
+                errorBox.classList.remove('d-none');
+                submitButton.disabled = false;
+            }
+        }).catch(function () {
+            errorBox.textContent = 'Failed to reach the server. Please try again.';
+            errorBox.classList.remove('d-none');
+            submitButton.disabled = false;
+        });
+    });
+</script>
+
+</body>
+</html>

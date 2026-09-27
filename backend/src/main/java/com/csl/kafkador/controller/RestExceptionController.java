@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  * to a generic message so internal details (hosts, stack traces, library errors)
  * never leak into an API response.
  */
-@ControllerAdvice(assignableTypes = {ApiController.class, AiController.class})
+@ControllerAdvice(assignableTypes = {ApiController.class, AiController.class, SetupController.class})
 @Slf4j
 public class RestExceptionController {
 
@@ -63,6 +63,23 @@ public class RestExceptionController {
                 .code(String.valueOf(HttpStatus.NOT_FOUND.value()))
                 .message(ex.getMessage())
                 .failed(HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(DatabaseAlreadyConfiguredException.class)
+    public ResponseEntity<GenericResponse<Void>> handleDatabaseAlreadyConfigured(DatabaseAlreadyConfiguredException ex) {
+        return new GenericResponse.Builder<Void>()
+                .code(String.valueOf(HttpStatus.CONFLICT.value()))
+                .message(ex.getMessage())
+                .failed(HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(DatabaseSetupException.class)
+    public ResponseEntity<GenericResponse<Void>> handleDatabaseSetupException(DatabaseSetupException ex) {
+        log.error("Database setup failed", ex);
+        return new GenericResponse.Builder<Void>()
+                .code(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()))
+                .message(ex.getMessage())
+                .failed(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(TopicAlreadyExistsException.class)
