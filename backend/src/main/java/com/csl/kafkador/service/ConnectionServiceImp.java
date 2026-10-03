@@ -16,6 +16,7 @@ import com.csl.kafkador.service.config.KafkadorConfigService;
 import com.csl.kafkador.util.DtoMapper;
 import com.csl.kafkador.util.KafkaHelper;
 import lombok.RequiredArgsConstructor;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.AdminClientConfig;
@@ -23,10 +24,13 @@ import org.apache.kafka.common.KafkaFuture;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
+import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -41,17 +45,26 @@ public class ConnectionServiceImp implements ConnectionService {
     @Qualifier("ObserverConfigService")
     private final KafkadorConfigService<ObserverConfigDto,ObserverConfigDto> kafkadorConfigService;
 
-    private HashMap<String, AdminClusterWrapper> adminClientMap = new HashMap<>();
+    // How long a cached Admin may take to prove it can still reach its cluster before it is replaced.
+    private static final long HEALTH_CHECK_TIMEOUT_SECONDS = 5;
+    private static final Duration ADMIN_CLOSE_TIMEOUT = Duration.ofSeconds(1);
+
+    // Shared by every session. Each Admin owns a network thread that keeps polling (and, once the brokers are
+    // unreachable, re-bootstrapping) until close() is called, so an entry must be closed whenever it is dropped.
+    private final Map<String, AdminClusterWrapper> adminClientMap = new ConcurrentHashMap<>();
 
     public AdminClusterWrapper getAdminClient(String clusterId) throws ClusterNotFoundException {
         AdminClusterWrapper adminClusterWrapper = new AdminClusterWrapper();
-        if(adminClientMap.containsKey(clusterId)) {
+        AdminClusterWrapper cached = adminClientMap.get(clusterId);
+        if(cached != null) {
             try {
-                KafkaFuture<String> clusterIdFuture = adminClientMap.get(clusterId).getAdmin().describeCluster().clusterId();
-                clusterIdFuture.get();
-                return adminClientMap.get(clusterId);
+                KafkaFuture<String> clusterIdFuture = cached.getAdmin().describeCluster().clusterId();
+                clusterIdFuture.get(HEALTH_CHECK_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                return cached;
             } catch (Exception e){
                 log.warn("Admin disconnected! Trying to reconnect... - " + e.getMessage());
+                adminClientMap.remove(clusterId, cached);
+                closeAdmin(cached);
             }
         }
         Optional<Cluster> clusterOptional = clusterRepository.findByClusterId(clusterId);
@@ -69,6 +82,7 @@ public class ConnectionServiceImp implements ConnectionService {
     public void delete(String id) throws ClusterNotFoundException {
         Optional<Cluster> clusterOptional = clusterRepository.findById(id);
         if(clusterOptional.isPresent()){
+            closeAdminClient(clusterOptional.get().getClusterId());
             clusterRepository.delete(clusterOptional.get());
         } else {
             throw new ClusterNotFoundException("Connection to cluster with given ID not found!");
@@ -119,7 +133,7 @@ public class ConnectionServiceImp implements ConnectionService {
                 admin = Admin.create(KafkaHelper.getConnectionProperties(connection.getHost(), connection.getPort()));
                 KafkaFuture<String> clusterIdFuture = admin.describeCluster().clusterId();
                 String clusterId = clusterIdFuture.get();
-                adminClientMap.remove(cluster.getClusterId());
+                closeAdminClient(cluster.getClusterId());
                 cluster.setClusterId(clusterId);
                 cluster.setHost(connection.getHost());
                 cluster.setPort(connection.getPort());
@@ -150,7 +164,29 @@ public class ConnectionServiceImp implements ConnectionService {
     public ConnectionDto disconnect() throws ClusterNotFoundException {
         ConnectionDto connection = (ConnectionDto) sessionHolder.getSession().getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString());
         sessionHolder.getSession().setAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString(),null);
+        // Stop the cluster's Admin so it doesn't keep polling in the background; any other session still using
+        // this cluster gets a fresh one from getAdminClient() on its next call.
+        if(connection != null) closeAdminClient(connection.getClusterId());
         return connection;
+    }
+
+    private void closeAdminClient(String clusterId) {
+        if(clusterId == null) return;
+        closeAdmin(adminClientMap.remove(clusterId));
+    }
+
+    private void closeAdmin(AdminClusterWrapper wrapper) {
+        if(wrapper == null || wrapper.getAdmin() == null) return;
+        try {
+            wrapper.getAdmin().close(ADMIN_CLOSE_TIMEOUT);
+        } catch (Exception e) {
+            log.warn("Failed to close Kafka admin client - " + e.getMessage());
+        }
+    }
+
+    @PreDestroy
+    void closeAllAdminClients() {
+        adminClientMap.keySet().forEach(this::closeAdminClient);
     }
 
     @Override
