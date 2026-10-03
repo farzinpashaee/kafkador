@@ -15,7 +15,9 @@ curl -O https://raw.githubusercontent.com/farzinpashaee/kafkador/main/docker-com
 docker compose up -d
 ```
 
-Open **http://localhost:8080**, add a connection to your Kafka cluster, and you're done.
+Open **http://localhost:8080**. On first start Kafkador asks you to choose the embedded database
+username/password (saved to the data volume, so you're asked only once). Then add a connection to your Kafka
+cluster and you're done.
 
 <details>
 <summary>Without Compose</summary>
@@ -95,7 +97,8 @@ Apply changes with `docker compose up -d`.
 ## Data, backup and restore
 
 Connections, settings and sessions are stored in an H2 database inside the named volume `kafkador-data`
-(mounted at `/app/data`). It survives restarts, upgrades and `docker compose down`. Only
+(mounted at `/app/data`), together with the database credentials chosen during first-run setup
+(`db-credentials.properties`). Back up and restore them together. The volume survives restarts, upgrades and `docker compose down`. Only
 `docker compose down -v` deletes it.
 
 **Backup**
