@@ -1,0 +1,13 @@
+# Only the frontend and backend sources are needed to build the image.
+*
+!frontend/
+!backend/
+
+frontend/node_modules
+frontend/dist
+frontend/.angular
+frontend/coverage
+backend/target
+backend/data
+**/.idea
+**/*.iml

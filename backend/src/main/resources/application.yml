@@ -26,15 +26,6 @@ kafkador:
   services:
     connection:
       implementation: "ConnectionService"
-  connections:
-    - id: 1
-      name: connection-1
-      host: 192.168.2.139
-      port: 9092
-    - id: 2
-      name: connection-2
-      host: 192.168.2.139
-      port: 9095
 
 spring:
   application:

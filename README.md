@@ -44,6 +44,16 @@
 
 ## 🚀 Getting Started
 
+### 🐳 Docker (quickest)
+
+```bash
+curl -O https://raw.githubusercontent.com/farzinpashaee/kafkador/main/docker-compose.yml
+docker compose up -d
+```
+
+Then open http://localhost:8080. See [DOCKER.md](DOCKER.md) for connecting to Kafka, configuration, backups
+and how releases are published.
+
 ### 🔧 Prerequisites
 
 - Java 17+
