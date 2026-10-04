@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse,HttpResponse   } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Cluster, Connection, Config, Broker, Alert, Topic, SearchResult, ConsumerGroup, GenericResponse,
@@ -15,7 +15,7 @@ export class ApiService {
 
   private static ApiBaseUrl = `${environment.baseUrl}/api/v1`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private zone: NgZone) {}
 
   public getClusterDetails(): Observable<GenericResponse<Cluster>> {
     return this.http.get<GenericResponse<Cluster>>(`${ApiService.ApiBaseUrl}/cluster`,{ withCredentials: true });
@@ -238,6 +238,9 @@ export class ApiService {
    * consumer group `groupId`. HttpClient has no SSE support, so this wraps the
    * native EventSource API in an Observable that closes the connection when
    * unsubscribed (component teardown, navigation away, etc).
+   *
+   * zone.js doesn't patch EventSource callbacks, so they're re-entered into the Angular zone; otherwise
+   * new messages wouldn't render until some unrelated event (a click) triggered change detection.
    */
   public consumeTopicMessages(topic: string, groupId: string): Observable<string> {
     return new Observable<string>((subscriber) => {
@@ -245,11 +248,11 @@ export class ApiService {
       const url = `${ApiService.ApiBaseUrl}/topics/${encodeURIComponent(topic)}/messages/stream?${params.toString()}`;
       const eventSource = new EventSource(url, { withCredentials: true });
 
-      eventSource.onmessage = (event) => subscriber.next(event.data);
-      eventSource.onerror = () => {
+      eventSource.onmessage = (event) => this.zone.run(() => subscriber.next(event.data));
+      eventSource.onerror = () => this.zone.run(() => {
         subscriber.error(new Error('Connection to the message stream was lost.'));
         eventSource.close();
-      };
+      });
 
       return () => eventSource.close();
     });
