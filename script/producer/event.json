@@ -1,0 +1,16 @@
+{
+  "eventId": "<random-string:12>",
+  "eventType": "ORDER_CREATED",
+  "createdAt": "<datetime>",
+  "source": "kafkador-producer",
+  "payload": {
+    "orderId": "ORD-<random-int:1000:9999>",
+    "customerId": "CUST-<random-int:1:500>",
+    "amount": <random-double:5:500>,
+    "currency": "USD",
+    "items": [
+      { "sku": "SKU-<random-string:4>", "quantity": <random-int:1:5> },
+      { "sku": "SKU-<random-string:4>", "quantity": <random-int:1:5> }
+    ]
+  }
+}
