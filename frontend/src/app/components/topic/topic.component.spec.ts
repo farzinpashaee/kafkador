@@ -53,6 +53,12 @@ describe('TopicComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('highlights a consumed message only during the first 3 seconds after it arrives', () => {
+    const now = Date.now();
+    expect(component.isNewMessage({ id: 0, text: '{}', receivedAt: now })).toBeTrue();
+    expect(component.isNewMessage({ id: 1, text: '{}', receivedAt: now - 3001 })).toBeFalse();
+  });
+
   it('starts listening and appends the latest consumed message to the front', () => {
     component.startListening();
     expect(component.listening).toBeTrue();
@@ -60,7 +66,7 @@ describe('TopicComponent', () => {
     messages$.next('{ Event 1 Received }');
     messages$.next('{ Event 2 Received }');
 
-    expect(component.consumedMessages).toEqual(['{ Event 2 Received }', '{ Event 1 Received }']);
+    expect(component.consumedMessages.map(m => m.text)).toEqual(['{ Event 2 Received }', '{ Event 1 Received }']);
   });
 
   it('stops listening and unsubscribes from the stream', () => {

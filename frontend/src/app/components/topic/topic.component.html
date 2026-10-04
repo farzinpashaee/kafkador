@@ -167,8 +167,8 @@
       </div>
 
       <div class="test-topic-log border rounded p-2">
-        @for (message of filteredMessages; track $index) {
-          <div class="test-topic-message text-s font-monospace">{{ message }}</div>
+        @for (message of filteredMessages; track message.id) {
+          <div class="test-topic-message text-s font-monospace" [class.is-new]="isNewMessage(message)">{{ message.text }}</div>
         } @empty {
           <div class="text-center text-s text-color-subtle py-3">
             @if (!listening) {

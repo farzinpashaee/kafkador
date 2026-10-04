@@ -9,6 +9,14 @@ import { ApiService, DocumentationService, CommonService} from '../../services';
 import { Broker, GenericResponse, Config, Topic, Error } from '../../models';
 
 const MAX_VISIBLE_TEST_MESSAGES = 200;
+// Matches the length of the fade-out highlight in topic.component.scss.
+const NEW_MESSAGE_HIGHLIGHT_MS = 3000;
+
+export interface ConsumedMessage {
+  id: number;
+  text: string;
+  receivedAt: number;
+}
 
 @Component({
   selector: 'app-topic',
@@ -33,16 +41,22 @@ export class TopicComponent implements OnDestroy {
 
   listening: boolean = false;
   activeGroupId: string = '';
-  consumedMessages: string[] = [];
+  consumedMessages: ConsumedMessage[] = [];
+  private nextMessageId = 0;
   producerEvent: string = '';
   showMessageFilter: boolean = false;
   messageFilter: string = '';
   private testTopicSubscription?: Subscription;
 
-  get filteredMessages(): string[] {
+  get filteredMessages(): ConsumedMessage[] {
     if (!this.showMessageFilter || !this.messageFilter.trim()) return this.consumedMessages;
     const term = this.messageFilter.toLowerCase();
-    return this.consumedMessages.filter(message => message.toLowerCase().includes(term));
+    return this.consumedMessages.filter(message => message.text.toLowerCase().includes(term));
+  }
+
+  /** Still within its highlight window; rows re-rendered later (e.g. when the filter changes) don't flash again. */
+  isNewMessage(message: ConsumedMessage): boolean {
+    return Date.now() - message.receivedAt < NEW_MESSAGE_HIGHLIGHT_MS;
   }
 
   constructor(private apiService: ApiService,
@@ -164,7 +178,8 @@ export class TopicComponent implements OnDestroy {
     this.activeGroupId = groupId;
     this.testTopicSubscription = this.apiService.consumeTopicMessages(this.topicName, this.activeGroupId).subscribe({
       next: (message: string) => {
-        this.consumedMessages = [message, ...this.consumedMessages].slice(0, MAX_VISIBLE_TEST_MESSAGES);
+        const consumed: ConsumedMessage = { id: this.nextMessageId++, text: message, receivedAt: Date.now() };
+        this.consumedMessages = [consumed, ...this.consumedMessages].slice(0, MAX_VISIBLE_TEST_MESSAGES);
       },
       error: (err) => {
         this.listening = false;

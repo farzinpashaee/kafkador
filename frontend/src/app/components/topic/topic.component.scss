@@ -13,10 +13,23 @@ $test-topic-panel-height: 26em;
 .test-topic-message {
   white-space: pre-wrap;
   word-break: break-word;
+  border-radius: var(--bs-border-radius-sm);
+  padding: 0.25em 0.5em;
+
+  // A newly received message starts highlighted and fades back to the normal background over 3s
+  // (keep in sync with NEW_MESSAGE_HIGHLIGHT_MS in topic.component.ts).
+  &.is-new {
+    animation: test-topic-message-highlight 3s ease-out forwards;
+  }
 
   &:not(:last-child) {
     border-bottom: 1px solid var(--bs-border-color);
     padding-bottom: 0.5em;
     margin-bottom: 0.5em;
   }
+}
+
+@keyframes test-topic-message-highlight {
+  from { background-color: color-mix(in srgb, var(--bs-primary) 25%, transparent); }
+  to   { background-color: transparent; }
 }
