@@ -16,6 +16,27 @@ export class CommonService {
     modal?.hide();
   }
 
+  /**
+   * Starts closing every open Bootstrap modal. Called when a navigation starts: Bootstrap puts the grey backdrop
+   * directly on <body>, outside Angular, so a modal whose component is destroyed while open (browser Back, the
+   * redirect to /connect on an expired session, ...) would leave a backdrop that blocks every click.
+   */
+  closeOpenModals() {
+    document.querySelectorAll<HTMLElement>('.modal.show').forEach(el => bootstrap.Modal.getInstance(el)?.hide());
+  }
+
+  /**
+   * Removes a backdrop left behind when no modal is open any more — e.g. hide() was ignored because the modal was
+   * still in its opening animation when its component went away — and gives the page its scrolling back.
+   */
+  removeOrphanModalBackdrops() {
+    if (document.querySelector('.modal.show')) return;
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+  }
+
   showTab(tabId:string) {
     const el = document.getElementById(tabId);
     if (!el) return;
