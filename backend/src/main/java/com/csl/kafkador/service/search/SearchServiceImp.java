@@ -29,7 +29,7 @@ public class SearchServiceImp implements SearchService {
     @PostConstruct
     public void init(){
         basePages = new ArrayList<>();
-        basePages.add( new SearchResult("Cluster","Cluster","/cluster","Cluster Details Page","bi bi-diagram-3") );
+        basePages.add( new SearchResult("Cluster","Cluster","/brokers","Brokers and partition health","bi bi-diagram-3") );
         basePages.add( new SearchResult("Topics","Topic","/topic","Topics List Page","bi bi-chat-square-text") );
         basePages.add( new SearchResult("Brokers","Broker","/broker","Brokers List Page","bi bi-columns-gap") );
         basePages.add( new SearchResult("Consumers","Consumer","/consumer","Consumers List Page","bi bi-journal-arrow-down") );

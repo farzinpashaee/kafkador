@@ -2,17 +2,20 @@ package com.csl.kafkador.service;
 
 import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.domain.Topic;
+import com.csl.kafkador.domain.dto.TopicOverviewDto;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.exception.TopicAlreadyExistsException;
 import com.csl.kafkador.exception.TopicNotFoundException;
 import com.csl.kafkador.record.ConfigEntry;
 import com.csl.kafkador.util.DtoMapper;
+import com.csl.kafkador.util.TopicOverviewCalculator;
 import com.csl.kafkador.util.ViewHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.KafkaFuture;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.ConfigResource;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
@@ -23,12 +26,15 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service("TopicService")
 @RequiredArgsConstructor
 @Slf4j
 public class TopicService {
+
+    private static final long OVERVIEW_TIMEOUT_SECONDS = 15;
 
     private final ApplicationContext applicationContext;
     private final ApplicationConfig applicationConfig;
@@ -51,6 +57,77 @@ public class TopicService {
             log.error("Failed to list topics for cluster {}", clusterId, e);
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
         }
+    }
+
+    /**
+     * Every topic, internal ones included, with partition health, message counts and sizes for the Topics page.
+     * Offsets, configs and log dirs are each optional: when one can't be read its columns are left empty.
+     */
+    public List<TopicOverviewDto> getTopicsOverview(String clusterId) throws KafkaAdminApiException {
+        try {
+            Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
+            Set<String> names = await(admin.listTopics(new ListTopicsOptions().listInternal(true)).names());
+            if (names.isEmpty()) return List.of();
+            Collection<TopicDescription> topics = await(admin.describeTopics(names).allTopicNames()).values();
+
+            List<TopicPartition> partitions = topics.stream()
+                    .flatMap(t -> t.partitions().stream().map(p -> new TopicPartition(t.name(), p.partition())))
+                    .toList();
+            Map<TopicPartition, Long> earliest = offsets(admin, partitions, OffsetSpec.earliest());
+            Map<TopicPartition, Long> latest = offsets(admin, partitions, OffsetSpec.latest());
+
+            return TopicOverviewCalculator.calculate(topics, earliest, latest, cleanupPolicies(admin, names), logDirs(admin));
+        } catch (ConnectionSessionExpiredException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to build the topics overview for cluster {}", clusterId, e);
+            throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
+        }
+    }
+
+    /** Offsets per partition; a partition that can't be read (e.g. no leader) is simply left out. */
+    private Map<TopicPartition, Long> offsets(Admin admin, List<TopicPartition> partitions, OffsetSpec spec) {
+        Map<TopicPartition, OffsetSpec> request = new HashMap<>();
+        partitions.forEach(tp -> request.put(tp, spec));
+        ListOffsetsResult result = admin.listOffsets(request);
+        Map<TopicPartition, Long> offsets = new HashMap<>();
+        for (TopicPartition tp : partitions) {
+            try {
+                offsets.put(tp, await(result.partitionResult(tp)).offset());
+            } catch (Exception e) {
+                log.debug("No {} offset for {}: {}", spec.getClass().getSimpleName(), tp, e.getMessage());
+            }
+        }
+        return offsets;
+    }
+
+    private Map<String, String> cleanupPolicies(Admin admin, Set<String> names) {
+        try {
+            List<ConfigResource> resources = names.stream().map(n -> new ConfigResource(ConfigResource.Type.TOPIC, n)).toList();
+            Map<String, String> policies = new HashMap<>();
+            await(admin.describeConfigs(resources).all()).forEach((resource, config) -> {
+                org.apache.kafka.clients.admin.ConfigEntry policy = config.get("cleanup.policy");
+                if (policy != null) policies.put(resource.name(), policy.value());
+            });
+            return policies;
+        } catch (Exception e) {
+            log.warn("Could not read topic cleanup policies: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private Map<Integer, Map<String, LogDirDescription>> logDirs(Admin admin) {
+        try {
+            List<Integer> brokers = await(admin.describeCluster().nodes()).stream().map(org.apache.kafka.common.Node::id).toList();
+            return await(admin.describeLogDirs(brokers).allDescriptions());
+        } catch (Exception e) {
+            log.warn("Could not describe broker log dirs, topic sizes will be unavailable: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private static <T> T await(KafkaFuture<T> future) throws Exception {
+        return future.get(OVERVIEW_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
     public Topic createTopic( String clusterId , Topic topic ) throws KafkaAdminApiException, TopicAlreadyExistsException {

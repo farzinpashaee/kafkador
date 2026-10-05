@@ -34,7 +34,7 @@
 
   <div class="row mt-2">
     <div class="col-12">
-      <div class="d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-2">
         <button
           type="button"
           class="btn btn-primary"
@@ -45,11 +45,39 @@
         </button>
         <label class="visually-hidden" for="table-filtering-search">Search topics</label>
         <input
-          placeholder="Search"
+          placeholder="Search topics"
           id="table-filtering-search"
-          class="form-control form-control-sm search-input-compact search-input-compact-width"
+          class="form-control form-control-sm search-input-compact search-input-compact-width ms-auto"
           type="search"
           [formControl]="filter"/>
+        <div class="dropdown">
+          <button class="btn btn-sm dropdown-toggle outline-button" type="button" data-bs-toggle="dropdown"
+                  data-bs-auto-close="outside" aria-expanded="false">
+            <i class="bi bi-funnel" aria-hidden="true"></i> Filter
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-padded">
+            <li>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="showInternalTopicsSwitch"
+                       [checked]="showInternal" (change)="setShowInternal($any($event.target).checked)">
+                <label class="form-check-label text-s text-nowrap" for="showInternalTopicsSwitch">
+                  Show internal topics ({{ internalTopicCount }})
+                </label>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div class="dropdown">
+          <button type="button" class="btn btn-sm outline-button dropdown-toggle" data-bs-toggle="dropdown"
+                  aria-expanded="false" [disabled]="!filteredTopics.length">
+            Export
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li *ngFor="let option of exportFormats">
+              <button type="button" class="dropdown-item" (click)="export(option.format)">{{ option.label }}</button>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
@@ -58,20 +86,28 @@
       <table class="table">
         <thead>
         <tr>
-          <th scope="col">Name</th>
-          <th scope="col">ID</th>
-          <th scope="col">Partitions</th>
-          <th scope="col"></th>
+          <th scope="col" *ngFor="let column of columns" [attr.aria-sort]="ariaSort(column.key)">
+            <button type="button" class="sort-button" (click)="sortBy(column.key)" [attr.title]="column.hint ?? null">
+              {{ column.label }}
+              <i class="bi" aria-hidden="true"
+                 [ngClass]="sortKey !== column.key ? 'bi-arrow-down-up opacity-50' : (sortAscending ? 'bi-sort-up' : 'bi-sort-down')"></i>
+            </button>
+          </th>
+          <th scope="col"><span class="visually-hidden">Actions</span></th>
         </tr>
         </thead>
         <tbody>
-        @for (topic of pagedTopics; track topic.name; let i = $index) {
+        @for (topic of pagedTopics; track topic.name) {
           <tr>
-            <th scope="row" class="cursor-pointer" routerLink="/topic/{{topic.name}}">
+            <th scope="row" class="cursor-pointer text-nowrap" routerLink="/topic/{{topic.name}}">
+              <span *ngIf="topic.internal" class="badge rounded-pill text-bg-secondary me-1" title="Internal topic">IN</span>
               <span class="badge bg-dark"><a class="badge-link">{{topic.name}}</a></span>
             </th>
-            <td routerLink="/topic/{{topic.name}}" class="cursor-pointer">{{topic.id}}</td>
-            <td routerLink="/topic/{{topic.name}}" class="cursor-pointer">{{topic.partitions}}</td>
+            <td routerLink="/topic/{{topic.name}}" class="cursor-pointer">{{topic.partitionCount}}</td>
+            <td routerLink="/topic/{{topic.name}}" class="cursor-pointer">{{topic.outOfSyncReplicaCount}}</td>
+            <td routerLink="/topic/{{topic.name}}" class="cursor-pointer">{{topic.replicationFactor}}</td>
+            <td routerLink="/topic/{{topic.name}}" class="cursor-pointer">{{ topic.messageCount ?? 'N/A' }}</td>
+            <td routerLink="/topic/{{topic.name}}" class="cursor-pointer text-nowrap">{{ formatSize(topic.sizeBytes) }}</td>
             <td>
               <button type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Delete topic {{topic.name}}"
                       (click)="openDeleteDialog(topic)" data-bs-toggle="modal" data-bs-target="#deleteTopicModal">
@@ -81,8 +117,8 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="4" class="text-center text-s text-color-subtle py-3">
-              {{ filter.value ? 'No topics match your search.' : 'No topics found.' }}
+            <td [attr.colspan]="columns.length + 1" class="text-center text-s text-color-subtle py-3">
+              {{ searchTerm ? 'No topics match your search.' : (topics.length ? 'No topics to show. Internal topics are hidden by the filter.' : 'No topics found.') }}
             </td>
           </tr>
         }

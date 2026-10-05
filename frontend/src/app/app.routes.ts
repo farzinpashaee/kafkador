@@ -6,7 +6,9 @@ export const routes: Routes = [
     loadComponent: () => import('./components/dashboard-layout/dashboard-layout.component').then(m => m.DashboardLayoutComponent),
     children: [
       { path: '', loadComponent: () => import('./components/dashboard/dashboard.component').then(m => m.DashboardComponent), title: 'Dashboard', data: { breadcrumb: { label: 'Dashboard' } } },
-      { path: 'cluster', loadComponent: () => import('./components/cluster/cluster.component').then(m => m.ClusterComponent), title: 'Cluster', data: { breadcrumb: { label: 'Cluster' } } },
+      // The page heading is built from the URL, so the Brokers page lives at /brokers; /cluster is its old address.
+      { path: 'cluster', redirectTo: 'brokers', pathMatch: 'full' },
+      { path: 'brokers', loadComponent: () => import('./components/cluster/cluster.component').then(m => m.ClusterComponent), title: 'Brokers', data: { breadcrumb: { label: 'Brokers' } } },
       { path: 'broker/:id', loadComponent: () => import('./components/broker/broker.component').then(m => m.BrokerComponent), title: 'Broker', data: { breadcrumb: { param: 'id' } } },
       { path: 'topic', loadComponent: () => import('./components/topics/topics.component').then(m => m.TopicsComponent), title: 'Topics', data: { breadcrumb: { label: 'Topics', url: '/topic' } } },
       { path: 'topic/:name', loadComponent: () => import('./components/topic/topic.component').then(m => m.TopicComponent), title: 'Topics', data: { breadcrumb: { param: 'name' } } },

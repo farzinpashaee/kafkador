@@ -105,7 +105,7 @@ export class DashboardLayoutComponent {
   }
 
   isClusterActive(): boolean {
-    return this.router.url === '/cluster' || this.router.url.startsWith('/cluster/') || this.router.url.startsWith('/broker/');
+    return this.router.url === '/brokers' || this.router.url.startsWith('/brokers?') || this.router.url.startsWith('/broker/');
   }
 
   goTo(route: string) {

@@ -86,6 +86,16 @@ public class ApiController {
                 .success(HttpStatus.OK);
     }
 
+    @GetMapping("/cluster/overview")
+    public ResponseEntity<GenericResponse<ClusterOverviewDto>> getClusterOverview() throws KafkaAdminApiException, ClusterNotFoundException {
+        ClusterService clusterService = (ClusterService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CLUSTER));
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<ClusterOverviewDto>()
+                .data(clusterService.getClusterOverview(connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
     @GetMapping("/brokers/{id}")
     public ResponseEntity<GenericResponse<BrokerDto>> getBroker(@PathVariable @NotBlank String id) throws KafkaAdminApiException, BrokerNotFoundException {
         BrokerService brokerService = (BrokerService) applicationContext
@@ -104,6 +114,17 @@ public class ApiController {
         ConnectionDto connection = connectionService.getActiveConnection();
         brokerService.updateConfig(connection.getClusterId(), id, configEntry);
         return ResponseEntity.noContent().build();
+    }
+
+    // Not under /topics/{name}: "overview" is a valid topic name.
+    @GetMapping("/topics-overview")
+    public ResponseEntity<GenericResponse<List<TopicOverviewDto>>> getTopicsOverview() throws KafkaAdminApiException {
+        TopicService topicService = (TopicService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<List<TopicOverviewDto>>()
+                .data(topicService.getTopicsOverview(connection.getClusterId()))
+                .success(HttpStatus.OK);
     }
 
     @GetMapping("/topics")

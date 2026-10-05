@@ -1,7 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse,HttpResponse   } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Cluster, Connection, Config, Broker, Alert, Topic, SearchResult, ConsumerGroup, GenericResponse,
+import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Alert, Topic, SearchResult, ConsumerGroup, GenericResponse,
   SchemaRegistry, SchemaRegistryConfig, Chart, Event, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery,
   AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest,
   SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, SchemaLookupResult,
@@ -19,6 +19,10 @@ export class ApiService {
 
   public getClusterDetails(): Observable<GenericResponse<Cluster>> {
     return this.http.get<GenericResponse<Cluster>>(`${ApiService.ApiBaseUrl}/cluster`,{ withCredentials: true });
+  }
+
+  public getClusterOverview(): Observable<GenericResponse<ClusterOverview>> {
+    return this.http.get<GenericResponse<ClusterOverview>>(`${ApiService.ApiBaseUrl}/cluster/overview`,{ withCredentials: true });
   }
 
   public getBrokerDetails(id:string): Observable<GenericResponse<Broker>> {
@@ -62,6 +66,11 @@ export class ApiService {
   public deleteAclBinding(binding:AclBinding): Observable<HttpResponse<void>> {
     return this.http.delete<void>(`${ApiService.ApiBaseUrl}/acl`,
       { withCredentials: true, observe: 'response', body: binding });
+  }
+
+  /** Every topic (internal ones included) with partition health, message counts and sizes. */
+  public getTopicsOverview(): Observable<GenericResponse<TopicOverview[]>> {
+    return this.http.get<GenericResponse<TopicOverview[]>>(`${ApiService.ApiBaseUrl}/topics-overview`, { withCredentials: true });
   }
 
   public getTopics(): Observable<HttpResponse<GenericResponse<Topic[]>>> {

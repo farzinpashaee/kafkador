@@ -1,64 +1,139 @@
-<p class="placeholder-glow" *ngIf="flags.get('getClusterLoading')">
-  <span class="placeholder col-12"></span>
-  <span class="placeholder col-12"></span>
-  <span class="placeholder col-8"></span>
-</p>
-<div class="view-element" id="clusterDetailsView" *ngIf="!flags.get('getClusterLoading')">
-  <div class="row align-items-start">
-    <div class="col-12 col-md-12 col-lg-12">
-      <div class="card card-top-widget">
-        <div class="card-body text-white d-flex">
-          <div class="flex-grow-1">
-            <h5 class="card-title">{{cluster.name}}</h5>
-            <p class="card-text text-s">
-              Brokers: {{cluster.brokers.length}} <br/>
-              Controller: {{cluster.controller.host}} <br/>
-              Cluster ID: {{cluster.id}}
-            </p>
+<div class="view-element" id="clusterDetailsView">
+  <div class="alert alert-danger text-s p-2" role="alert" *ngIf="errors.get('getOverview')">
+    {{ errors.get('getOverview')?.message }}
+  </div>
+
+  <p class="placeholder-glow" *ngIf="flags.get('getOverviewLoading')">
+    <span class="placeholder col-12"></span>
+    <span class="placeholder col-10"></span>
+  </p>
+
+  <ng-container *ngIf="overview && !flags.get('getOverviewLoading')">
+    <div class="row g-4">
+      <section class="col-12 col-xl-5" aria-labelledby="clusterStatsHeading">
+        <h6 id="clusterStatsHeading" class="mb-2">Cluster</h6>
+        <div class="stat-grid">
+          <div class="stat-tile">
+            <div class="stat-label">Broker count</div>
+            <div class="stat-value">{{ overview.brokerCount }}</div>
           </div>
-          <div class="ms-auto chart-container-medium" *ngIf="activeConnection?.agentEnabled">
-            <ngx-charts-bar-vertical
-              [results]="data"
-              [scheme]="cartTopWidgetWhiteScheme"
-              [xAxis]="false"
-              [gradient]="true"
-              [yAxis]="false" class="chart-full-size" >
-            </ngx-charts-bar-vertical>
+          <div class="stat-tile">
+            <div class="stat-label">Active controller</div>
+            <div class="stat-value">{{ overview.activeControllerId ?? 'n/a' }}</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-label">Version</div>
+            <div class="stat-value">{{ overview.version ?? 'n/a' }}</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-label">Controller type</div>
+            <div class="stat-value">{{ overview.controllerType ?? 'n/a' }}</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="col-12 col-xl-7" aria-labelledby="partitionStatsHeading">
+        <h6 id="partitionStatsHeading" class="mb-2">Partitions</h6>
+        <div class="stat-grid">
+          <div class="stat-tile">
+            <div class="stat-label">
+              Online
+              <ng-container *ngTemplateOutlet="health; context: { ok: overview.onlinePartitionCount === overview.partitionCount }"></ng-container>
+            </div>
+            <div class="stat-value">{{ overview.onlinePartitionCount }} <span class="stat-of">of {{ overview.partitionCount }}</span></div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-label" title="Under-replicated partitions: fewer in-sync replicas than replicas">
+              URP
+              <ng-container *ngTemplateOutlet="health; context: { ok: overview.underReplicatedPartitionCount === 0 }"></ng-container>
+            </div>
+            <div class="stat-value">{{ overview.underReplicatedPartitionCount }}</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-label">
+              In sync replicas
+              <ng-container *ngTemplateOutlet="health; context: { ok: overview.inSyncReplicaCount === overview.replicaCount }"></ng-container>
+            </div>
+            <div class="stat-value">{{ overview.inSyncReplicaCount }} <span class="stat-of">of {{ overview.replicaCount }}</span></div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-label">Out of sync replicas</div>
+            <div class="stat-value">{{ overview.outOfSyncReplicaCount }}</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="row mt-4">
+      <div class="d-flex align-items-start">
+        <div>
+          <h5>Brokers</h5>
+          <p class="text-s">List of Brokers that are member of this cluster</p>
+        </div>
+        <div class="d-flex align-items-center gap-2 ms-auto">
+          <div class="search-box">
+            <input type="search" class="form-control form-control-sm" placeholder="Search brokers"
+                   aria-label="Search brokers" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()">
+          </div>
+          <div class="dropdown">
+            <button type="button" class="btn btn-sm outline-button dropdown-toggle" data-bs-toggle="dropdown"
+                    aria-expanded="false" [disabled]="!sortedBrokers.length">
+              Export
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li *ngFor="let option of exportFormats">
+                <button type="button" class="dropdown-item" (click)="export(option.format)">{{ option.label }}</button>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <div class="row mt-4">
-    <h5>Brokers</h5>
-    <p class="text-s">List of Brokers that are member of this cluster</p>
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
-        <tr>
-          <th scope="col">id</th>
-          <th scope="col">Host</th>
-          <th scope="col">Port</th>
-          <th scope="col">Size (KB)</th>
-          <th scope="col">Hash</th>
-          <th></th>
-        </tr>
-        </thead>
-        <tbody id="clusterBrokers">
-          <tr *ngFor="let broker of pagedBrokers" routerLink="/broker/{{broker.id}}" class="cursor-pointer">
-            <th scope="row">{{broker.id}}</th>
-            <td>
-              <span class="badge bg-dark"> <a class="badge-link">{{broker.host}}</a></span>
-            </td>
-            <td>{{broker.port}}</td>
-            <td>{{broker.size}}</td>
-            <td>{{broker.hash}}</td>
-            <td><i class="bi bi-three-dots"></i></td>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+          <tr>
+            <th scope="col" *ngFor="let column of columns" [attr.aria-sort]="ariaSort(column.key)">
+              <button type="button" class="sort-button" (click)="sortBy(column.key)" [attr.title]="column.hint ?? null">
+                {{ column.label }}
+                <i class="bi" aria-hidden="true"
+                   [ngClass]="sortKey !== column.key ? 'bi-arrow-down-up opacity-50' : (sortAscending ? 'bi-sort-up' : 'bi-sort-down')"></i>
+              </button>
+            </th>
+            <th></th>
           </tr>
-        </tbody>
-      </table>
+          </thead>
+          <tbody id="clusterBrokers">
+            <tr *ngIf="!pagedBrokers.length">
+              <td [attr.colspan]="columns.length + 1" class="text-center text-s text-color-subtle py-3">
+                No brokers match "{{ searchTerm }}".
+              </td>
+            </tr>
+            <tr *ngFor="let broker of pagedBrokers" routerLink="/broker/{{broker.id}}" class="cursor-pointer">
+              <th scope="row">
+                {{broker.id}}
+                <span *ngIf="broker.activeController" class="badge text-bg-success ms-1" title="Active controller">controller</span>
+              </th>
+              <td class="text-nowrap">{{ formatDiskUsage(broker) }}</td>
+              <td>{{ broker.inSyncReplicaCount }}</td>
+              <td>{{ broker.replicaCount }}</td>
+              <td>{{ formatSkew(broker.replicasSkew) }}</td>
+              <td>{{ broker.leaderCount }}</td>
+              <td>{{ formatSkew(broker.leadersSkew) }}</td>
+              <td>{{ broker.port }}</td>
+              <td>
+                <span class="badge bg-dark"> <a class="badge-link">{{broker.host}}</a></span>
+              </td>
+              <td><i class="bi bi-three-dots"></i></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <app-pagination [totalItems]="sortedBrokers.length" [pageSize]="pageSize" [page]="page" (pageChange)="page = $event"></app-pagination>
     </div>
-    <app-pagination [totalItems]="cluster.brokers.length" [pageSize]="pageSize" [page]="page" (pageChange)="page = $event"></app-pagination>
-  </div>
+  </ng-container>
 </div>
+
+<ng-template #health let-ok="ok">
+  <i class="bi bi-circle-fill health-dot" aria-hidden="true" [ngClass]="ok ? 'text-success' : 'text-danger'"></i>
+  <span class="visually-hidden">{{ ok ? '(healthy)' : '(needs attention)' }}</span>
+</ng-template>

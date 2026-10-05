@@ -1,6 +1,7 @@
 package com.csl.kafkador.service;
 
 import com.csl.kafkador.domain.dto.ClusterDto;
+import com.csl.kafkador.domain.dto.ClusterOverviewDto;
 import com.csl.kafkador.exception.ClusterNotFoundException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 
@@ -12,6 +13,7 @@ public interface ClusterService {
     ClusterDto save(String name, String host, String port) throws KafkaAdminApiException;
     String getClusterId(String host, String port) throws KafkaAdminApiException;
     ClusterDto getClusterDetails(String id) throws ClusterNotFoundException, KafkaAdminApiException;
+    ClusterOverviewDto getClusterOverview(String id) throws ClusterNotFoundException, KafkaAdminApiException;
 
 
 }
