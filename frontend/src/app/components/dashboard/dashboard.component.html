@@ -125,24 +125,38 @@
       <table class="table">
         <thead>
         <tr>
-          <th scope="col">id</th>
-          <th scope="col">Host</th>
+          <th scope="col">Broker ID</th>
+          <th scope="col" title="Size of all partition logs on the broker, and how many logs that is">Disk usage</th>
+          <th scope="col">In sync replicas</th>
+          <th scope="col">Replicas</th>
+          <th scope="col" title="How far the broker's replica count is above (+) or below (-) an even share across brokers">Replicas skew</th>
+          <th scope="col">Leaders</th>
+          <th scope="col" title="How far the broker's partition leader count is above (+) or below (-) an even share across brokers">Leaders skew</th>
           <th scope="col">Port</th>
-          <th scope="col">Size (KB)</th>
+          <th scope="col">Host</th>
           <th></th>
         </tr>
         </thead>
         <tbody id="clusterBrokers">
         <tr *ngFor="let broker of pagedBrokers" routerLink="/broker/{{broker.id}}" class="cursor-pointer">
-          <th scope="row">{{broker.id}}</th>
-          <td><span class="badge bg-dark "><a class="badge-link" >{{broker.host}}</a></span></td>
-          <td>{{broker.port}}</td>
-          <td>{{broker.size}}</td>
+          <th scope="row">
+            {{broker.id}}
+            <span *ngIf="broker.activeController" class="badge text-bg-success ms-1" title="Active controller">controller</span>
+          </th>
+          <td class="text-nowrap">{{ formatDiskUsage(broker) }}</td>
+          <td>{{ broker.inSyncReplicaCount }}</td>
+          <td>{{ broker.replicaCount }}</td>
+          <td>{{ formatSkew(broker.replicasSkew) }}</td>
+          <td>{{ broker.leaderCount }}</td>
+          <td>{{ formatSkew(broker.leadersSkew) }}</td>
+          <td>{{ broker.port }}</td>
+          <td><span class="badge bg-dark"> <a class="badge-link">{{broker.host}}</a></span></td>
           <td><i class="bi bi-three-dots"></i></td>
         </tr>
         </tbody>
       </table>
     </div>
-    <app-pagination [totalItems]="cluster.brokers.length" [pageSize]="pageSize" [page]="brokerPage" (pageChange)="brokerPage = $event"></app-pagination>
+    <div *ngIf="errors.get('getBrokers')" class="alert alert-danger" role="alert">{{ errors.get('getBrokers')?.message }}</div>
+    <app-pagination [totalItems]="sortedBrokers.length" [pageSize]="pageSize" [page]="brokerPage" (pageChange)="brokerPage = $event"></app-pagination>
   </div>
 </div>

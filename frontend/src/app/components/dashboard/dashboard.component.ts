@@ -4,8 +4,9 @@ import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 import * as shape from 'd3-shape';
-import { ConsumerGroup, GenericResponse, Alert, Cluster, Topic, Error, Connection, Broker } from '../../models';
+import { ConsumerGroup, GenericResponse, Alert, Cluster, ClusterOverview, Topic, Error, Connection, BrokerOverview } from '../../models';
 import { ApiService, CommonService, DateTimeService, LocalStorageService } from '../../services';
+import { formatBytes } from '../../services/table-export';
 import { PaginationComponent } from '../pagination/pagination.component';
 
 
@@ -28,8 +29,27 @@ export class DashboardComponent {
   brokerPage = 1;
   alertPage = 1;
 
-  get pagedBrokers(): Broker[] {
-    return this.cluster.brokers.slice((this.brokerPage - 1) * this.pageSize, this.brokerPage * this.pageSize);
+  overview?: ClusterOverview;
+
+  /** Same data and column formatting as the Brokers page, in broker id order. */
+  get sortedBrokers(): BrokerOverview[] {
+    return [...(this.overview?.brokers ?? [])].sort((a, b) => Number(a.id) - Number(b.id) || a.id.localeCompare(b.id));
+  }
+
+  get pagedBrokers(): BrokerOverview[] {
+    return this.sortedBrokers.slice((this.brokerPage - 1) * this.pageSize, this.brokerPage * this.pageSize);
+  }
+
+  formatDiskUsage(broker: BrokerOverview): string {
+    if (broker.diskUsageBytes == null) return 'n/a';
+    const logs = broker.logCount ?? 0;
+    return `${formatBytes(broker.diskUsageBytes)}, ${logs} log${logs === 1 ? '' : 's'}`;
+  }
+
+  /** "-" when there is nothing to compare or the broker holds exactly its even share. */
+  formatSkew(skew?: number): string {
+    if (skew == null || Math.abs(skew) < 0.005) return '-';
+    return `${skew > 0 ? '+' : ''}${skew.toFixed(2)}%`;
   }
 
   get pagedAlerts(): Alert[] {
@@ -59,11 +79,19 @@ export class DashboardComponent {
         this.cluster = res.data;
         this.errors.delete('getCluster');
         this.flags.set('getClusterLoading',false);
-        this.flags.set('getBrokerLoading',false);
       },
       error: (res:HttpErrorResponse) => {
         this.errors.set("getCluster",this.commonService.prepareError(res.error?.error,'500','Failed to get cluster details!'));
         this.flags.set('getClusterLoading',false);
+      }
+    });
+    this.apiService.getClusterOverview().subscribe({ next: (res: GenericResponse<ClusterOverview>) => {
+        this.overview = res.data;
+        this.errors.delete('getBrokers');
+        this.flags.set('getBrokerLoading',false);
+      },
+      error: (res:HttpErrorResponse) => {
+        this.errors.set("getBrokers",this.commonService.prepareError(res.error?.error,'500','Failed to get brokers!'));
         this.flags.set('getBrokerLoading',false);
       }
     });
