@@ -27,6 +27,17 @@ kafkador:
     connection:
       implementation: "ConnectionService"
 
+server:
+  servlet:
+    session:
+      cookie:
+        # Cookies are shared by every port on the same host, and "SESSION" is the default name of every Spring
+        # Session app: another one on localhost (e.g. kafka-ui) deletes a SESSION cookie it doesn't recognise,
+        # which signed Kafkador users out of their connection. A unique name keeps the two apart.
+        name: KAFKADOR_SESSION
+        same-site: strict
+        http-only: true
+
 spring:
   application:
     name: dashboard
@@ -44,11 +55,6 @@ spring:
       initialize-schema: always
     timeout:
       seconds: 365d # TODO: update
-  servlet:
-    session:
-      cookie:
-        same-site: strict
-        http-only: true
   h2:
     console:
       enabled: true
