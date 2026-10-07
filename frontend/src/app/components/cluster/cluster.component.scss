@@ -1,17 +1,49 @@
+// One dark card per section (same look as the dashboard's top cards, driven by the same theme variables),
+// with the stats laid out in columns separated by thin dividers. Items wrap onto further rows without dividers
+// between rows.
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9.5em, 1fr));
-  gap: 0.5em;
-}
-
-// Same look as the dashboard's top cards (.card-top-widget), driven by the same theme variables.
-.stat-tile {
-  padding: 1rem;
+  row-gap: 1.5rem;
+  padding: 1.5rem 0.5rem;
   border: 1px solid;
   border-color: var(--app-card-top-widget-border);
   border-radius: var(--bs-border-radius);
   background-color: var(--app-card-top-widget-background);
   color: var(--app-card-top-widget-text);
+}
+
+@mixin stat-columns($count) {
+  grid-template-columns: repeat($count, minmax(0, 1fr));
+
+  // Reset first so a wider breakpoint's dividers replace, rather than add to, the narrower one's.
+  .stat-tile:nth-child(n) {
+    border-left: 0;
+  }
+
+  .stat-tile:not(:nth-child(#{$count}n + 1)) {
+    border-left: 1px solid currentColor;
+    border-left-color: color-mix(in srgb, currentColor 22%, transparent);
+  }
+}
+
+.stat-grid-3 {
+  @include stat-columns(2);
+
+  @media (min-width: 576px) {
+    @include stat-columns(3);
+  }
+}
+
+.stat-grid-4 {
+  @include stat-columns(2);
+
+  @media (min-width: 576px) {
+    @include stat-columns(4);
+  }
+}
+
+.stat-tile {
+  padding: 0 1.5rem;
 }
 
 .stat-label {
