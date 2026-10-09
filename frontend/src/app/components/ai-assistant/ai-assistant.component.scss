@@ -110,6 +110,74 @@ $panel-width: 380px;
   &:focus-visible {
     outline: 2px solid var(--bs-primary, #5cb8a5);
   }
+
+  &.ai-icon-button-active {
+    background: var(--bs-tertiary-bg);
+  }
+}
+
+.ai-header-divider {
+  width: 1px;
+  height: 22px;
+  margin: 0 6px;
+  background: var(--bs-border-color);
+}
+
+.ai-history-title {
+  margin: 4px 0 2px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.ai-history-status {
+  font-size: 0.85rem;
+  color: var(--bs-tertiary-color);
+}
+
+.ai-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ai-history-item {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &:hover {
+    background: var(--bs-tertiary-bg);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--bs-primary, #5cb8a5);
+  }
+
+  &.ai-history-item-current {
+    background: var(--bs-secondary-bg);
+  }
+}
+
+.ai-history-item-title {
+  font-size: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-history-item-date {
+  font-size: 0.75rem;
+  color: var(--bs-tertiary-color);
 }
 
 .ai-body {

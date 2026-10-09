@@ -1,20 +1,20 @@
 package com.csl.kafkador.domain.dto;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import java.util.List;
-
+/** One user turn. Without a {@code sessionId} a new conversation is started; the earlier turns are read from the database. */
 @Data
 @Accessors(chain = true)
 public class AiChatRequestDto {
 
-    @NotEmpty(message = "At least one message is required")
-    @Size(max = 40, message = "Too many messages")
-    @Valid
-    private List<AiMessageDto> messages;
+    @Size(max = 64, message = "Invalid session id")
+    private String sessionId;
+
+    @NotBlank(message = "Ask a question to get started.")
+    @Size(max = 8000, message = "Message is too long")
+    private String message;
 
 }

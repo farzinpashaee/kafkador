@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { AiAssistantService, ApiService, CommonService } from '../../services';
-import { AiChatResponse, AiMessage, GenericResponse } from '../../models';
+import { AiChatResponse, AiChatSession, AiMessage, GenericResponse } from '../../models';
 
 interface Segment {
   code: boolean;
@@ -13,8 +13,6 @@ interface Segment {
 interface ChatMessage extends AiMessage {
   segments: Segment[];
 }
-
-const MAX_HISTORY = 20;
 
 // The Web Speech API isn't in the TypeScript DOM lib and is still vendor-prefixed in Chromium/Safari.
 interface SpeechRecognitionLike {
@@ -64,6 +62,14 @@ export class AiAssistantComponent implements OnInit, OnDestroy {
   messages = signal<ChatMessage[]>([]);
   draft = '';
 
+  /** The stored conversation being shown; null until the server answers the first question of a new chat. */
+  sessionId = signal<string | null>(null);
+  view = signal<'chat' | 'history'>('chat');
+  sessions = signal<AiChatSession[]>([]);
+  historyLoading = signal(false);
+  /** Bumped whenever the shown conversation changes, so a late response can't land in a different chat. */
+  private conversation = 0;
+
   @ViewChild('body') body?: ElementRef<HTMLElement>;
   @ViewChild('input') input?: ElementRef<HTMLTextAreaElement>;
 
@@ -85,11 +91,63 @@ export class AiAssistantComponent implements OnInit, OnDestroy {
     }
   }
 
-  reset() {
-    this.stopListening();
-    this.messages.set([]);
-    this.error.set(null);
+  /** Starts a new session; the server creates it when the first question is answered. */
+  newChat() {
+    this.showConversation(null, []);
+    this.draft = '';
     this.focusInput();
+  }
+
+  toggleHistory() {
+    if (this.view() === 'history') {
+      this.view.set('chat');
+      this.focusInput();
+      return;
+    }
+    this.stopListening();
+    this.error.set(null);
+    this.view.set('history');
+    this.historyLoading.set(true);
+    this.apiService.getAiChatSessions().subscribe({
+      next: res => {
+        this.sessions.set(res.body?.data ?? []);
+        this.historyLoading.set(false);
+      },
+      error: (res: HttpErrorResponse) => {
+        this.error.set(this.commonService.prepareError(res.error?.error, '500', 'The chat history could not be loaded.').message);
+        this.historyLoading.set(false);
+      }
+    });
+  }
+
+  openSession(session: AiChatSession) {
+    this.error.set(null);
+    this.historyLoading.set(true);
+    this.apiService.getAiChatSession(session.id).subscribe({
+      next: res => {
+        const loaded = res.body?.data;
+        this.historyLoading.set(false);
+        if (!loaded) return;
+        this.showConversation(loaded.id, (loaded.messages ?? []).map(m => this.toMessage(m.role, m.content)));
+        this.draft = '';
+        this.scrollToBottom();
+        this.focusInput();
+      },
+      error: (res: HttpErrorResponse) => {
+        this.error.set(this.commonService.prepareError(res.error?.error, '500', 'This chat could not be opened.').message);
+        this.historyLoading.set(false);
+      }
+    });
+  }
+
+  private showConversation(sessionId: string | null, messages: ChatMessage[]) {
+    this.stopListening();
+    this.conversation++;
+    this.sessionId.set(sessionId);
+    this.messages.set(messages);
+    this.loading.set(false);
+    this.error.set(null);
+    this.view.set('chat');
   }
 
   onEnter(event: Event) {
@@ -145,7 +203,7 @@ export class AiAssistantComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Manual stop keeps late final results; `discard` (send, reset, close) drops anything still in flight. */
+  /** Manual stop keeps late final results; `discard` (send, new chat, history, close) drops anything still in flight. */
   private stopListening(discard = true) {
     const recognition = this.recognition;
     this.recognition = null;
@@ -172,17 +230,18 @@ export class AiAssistantComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.scrollToBottom();
 
-    const history: AiMessage[] = this.messages()
-      .slice(-MAX_HISTORY)
-      .map(m => ({ role: m.role, content: m.content }));
-
-    this.apiService.aiChat(history).subscribe({
+    // The server keeps the earlier turns of the session, so only the new question is sent.
+    const conversation = this.conversation;
+    this.apiService.aiChat(text, this.sessionId()).subscribe({
       next: (res: HttpResponse<GenericResponse<AiChatResponse>>) => {
+        if (conversation !== this.conversation) return;
+        this.sessionId.set(res.body?.data?.sessionId ?? this.sessionId());
         this.messages.update(m => [...m, this.toMessage('assistant', res.body?.data?.reply ?? '')]);
         this.loading.set(false);
         this.scrollToBottom();
       },
       error: (res: HttpErrorResponse) => {
+        if (conversation !== this.conversation) return;
         // Give the question back to the user so they can retry or edit it.
         this.messages.update(m => m.slice(0, -1));
         this.draft = text;
@@ -193,7 +252,7 @@ export class AiAssistantComponent implements OnInit, OnDestroy {
     });
   }
 
-  private toMessage(role: 'user' | 'assistant', content: string): ChatMessage {
+  private toMessage(role: AiMessage['role'], content: string): ChatMessage {
     return { role, content, segments: this.toSegments(content) };
   }
 

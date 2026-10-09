@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AiChatResponseDto {
 
+    private String sessionId;
     private String reply;
 
 }

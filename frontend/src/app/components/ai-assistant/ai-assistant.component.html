@@ -8,18 +8,40 @@
       <header class="ai-header">
         <span class="ai-icon ai-header-logo" aria-hidden="true"></span>
         <span class="ai-header-spacer"></span>
-        @if (messages().length) {
-          <button type="button" class="ai-icon-button" aria-label="Start a new chat" title="New chat" (click)="reset()">
-            <i class="bi bi-arrow-counterclockwise"></i>
-          </button>
-        }
+        <button type="button" class="ai-icon-button" [class.ai-icon-button-active]="view() === 'history'"
+                [attr.aria-pressed]="view() === 'history'" aria-label="Chat history" title="Chat history" (click)="toggleHistory()">
+          <i class="bi bi-list-ul"></i>
+        </button>
+        <button type="button" class="ai-icon-button" aria-label="Start a new chat" title="New chat" (click)="newChat()">
+          <i class="bi bi-plus-square"></i>
+        </button>
+        <span class="ai-header-divider" aria-hidden="true"></span>
         <button type="button" class="ai-icon-button" aria-label="Close assistant" title="Close" (click)="toggle()">
           <i class="bi bi-x-lg"></i>
         </button>
       </header>
 
       <div class="ai-body" #body aria-live="polite">
-        @if (!messages().length) {
+        @if (view() === 'history') {
+          <h2 class="ai-history-title">Chat history</h2>
+          @if (historyLoading()) {
+            <div class="ai-history-status">Loading...</div>
+          } @else if (!sessions().length && !error()) {
+            <div class="ai-history-status">No chats yet. Questions you ask are saved here.</div>
+          } @else {
+            <ul class="ai-history-list">
+              @for (session of sessions(); track session.id) {
+                <li>
+                  <button type="button" class="ai-history-item" [class.ai-history-item-current]="session.id === sessionId()"
+                          [title]="session.title" (click)="openSession(session)">
+                    <span class="ai-history-item-title">{{ session.title }}</span>
+                    <span class="ai-history-item-date">{{ session.updateDateTime | date: 'MMM d, HH:mm' }}</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        } @else if (!messages().length) {
           <div class="ai-empty">
             <div class="ai-orb-wrap" aria-hidden="true">
               <span class="ai-orb"></span>
@@ -55,7 +77,7 @@
         }
       </div>
 
-      <form class="ai-input" (ngSubmit)="send()">
+      <form class="ai-input" [hidden]="view() === 'history'" (ngSubmit)="send()">
         <textarea #input class="ai-textarea" [class.ai-textarea-with-mic]="speechSupported()" name="message" rows="2" maxlength="8000"
                   [placeholder]="listening() ? 'Listening...' : 'Ask me Anything...'"
                   aria-label="Message the AI assistant" [(ngModel)]="draft" [disabled]="loading()"

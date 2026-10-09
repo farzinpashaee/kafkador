@@ -15,5 +15,16 @@ export class AiMessage {
 }
 
 export class AiChatResponse {
+    sessionId!: string;
     reply!: string;
+}
+
+export class AiChatSession {
+    id!: string;
+    /** The first message the user sent in the session. */
+    title!: string;
+    createDateTime!: string;
+    updateDateTime!: string;
+    /** Only present when a single session is loaded. */
+    messages?: AiMessage[];
 }

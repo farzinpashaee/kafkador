@@ -5,7 +5,7 @@ import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Al
   SchemaRegistry, SchemaRegistryConfig, Chart, Event, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery,
   AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest,
   SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, SchemaLookupResult,
-  AiConfig, AiMessage, AiChatResponse, SessionConfig, DatabaseSetupStatus, DatabaseCredentials } from '../models';
+  AiConfig, AiChatResponse, AiChatSession, SessionConfig, DatabaseSetupStatus, DatabaseCredentials } from '../models';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -353,8 +353,19 @@ export class ApiService {
       { withCredentials: true, observe: 'response' });
   }
 
-  public aiChat(messages: AiMessage[]): Observable<HttpResponse<GenericResponse<AiChatResponse>>> {
-    return this.http.post<GenericResponse<AiChatResponse>>(`${ApiService.ApiBaseUrl}/ai/chat`, { messages },
+  /** Without a `sessionId` the server starts a new session and returns its id with the reply. */
+  public aiChat(message: string, sessionId: string | null): Observable<HttpResponse<GenericResponse<AiChatResponse>>> {
+    return this.http.post<GenericResponse<AiChatResponse>>(`${ApiService.ApiBaseUrl}/ai/chat`, { message, sessionId },
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public getAiChatSessions(): Observable<HttpResponse<GenericResponse<AiChatSession[]>>> {
+    return this.http.get<GenericResponse<AiChatSession[]>>(`${ApiService.ApiBaseUrl}/ai/sessions`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public getAiChatSession(id: string): Observable<HttpResponse<GenericResponse<AiChatSession>>> {
+    return this.http.get<GenericResponse<AiChatSession>>(`${ApiService.ApiBaseUrl}/ai/sessions/${encodeURIComponent(id)}`,
       { withCredentials: true, observe: 'response' });
   }
 
