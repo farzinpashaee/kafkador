@@ -34,7 +34,7 @@
 
   <div class="row mt-2">
     <div class="col-12">
-      <div class="d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-2">
         <button
           type="button"
           class="btn btn-primary"
@@ -47,9 +47,20 @@
         <input
           placeholder="Search"
           id="consumer-group-search"
-          class="form-control form-control-sm search-input-compact search-input-compact-width"
+          class="form-control form-control-sm search-input-compact search-input-compact-width ms-auto"
           type="search"
           [formControl]="filter"/>
+        <div class="dropdown">
+          <button type="button" class="btn btn-sm outline-button dropdown-toggle" data-bs-toggle="dropdown"
+                  aria-expanded="false" [disabled]="!filteredConsumerGroups.length">
+            Export
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li *ngFor="let option of exportFormats">
+              <button type="button" class="dropdown-item" (click)="export(option.format)">{{ option.label }}</button>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>

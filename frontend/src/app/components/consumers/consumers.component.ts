@@ -9,7 +9,16 @@ import { startWith, map, debounceTime, distinctUntilChanged } from 'rxjs/operato
 import { ApiService, CommonService, ValidationService, LocalStorageService } from '../../services';
 import { ConsumerGroup, Chart, Error, Connection, GenericResponse, Topic } from '../../models';
 import { PaginationComponent } from '../pagination/pagination.component';
+import { EXPORT_FORMATS, ExportField, ExportFormat, buildExport, downloadExport } from '../../services/table-export';
 
+const EXPORT_FIELDS: ExportField<ConsumerGroup>[] = [
+  { key: 'id', label: 'ID', value: g => g.id },
+  { key: 'type', label: 'Type', value: g => g.type },
+  { key: 'coordinator', label: 'Coordinator', value: g => g.coordinator },
+  { key: 'simpleConsumerGroup', label: 'Simple consumer group', value: g => g.isSimpleConsumerGroup },
+  { key: 'partitionAssignor', label: 'Partition assignor', value: g => g.partitionAssignor },
+  { key: 'groupState', label: 'Group state', value: g => g.groupState }
+];
 
 @Component({
   selector: 'app-consumers',
@@ -46,6 +55,7 @@ export class ConsumersComponent {
   filter = new FormControl('', { nonNullable: true });
   readonly pageSize = 10;
   page = 1;
+  readonly exportFormats = EXPORT_FORMATS;
 
   get pagedConsumerGroups(): ConsumerGroup[] {
     return this.filteredConsumerGroups.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
@@ -115,6 +125,16 @@ export class ConsumersComponent {
   search(text: string): ConsumerGroup[] {
     const term = text.toLowerCase();
     return this.consumerGroups.filter((group: ConsumerGroup) => group.id.toLowerCase().includes(term));
+  }
+
+  /** Exports the consumer groups currently listed (search applied, all pages). */
+  export(format: ExportFormat): void {
+    downloadExport(this.exportContent(format, this.filteredConsumerGroups), format,
+      `consumer-groups-${this.activeConnection?.name ?? 'cluster'}`);
+  }
+
+  exportContent(format: ExportFormat, consumerGroups: ConsumerGroup[]): string {
+    return buildExport(format, EXPORT_FIELDS, consumerGroups, 'consumerGroups', 'consumerGroup');
   }
 
   useInstanceConsumerId(): void {
