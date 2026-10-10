@@ -1,7 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse,HttpResponse   } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Alert, Topic, SearchResult, ConsumerGroup, GenericResponse,
+import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Alert, Topic, TopicCreateRequest, SearchResult, ConsumerGroup, GenericResponse,
   SchemaRegistry, SchemaRegistryConfig, Chart, Event, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery,
   AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest,
   SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, SchemaLookupResult,
@@ -82,7 +82,7 @@ export class ApiService {
     return this.http.get<GenericResponse<Topic>>(`${ApiService.ApiBaseUrl}/topics/${name}`,{ withCredentials: true });
   }
 
-  public createTopic(topic:Topic): Observable<HttpResponse<GenericResponse<Topic>>> {
+  public createTopic(topic:TopicCreateRequest): Observable<HttpResponse<GenericResponse<Topic>>> {
     return this.http.post<GenericResponse<Topic>>(`${ApiService.ApiBaseUrl}/topics`,topic,
       { withCredentials: true ,observe: 'response' });
   }

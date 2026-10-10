@@ -4,7 +4,7 @@ import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 import { ApiService, CommonService, LocalStorageService, ValidationService } from '../../services';
-import { GenericResponse, Topic, TopicOverview, Chart, Error } from '../../models';
+import { GenericResponse, TopicCreateRequest, TopicOverview, Chart, Error } from '../../models';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { PaginationComponent } from '../pagination/pagination.component';
@@ -13,6 +13,12 @@ import { EXPORT_FORMATS, ExportField, ExportFormat, buildExport, downloadExport,
 export type TopicSortKey = 'name' | 'partitionCount' | 'outOfSyncReplicaCount' | 'replicationFactor' | 'messageCount' | 'sizeBytes';
 
 const SHOW_INTERNAL_STORAGE_KEY = 'topics.showInternal';
+
+const HOUR_MS = 60 * 60 * 1000;
+const GIB = 1024 * 1024 * 1024;
+
+/** Key/value row of the create form's custom parameters list. */
+export interface CustomParameter { name: string; value: string; }
 
 const EXPORT_FIELDS: ExportField<TopicOverview>[] = [
   { key: 'name', label: 'Topic name', value: t => t.name },
@@ -50,7 +56,8 @@ export class TopicsComponent {
   };
 
   topics: TopicOverview[] = [];
-  newTopic!: Topic;
+  newTopic!: TopicCreateRequest;
+  customParameters: CustomParameter[] = [];
   deletedTopic!: TopicOverview;
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
@@ -62,6 +69,29 @@ export class TopicsComponent {
   readonly pageSize = 10;
   page = 1;
   readonly exportFormats = EXPORT_FORMATS;
+
+  readonly cleanupPolicies = [
+    { value: 'delete', label: 'Delete' },
+    { value: 'compact', label: 'Compact' },
+    { value: 'compact,delete', label: 'Compact, Delete' }
+  ];
+
+  readonly retentionPresets = [
+    { label: '1 hour', ms: HOUR_MS },
+    { label: '3 hours', ms: 3 * HOUR_MS },
+    { label: '6 hours', ms: 6 * HOUR_MS },
+    { label: '12 hours', ms: 12 * HOUR_MS },
+    { label: '1 day', ms: 24 * HOUR_MS },
+    { label: '2 days', ms: 2 * 24 * HOUR_MS },
+    { label: '7 days', ms: 7 * 24 * HOUR_MS },
+    { label: '4 weeks', ms: 28 * 24 * HOUR_MS }
+  ];
+
+  /** Max partition size choices; null leaves retention.bytes at the broker default. */
+  readonly partitionSizeOptions: { label: string; bytes: number | null }[] = [
+    { label: 'Not Set', bytes: null },
+    ...[1, 2, 5, 10, 20, 50, 100, 500, 1000].map(gb => ({ label: `${gb} GB`, bytes: gb * GIB }))
+  ];
 
   readonly columns: { key: TopicSortKey; label: string; hint?: string }[] = [
     { key: 'name', label: 'Topic name' },
@@ -169,20 +199,19 @@ export class TopicsComponent {
   }
 
   createTopic(){
-    const errors = [
-      ...this.validationService.validateRequiredFields(this.newTopic, ['name', 'partitions', 'replicatorFactor']),
-      ...this.validationService.validatePositiveIntegerFields(this.newTopic, ['partitions', 'replicatorFactor'])
-    ];
+    const errors = this.validateNewTopic();
     if (errors.length > 0) {
       this.errors.set("createTopic",{code:'400',message:errors[0],datetime:''});
       return;
     } else {
       this.errors.delete('createTopic');
     }
+    this.newTopic.configs = Object.fromEntries(
+      this.customParameters.map(p => [p.name.trim(), p.value.trim()]));
     this.flags.set('createTopicLoading',true);
     this.apiService.createTopic(this.newTopic).subscribe({
       next: () => {
-        this.newTopic = this.blankTopic();
+        this.resetCreateForm();
         this.flags.set('createTopicLoading',false);
         this.commonService.hideModal('createTopicModal');
         this.loadTopics();
@@ -192,6 +221,58 @@ export class TopicsComponent {
         this.flags.set('createTopicLoading',false);
       }
     });
+  }
+
+  resetCreateForm(): void {
+    this.newTopic = this.blankTopic();
+    this.customParameters = [];
+    this.errors.delete('createTopic');
+  }
+
+  setRetention(ms: number): void {
+    this.newTopic.retentionMs = ms;
+  }
+
+  addCustomParameter(): void {
+    this.customParameters.push({ name: '', value: '' });
+  }
+
+  removeCustomParameter(index: number): void {
+    this.customParameters.splice(index, 1);
+  }
+
+  get canCreateTopic(): boolean {
+    return !!this.newTopic?.name?.trim() && this.newTopic.partitions != null;
+  }
+
+  private validateNewTopic(): string[] {
+    const t = this.newTopic;
+    const errors = [
+      ...this.validationService.validateRequiredFields(t, ['name', 'partitions']),
+      ...this.validationService.validatePositiveIntegerFields(t, ['partitions'])
+    ];
+    const optionalPositive = (value: number | null, label: string) => {
+      if (value != null && (!Number.isInteger(Number(value)) || value < 1)) {
+        errors.push(`${label} must be a positive whole number`);
+      }
+    };
+    optionalPositive(t.replicatorFactor, 'Replication Factor');
+    optionalPositive(t.minInSyncReplicas, 'Min In Sync Replicas');
+    optionalPositive(t.maxMessageBytes, 'Maximum message size');
+    if (t.retentionMs != null && (!Number.isInteger(Number(t.retentionMs)) || t.retentionMs < -1)) {
+      errors.push('Time to retain data must be -1 (forever) or a positive number of milliseconds');
+    }
+    if (t.replicatorFactor != null && t.minInSyncReplicas != null && t.minInSyncReplicas > t.replicatorFactor) {
+      errors.push('Min In Sync Replicas cannot be greater than the Replication Factor');
+    }
+    const names = new Set<string>();
+    for (const p of this.customParameters) {
+      const name = p.name.trim();
+      if (!name) errors.push('Custom parameter name is required');
+      else if (names.has(name)) errors.push(`Custom parameter '${name}' is set more than once`);
+      names.add(name);
+    }
+    return errors;
   }
 
   openDeleteDialog(topic: TopicOverview) {
@@ -224,8 +305,9 @@ export class TopicsComponent {
     return x === y ? 0 : (x < y ? -1 : 1);
   }
 
-  private blankTopic(): Topic {
-    return { name: '' , id : '' , partitions : 1 , internal: false , replicatorFactor: 1, config: [] };
+  private blankTopic(): TopicCreateRequest {
+    return { name: '', partitions: 1, replicatorFactor: null, cleanupPolicy: 'delete', minInSyncReplicas: null,
+      retentionMs: null, retentionBytes: null, maxMessageBytes: null, configs: {} };
   }
 
   private blankOverview(): TopicOverview {

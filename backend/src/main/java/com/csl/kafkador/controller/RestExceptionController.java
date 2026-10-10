@@ -91,6 +91,14 @@ public class RestExceptionController {
                 .failed(HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(InvalidTopicConfigException.class)
+    public ResponseEntity<GenericResponse<Void>> handleInvalidTopicConfig(InvalidTopicConfigException ex) {
+        return new GenericResponse.Builder<Void>()
+                .code(String.valueOf(HttpStatus.BAD_REQUEST.value()))
+                .message(ex.getMessage())
+                .failed(HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<GenericResponse<Void>> handleValidation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()

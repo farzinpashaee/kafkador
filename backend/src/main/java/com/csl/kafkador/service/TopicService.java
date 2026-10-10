@@ -5,6 +5,7 @@ import com.csl.kafkador.domain.Topic;
 import com.csl.kafkador.domain.dto.TopicOverviewDto;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
+import com.csl.kafkador.exception.InvalidTopicConfigException;
 import com.csl.kafkador.exception.TopicAlreadyExistsException;
 import com.csl.kafkador.exception.TopicNotFoundException;
 import com.csl.kafkador.record.ConfigEntry;
@@ -17,6 +18,10 @@ import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.ConfigResource;
+import org.apache.kafka.common.errors.InvalidConfigurationException;
+import org.apache.kafka.common.errors.InvalidPartitionsException;
+import org.apache.kafka.common.errors.InvalidReplicationFactorException;
+import org.apache.kafka.common.errors.PolicyViolationException;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
 import org.springframework.context.ApplicationContext;
@@ -130,12 +135,23 @@ public class TopicService {
         return future.get(OVERVIEW_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-    public Topic createTopic( String clusterId , Topic topic ) throws KafkaAdminApiException, TopicAlreadyExistsException {
+    public Topic createTopic( String clusterId , Topic topic ) throws KafkaAdminApiException, TopicAlreadyExistsException, InvalidTopicConfigException {
+        return createTopic(clusterId, topic, Collections.emptyMap());
+    }
+
+    /**
+     * Creates the topic with the given topic-level configs. A null partition count or
+     * replication factor on {@code topic} falls back to the broker default.
+     */
+    public Topic createTopic( String clusterId , Topic topic, Map<String, String> configs ) throws KafkaAdminApiException, TopicAlreadyExistsException, InvalidTopicConfigException {
         try {
             Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
             NewTopic newTopic = new NewTopic(topic.getName(),
-                    topic.getPartitions(),
-                    topic.getReplicatorFactor());
+                    Optional.ofNullable(topic.getPartitions()),
+                    Optional.ofNullable(topic.getReplicatorFactor()));
+            if (configs != null && !configs.isEmpty()) {
+                newTopic.configs(configs);
+            }
             CreateTopicsResult result = admin.createTopics(Collections.singleton(newTopic));
             KafkaFuture<Void> future = result.values().get(topic.getName());
             future.get();
@@ -145,6 +161,12 @@ public class TopicService {
         } catch (ExecutionException e) {
             if (e.getCause() instanceof TopicExistsException) {
                 throw new TopicAlreadyExistsException("A topic named '" + topic.getName() + "' already exists");
+            }
+            if (e.getCause() instanceof InvalidConfigurationException
+                    || e.getCause() instanceof InvalidReplicationFactorException
+                    || e.getCause() instanceof InvalidPartitionsException
+                    || e.getCause() instanceof PolicyViolationException) {
+                throw new InvalidTopicConfigException(e.getCause().getMessage());
             }
             log.error("Failed to create topic {} on cluster {}", topic.getName(), clusterId, e);
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());

@@ -3,6 +3,7 @@ export * from './cluster';
 export * from './cluster-overview';
 export * from './broker';
 export * from './topic';
+export * from './topic-create-request';
 export * from './topic-overview';
 export * from './consumer';
 export * from './consumer-group';

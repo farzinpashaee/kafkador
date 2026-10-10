@@ -15,7 +15,8 @@
           type="button"
           class="btn btn-primary"
           data-bs-toggle="modal"
-          data-bs-target="#createTopicModal">
+          data-bs-target="#createTopicModal"
+          (click)="resetCreateForm()">
           <i class="bi bi-plus-circle me-1"></i>
           New Topic
         </button>
@@ -108,7 +109,7 @@
 
 <!-- Create topic -->
 <div class="modal fade" id="createTopicModal" tabindex="-1" aria-labelledby="createTopicModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
         <h1 class="modal-title fs-5" id="createTopicModalLabel">Create Topic</h1>
@@ -116,26 +117,75 @@
       </div>
       <div class="modal-body">
         <div class="mb-3">
-          <label for="name" class="form-label">Topic Name:</label>
+          <label for="name" class="form-label">Topic Name *</label>
           <input required [(ngModel)]="newTopic.name" type="text" class="form-control" id="name" placeholder="e.g. TransactionEvents">
         </div>
-        <div class="mb-3">
-          <label for="partitions" class="form-label">Partitions:</label>
-          <input required min="1" [(ngModel)]="newTopic.partitions" type="number" class="form-control" id="partitions" placeholder="e.g. 3">
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6">
+            <label for="partitions" class="form-label">Number of Partitions *</label>
+            <input required min="1" [(ngModel)]="newTopic.partitions" type="number" class="form-control" id="partitions" placeholder="e.g. 3">
+          </div>
+          <div class="col-sm-6">
+            <label for="cleanupPolicy" class="form-label">Cleanup policy</label>
+            <select [(ngModel)]="newTopic.cleanupPolicy" class="form-select" id="cleanupPolicy">
+              <option *ngFor="let policy of cleanupPolicies" [ngValue]="policy.value">{{ policy.label }}</option>
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label for="minInSyncReplicas" class="form-label">Min In Sync Replicas</label>
+            <input min="1" [(ngModel)]="newTopic.minInSyncReplicas" type="number" class="form-control" id="minInSyncReplicas" placeholder="Broker default">
+          </div>
+          <div class="col-sm-6">
+            <label for="replicatorFactor" class="form-label">Replication Factor</label>
+            <input min="1" [(ngModel)]="newTopic.replicatorFactor" type="number" class="form-control" id="replicatorFactor" placeholder="Broker default">
+          </div>
         </div>
         <div class="mb-3">
-          <label for="replicatorFactor" class="form-label">Replicator Factor:</label>
-          <input required min="1" [(ngModel)]="newTopic.replicatorFactor" type="number" class="form-control" id="replicatorFactor" placeholder="e.g. 3">
+          <label for="retentionMs" class="form-label">Time to retain data (in ms)</label>
+          <input min="-1" [(ngModel)]="newTopic.retentionMs" type="number" class="form-control" id="retentionMs" placeholder="Broker default, -1 keeps data forever">
+          <div class="d-flex flex-wrap gap-1 mt-2" role="group" aria-label="Retention presets">
+            <button *ngFor="let preset of retentionPresets" type="button"
+              class="btn btn-sm" [class.btn-secondary]="newTopic.retentionMs === preset.ms"
+              [class.btn-outline-secondary]="newTopic.retentionMs !== preset.ms"
+              [attr.aria-pressed]="newTopic.retentionMs === preset.ms"
+              (click)="setRetention(preset.ms)">{{ preset.label }}</button>
+          </div>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6">
+            <label for="retentionBytes" class="form-label">Max partition size in GB</label>
+            <select [(ngModel)]="newTopic.retentionBytes" class="form-select" id="retentionBytes">
+              <option *ngFor="let option of partitionSizeOptions" [ngValue]="option.bytes">{{ option.label }}</option>
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label for="maxMessageBytes" class="form-label">Maximum message size in bytes</label>
+            <input min="1" [(ngModel)]="newTopic.maxMessageBytes" type="number" class="form-control" id="maxMessageBytes" placeholder="Broker default">
+          </div>
         </div>
 
-        <div *ngIf="errors.get('createTopic')" class="alert alert-danger" role="alert">
+        <h2 class="fs-6 mb-2">Custom parameters</h2>
+        <div *ngFor="let param of customParameters; let i = index" class="d-flex gap-2 mb-2">
+          <label class="visually-hidden" [for]="'customParamName' + i">Parameter name</label>
+          <input [(ngModel)]="param.name" type="text" class="form-control" [id]="'customParamName' + i" placeholder="e.g. compression.type">
+          <label class="visually-hidden" [for]="'customParamValue' + i">Parameter value</label>
+          <input [(ngModel)]="param.value" type="text" class="form-control" [id]="'customParamValue' + i" placeholder="Value">
+          <button type="button" class="btn btn-outline-danger" (click)="removeCustomParameter(i)" aria-label="Remove parameter">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+        <button type="button" class="btn btn-sm btn-light" (click)="addCustomParameter()">
+          <i class="bi bi-plus-lg me-1"></i>Add Custom Parameter
+        </button>
+
+        <div *ngIf="errors.get('createTopic')" class="alert alert-danger mt-3 mb-0" role="alert">
           {{ errors.get('createTopic')?.message }}
         </div>
 
       </div>
       <div class="modal-footer">
         <button *ngIf="!flags.get('createTopicLoading')" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-        <button *ngIf="!flags.get('createTopicLoading')" type="button" class="btn btn-primary" (click)="createTopic()">Create Topic</button>
+        <button *ngIf="!flags.get('createTopicLoading')" type="button" class="btn btn-primary" [disabled]="!canCreateTopic" (click)="createTopic()">Create Topic</button>
         <div *ngIf="flags.get('createTopicLoading')">
           <div class="spinner-border spinner-border-sm" role="status">
             <span class="visually-hidden">Loading...</span>

@@ -162,7 +162,7 @@ public class ApiController {
 
     @PostMapping("/topics")
     public ResponseEntity<GenericResponse<Topic>> createTopic(@Valid @RequestBody TopicCreateRequestDto request)
-            throws KafkaAdminApiException, TopicAlreadyExistsException {
+            throws KafkaAdminApiException, TopicAlreadyExistsException, InvalidTopicConfigException {
         TopicService topicService = (TopicService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.TOPIC));
         ConnectionDto connection = connectionService.getActiveConnection();
@@ -170,7 +170,7 @@ public class ApiController {
                 .setName(request.getName())
                 .setPartitions(request.getPartitions())
                 .setReplicatorFactor(request.getReplicatorFactor());
-        Topic created = topicService.createTopic(connection.getClusterId(), topic);
+        Topic created = topicService.createTopic(connection.getClusterId(), topic, request.toTopicConfigs());
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequestUri()
                 .path("/{name}")
