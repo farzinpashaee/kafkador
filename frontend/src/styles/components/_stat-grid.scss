@@ -1,4 +1,4 @@
-// Stat cards shared by the Brokers, topic and consumer group pages.
+// Stat cards shared by the Brokers, broker, topic and consumer group pages.
 // One dark card per section (same look as the dashboard's top cards, driven by the same theme variables),
 // with the stats laid out in columns separated by thin dividers. Items wrap onto further rows without dividers
 // between rows.
@@ -44,6 +44,18 @@
 
   @media (min-width: 576px) {
     @include stat-columns(4);
+  }
+}
+
+.stat-grid-5 {
+  @include stat-columns(2);
+
+  @media (min-width: 576px) {
+    @include stat-columns(3);
+  }
+
+  @media (min-width: 1200px) {
+    @include stat-columns(5);
   }
 }
 

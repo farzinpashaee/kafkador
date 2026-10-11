@@ -24,120 +24,131 @@
   <div class="tab-content border border-top-0 p-3" id="profileTabsContent">
     <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="logs-tab" tabindex="0">
       <div class="row">
-        <h4><i class="bi bi-view-stacked"></i>&nbsp; {{broker.host}}:{{broker.port}}</h4>
-        <p>some description</p>
+        <h4>{{broker.host}}:{{broker.port}}</h4>
       </div>
-      <div class="row">
-        <div class="col-12 col-md-12 col-lg-4 mt-1">
-          <ul class="list-group">
-            <li class="list-group-item list-group-item-secondary"><i class="bi bi-diagram-3"></i>&nbsp; Cluster Identity
-              & Core
-            </li>
-            <li class="list-group-item text-s"><strong> ID:</strong> {{broker.id}}</li>
-            <li class="list-group-item text-s"><strong> Process Role:</strong> {{ getConfigValue('process.roles') }}
-            </li>
-            <li class="list-group-item text-s"><strong> Controller Voters:</strong> {{
-              getConfigValue('controller.quorum.voters') }}
-            </li>
-          </ul>
-        </div>
-        <div class="col-12 col-md-12 col-lg-4 mt-1">
-          <ul class="list-group">
-            <li class="list-group-item list-group-item-secondary"><i class="bi bi-hdd-network"></i>&nbsp; Networking &
-              Listeners
-            </li>
-            <li class="list-group-item text-s"><strong> Listeners:</strong> {{ getConfigValue('listeners') }}</li>
-            <li class="list-group-item text-s"><strong> Advertised Listeners:</strong> {{
-              getConfigValue('advertised.listeners') }}
-            </li>
-            <li class="list-group-item text-s"><strong> Inter Broker Listener Name:</strong> {{
-              getConfigValue('inter.broker.listener.name') }}
-            </li>
-          </ul>
-        </div>
-        <div class="col-12 col-md-12 col-lg-4 mt-1">
-          <ul class="list-group">
-            <li class="list-group-item list-group-item-secondary"><i class="bi bi-copy"></i>&nbsp; Replication & Fault
-              Tolerance
-            </li>
-            <li class="list-group-item text-s"><strong> Replication Factor:</strong> {{
-              getConfigValue('default.replication.factor') }}
-            </li>
-            <li class="list-group-item text-s"><strong> Minimum Number of In-sync Replicas:</strong> {{
-              getConfigValue('min.insync.replicas') }}
-            </li>
-            <li class="list-group-item text-s"><strong> Unclean Leader Election Enabled:</strong> {{
-              getConfigValue('unclean.leader.election.enable') }}
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-12">
-          <ul class="list-group">
-            <li class="list-group-item list-group-item-secondary"><i class="bi bi-card-list"></i>&nbsp; Messages, Log
-              Storage & Retention
-            </li>
-            <li class="list-group-item text-s"><strong> Message Maximum Size:</strong> {{
-              getConfigValue('message.max.bytes') }} bytes
-            </li>
-            <li class="list-group-item text-s"><strong> Replica Fetch Max Size:</strong> {{
-              getConfigValue('replica.fetch.max.bytes') }} bytes
-            </li>
-            <li class="list-group-item text-s"><strong> Log Directory:</strong> {{ getConfigValue('log.dirs') }}</li>
-            <li class="list-group-item text-s"><strong> Log Retention Hours:</strong> {{
-              getConfigValue('log.retention.hours') }}
-            </li>
-            <li class="list-group-item text-s"><strong> Log Segment:</strong> {{ getConfigValue('log.segment.bytes') }}
-              bytes
-            </li>
-            <li class="list-group-item text-s"><strong> Log Retention Check Interval:</strong> {{
-              getConfigValue('log.retention.check.interval.ms') }} ms
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-12">
-          <ul class="list-group">
-            <li class="list-group-item list-group-item-secondary"><i class="bi bi-speedometer"></i>&nbsp; Performance &
-              Throughput
-            </li>
-            <li class="list-group-item text-s"><strong> Network Threads Number:</strong> {{
-              getConfigValue('num.network.threads') }}
-            </li>
-            <li class="list-group-item text-s"><strong> I/O Threads Number:</strong> {{ getConfigValue('num.io.threads')
-              }}
-            </li>
-            <li class="list-group-item text-s"><strong> Send Socket Buffer Size:</strong> {{
-              getConfigValue('socket.send.buffer.bytes') }} bytes
-            </li>
-            <li class="list-group-item text-s"><strong> Receive Socket Buffer Size:</strong> {{
-              getConfigValue('socket.receive.buffer.bytes') }} bytes
-            </li>
-            <li class="list-group-item text-s"><strong> Maximum Queued Requests:</strong> {{
-              getConfigValue('queued.max.requests') }}
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-12">
-          <ul class="list-group">
-            <li class="list-group-item list-group-item-secondary"><i class="bi bi-card-checklist"></i>&nbsp; Reliability
-              & Availability Tuning
-            </li>
-            <li class="list-group-item text-s"><strong> Controller Shutdown Enabled:</strong> {{
-              getConfigValue('controlled.shutdown.enable') }}
-            </li>
-            <li class="list-group-item text-s"><strong> Controller Maximum Shutdown Retries:</strong> {{
-              getConfigValue('controlled.shutdown.max.retries') }}
-            </li>
-            <li class="list-group-item text-s"><strong> Maximum Replica Lag Time:</strong> {{
-              getConfigValue('replica.lag.time.max.ms') }} ms
-            </li>
-          </ul>
-        </div>
+      <div class="row g-4">
+        <section class="col-12 col-xl-6" aria-labelledby="brokerIdentityHeading">
+          <h6 id="brokerIdentityHeading" class="mb-2">Cluster identity &amp; core</h6>
+          <div class="stat-grid stat-grid-3">
+            <div class="stat-tile">
+              <div class="stat-label">ID</div>
+              <div class="stat-value">{{ broker.id }}</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Process role</div>
+              <div class="stat-value">{{ getConfigValue('process.roles') }}</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Controller voters</div>
+              <div class="stat-value">{{ getConfigValue('controller.quorum.voters') }}</div>
+            </div>
+          </div>
+        </section>
+        <section class="col-12 col-xl-6" aria-labelledby="brokerNetworkingHeading">
+          <h6 id="brokerNetworkingHeading" class="mb-2">Networking &amp; listeners</h6>
+          <div class="stat-grid stat-grid-3">
+            <div class="stat-tile">
+              <div class="stat-label">Listeners</div>
+              <div class="stat-value">{{ getConfigValue('listeners') }}</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Advertised listeners</div>
+              <div class="stat-value">{{ getConfigValue('advertised.listeners') }}</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Inter broker listener name</div>
+              <div class="stat-value">{{ getConfigValue('inter.broker.listener.name') }}</div>
+            </div>
+          </div>
+        </section>
+        <section class="col-12 col-xl-6" aria-labelledby="brokerReplicationHeading">
+          <h6 id="brokerReplicationHeading" class="mb-2">Replication &amp; fault tolerance</h6>
+          <div class="stat-grid stat-grid-3">
+            <div class="stat-tile">
+              <div class="stat-label">Replication factor</div>
+              <div class="stat-value">{{ getConfigValue('default.replication.factor') }}</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Minimum in-sync replicas</div>
+              <div class="stat-value">{{ getConfigValue('min.insync.replicas') }}</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Unclean leader election</div>
+              <div class="stat-value">{{ getConfigValue('unclean.leader.election.enable') }}</div>
+            </div>
+          </div>
+        </section>
+        <section class="col-12 col-xl-6" aria-labelledby="brokerReliabilityHeading">
+          <h6 id="brokerReliabilityHeading" class="mb-2">Reliability &amp; availability tuning</h6>
+          <div class="stat-grid stat-grid-3">
+            <div class="stat-tile">
+              <div class="stat-label">Controlled shutdown</div>
+              <div class="stat-value">{{ getConfigValue('controlled.shutdown.enable') }}</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Controlled shutdown max retries</div>
+              <div class="stat-value">{{ getConfigValue('controlled.shutdown.max.retries') }}</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Maximum replica lag time</div>
+              <div class="stat-value">{{ getConfigValue('replica.lag.time.max.ms') }} <span class="stat-of">ms</span></div>
+            </div>
+          </div>
+        </section>
+        <section class="col-12" aria-labelledby="brokerStorageHeading">
+          <h6 id="brokerStorageHeading" class="mb-2">Messages, log storage &amp; retention</h6>
+          <div class="stat-grid stat-grid-6">
+            <div class="stat-tile">
+              <div class="stat-label">Message maximum size</div>
+              <div class="stat-value">{{ getConfigValue('message.max.bytes') }} <span class="stat-of">bytes</span></div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Replica fetch max size</div>
+              <div class="stat-value">{{ getConfigValue('replica.fetch.max.bytes') }} <span class="stat-of">bytes</span></div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Log directory</div>
+              <div class="stat-value">{{ getConfigValue('log.dirs') }}</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Log retention</div>
+              <div class="stat-value">{{ getConfigValue('log.retention.hours') }} <span class="stat-of">hours</span></div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Log segment size</div>
+              <div class="stat-value">{{ getConfigValue('log.segment.bytes') }} <span class="stat-of">bytes</span></div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Log retention check interval</div>
+              <div class="stat-value">{{ getConfigValue('log.retention.check.interval.ms') }} <span class="stat-of">ms</span></div>
+            </div>
+          </div>
+        </section>
+        <section class="col-12" aria-labelledby="brokerPerformanceHeading">
+          <h6 id="brokerPerformanceHeading" class="mb-2">Performance &amp; throughput</h6>
+          <div class="stat-grid stat-grid-5">
+            <div class="stat-tile">
+              <div class="stat-label">Network threads</div>
+              <div class="stat-value">{{ getConfigValue('num.network.threads') }}</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">I/O threads</div>
+              <div class="stat-value">{{ getConfigValue('num.io.threads') }}</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Send socket buffer</div>
+              <div class="stat-value">{{ getConfigValue('socket.send.buffer.bytes') }} <span class="stat-of">bytes</span></div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Receive socket buffer</div>
+              <div class="stat-value">{{ getConfigValue('socket.receive.buffer.bytes') }} <span class="stat-of">bytes</span></div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Maximum queued requests</div>
+              <div class="stat-value">{{ getConfigValue('queued.max.requests') }}</div>
+            </div>
+          </div>
+        </section>
       </div>
 
     </div>
