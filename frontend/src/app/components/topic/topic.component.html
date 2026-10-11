@@ -31,53 +31,90 @@
   <div class="tab-content border border-top-0 p-3" id="profileTabsContent">
     <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="projects-tab" tabindex="0">
       <div class="row">
-        <h4><i class="bi bi-chat-square-text"></i>&nbsp; {{topic.name}}</h4>
-        <p>some description</p>
+        <h4>{{topic.name}}</h4>
       </div>
-      <div class="row">
-        <div class="col-12 col-md-12 col-lg-4 mt-1">
-          <ul class="list-group">
-            <li class="list-group-item list-group-item-secondary"><i class="bi bi-diagram-3"></i>&nbsp; Topic Identity & Partitioning</li>
-            <li class="list-group-item text-s"><strong> ID:</strong> {{topic.id}}</li>
-            <li class="list-group-item text-s"><strong> partitions:</strong> {{topic.partitions}}</li>
-            <li class="list-group-item text-s"><strong> Replication Factor:</strong> {{ getConfigValue('replication.factor') }}</li>
-          </ul>
-        </div>
-        <div class="col-12 col-md-12 col-lg-4 mt-1">
-          <ul class="list-group">
-            <li class="list-group-item list-group-item-secondary"><i class="bi bi-copy"></i>&nbsp; Retention & Cleanup Policy</li>
-            <li class="list-group-item text-s"><strong> Cleanup Policy:</strong> {{ getConfigValue('cleanup.policy') }}</li>
-            <li class="list-group-item text-s"><strong> Retention Duration:</strong> {{ getConfigValue('retention.ms') }} ms</li>
-            <li class="list-group-item text-s"><strong> Retention Size:</strong> {{ getConfigValue('retention.bytes') }} bytes</li>
-          </ul>
-        </div>
-        <div class="col-12 col-md-12 col-lg-4 mt-1">
-          <ul class="list-group">
-            <li class="list-group-item list-group-item-secondary"><i class="bi bi-hdd-network"></i>&nbsp; In-Sync Replicas & Durability</li>
-            <li class="list-group-item text-s"><strong> Minimum In-sync Replicas:</strong> {{ getConfigValue('min.insync.replicas') }}</li>
-            <li class="list-group-item text-s"><strong> Unclean Leader Election Enabled:</strong> {{ getConfigValue('unclean.leader.election.enable') }}</li>
-          </ul>
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-12">
-          <ul class="list-group">
-            <li class="list-group-item list-group-item-secondary"><i class="bi bi-card-list"></i>&nbsp; Messages, Ordering and Tiered Storage</li>
-            <li class="list-group-item text-s"><strong> Message Maximum Size:</strong> {{ getConfigValue('max.message.bytes') }} bytes</li>
-            <li class="list-group-item text-s"><strong> Message Timestamp Type:</strong> {{ getConfigValue('message.timestamp.type') }}</li>
-            <li class="list-group-item text-s"><strong> Local Retention Duration:</strong> {{ getConfigValue('local.retention.ms') }} ms</li>
-          </ul>
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-12">
-          <ul class="list-group">
-            <li class="list-group-item list-group-item-secondary"><i class="bi bi-speedometer"></i>&nbsp; Performance & Throughput</li>
-            <li class="list-group-item text-s"><strong> Segment Size:</strong> {{ getConfigValue('segment.bytes') }} bytes</li>
-            <li class="list-group-item text-s"><strong> Segment Duration:</strong> {{ getConfigValue('segment.ms') }} ms</li>
-            <li class="list-group-item text-s"><strong> Flush Messages:</strong> {{ getConfigValue('flush.messages') }}</li>
-          </ul>
-        </div>
+      <div class="row g-4">
+        <section class="col-12 col-xl-6" aria-labelledby="topicIdentityHeading">
+          <h6 id="topicIdentityHeading" class="mb-2">Topic identity &amp; partitioning</h6>
+          <div class="stat-grid stat-grid-3">
+            <div class="stat-tile">
+              <div class="stat-label">ID</div>
+              <div class="stat-value">{{ topic.id }}</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Partitions</div>
+              <div class="stat-value">{{ topic.partitions }}</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Replication factor</div>
+              <div class="stat-value">{{ topic.replicatorFactor || 'N/A' }}</div>
+            </div>
+          </div>
+        </section>
+        <section class="col-12 col-xl-6" aria-labelledby="topicRetentionHeading">
+          <h6 id="topicRetentionHeading" class="mb-2">Retention &amp; cleanup policy</h6>
+          <div class="stat-grid stat-grid-3">
+            <div class="stat-tile">
+              <div class="stat-label">Cleanup policy</div>
+              <div class="stat-value">{{ getConfigValue('cleanup.policy') }}</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Retention duration</div>
+              <div class="stat-value">{{ getConfigValue('retention.ms') }} <span class="stat-of">ms</span></div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Retention size</div>
+              <div class="stat-value">{{ getConfigValue('retention.bytes') }} <span class="stat-of">bytes</span></div>
+            </div>
+          </div>
+        </section>
+        <section class="col-12 col-xl-6" aria-labelledby="topicDurabilityHeading">
+          <h6 id="topicDurabilityHeading" class="mb-2">In-sync replicas &amp; durability</h6>
+          <div class="stat-grid stat-grid-2">
+            <div class="stat-tile">
+              <div class="stat-label">Minimum in-sync replicas</div>
+              <div class="stat-value">{{ getConfigValue('min.insync.replicas') }}</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Unclean leader election</div>
+              <div class="stat-value">{{ getConfigValue('unclean.leader.election.enable') }}</div>
+            </div>
+          </div>
+        </section>
+        <section class="col-12 col-xl-6" aria-labelledby="topicMessagesHeading">
+          <h6 id="topicMessagesHeading" class="mb-2">Messages, ordering &amp; tiered storage</h6>
+          <div class="stat-grid stat-grid-3">
+            <div class="stat-tile">
+              <div class="stat-label">Message maximum size</div>
+              <div class="stat-value">{{ getConfigValue('max.message.bytes') }} <span class="stat-of">bytes</span></div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Message timestamp type</div>
+              <div class="stat-value">{{ getConfigValue('message.timestamp.type') }}</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Local retention duration</div>
+              <div class="stat-value">{{ getConfigValue('local.retention.ms') }} <span class="stat-of">ms</span></div>
+            </div>
+          </div>
+        </section>
+        <section class="col-12 col-xl-6" aria-labelledby="topicPerformanceHeading">
+          <h6 id="topicPerformanceHeading" class="mb-2">Performance &amp; throughput</h6>
+          <div class="stat-grid stat-grid-3">
+            <div class="stat-tile">
+              <div class="stat-label">Segment size</div>
+              <div class="stat-value">{{ getConfigValue('segment.bytes') }} <span class="stat-of">bytes</span></div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Segment duration</div>
+              <div class="stat-value">{{ getConfigValue('segment.ms') }} <span class="stat-of">ms</span></div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">Flush messages</div>
+              <div class="stat-value">{{ getConfigValue('flush.messages') }}</div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
     <div class="tab-pane fade" id="configurations" role="tabpanel" aria-labelledby="overview-tab" tabindex="0">

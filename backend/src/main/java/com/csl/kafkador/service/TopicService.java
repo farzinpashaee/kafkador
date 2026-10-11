@@ -212,6 +212,9 @@ public class TopicService {
                 topic.setName(topicDescription.name());
                 topic.setId(topicDescription.topicId().toString());
                 topic.setPartitions(topicDescription.partitions().size());
+                // Not a topic config: it's the replica count, taken from the first partition.
+                topicDescription.partitions().stream().findFirst()
+                        .ifPresent(p -> topic.setReplicatorFactor((short) p.replicas().size()));
                 topic.setConfig(getBrokerConfiguration(clusterId, topicDescription.name()));
                 return topic;
             }
