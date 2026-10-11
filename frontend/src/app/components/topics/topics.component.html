@@ -145,7 +145,7 @@
           <input min="-1" [(ngModel)]="newTopic.retentionMs" type="number" class="form-control" id="retentionMs" placeholder="Broker default, -1 keeps data forever">
           <div class="d-flex flex-wrap gap-1 mt-2" role="group" aria-label="Retention presets">
             <button *ngFor="let preset of retentionPresets" type="button"
-              class="btn btn-sm" [class.btn-secondary]="newTopic.retentionMs === preset.ms"
+              class="btn btn-sm retention-preset" [class.btn-secondary]="newTopic.retentionMs === preset.ms"
               [class.btn-outline-secondary]="newTopic.retentionMs !== preset.ms"
               [attr.aria-pressed]="newTopic.retentionMs === preset.ms"
               (click)="setRetention(preset.ms)">{{ preset.label }}</button>

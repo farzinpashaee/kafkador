@@ -19,3 +19,11 @@
 td {
   font-variant-numeric: tabular-nums;
 }
+
+// Retention quick picks, 72% of a regular small button.
+.retention-preset {
+  --bs-btn-padding-y: 0.18rem;
+  --bs-btn-padding-x: 0.36rem;
+  --bs-btn-font-size: 0.63rem;
+  --bs-btn-border-radius: 0.18rem;
+}

@@ -15,6 +15,7 @@ export type TopicSortKey = 'name' | 'partitionCount' | 'outOfSyncReplicaCount' |
 const SHOW_INTERNAL_STORAGE_KEY = 'topics.showInternal';
 
 const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
 const GIB = 1024 * 1024 * 1024;
 
 /** Key/value row of the create form's custom parameters list. */
@@ -76,15 +77,16 @@ export class TopicsComponent {
     { value: 'compact,delete', label: 'Compact, Delete' }
   ];
 
+  /** Retention quick picks; -1 keeps data forever. */
   readonly retentionPresets = [
-    { label: '1 hour', ms: HOUR_MS },
-    { label: '3 hours', ms: 3 * HOUR_MS },
-    { label: '6 hours', ms: 6 * HOUR_MS },
-    { label: '12 hours', ms: 12 * HOUR_MS },
-    { label: '1 day', ms: 24 * HOUR_MS },
-    { label: '2 days', ms: 2 * 24 * HOUR_MS },
-    { label: '7 days', ms: 7 * 24 * HOUR_MS },
-    { label: '4 weeks', ms: 28 * 24 * HOUR_MS }
+    { label: '1 Hour', ms: HOUR_MS },
+    { label: '3 Hours', ms: 3 * HOUR_MS },
+    { label: '12 Hours', ms: 12 * HOUR_MS },
+    { label: '1 Day', ms: DAY_MS },
+    { label: '1 Week', ms: 7 * DAY_MS },
+    { label: '1 Month', ms: 30 * DAY_MS },
+    { label: '1 Year', ms: 365 * DAY_MS },
+    { label: 'Forever', ms: -1 }
   ];
 
   /** Max partition size choices; null leaves retention.bytes at the broker default. */

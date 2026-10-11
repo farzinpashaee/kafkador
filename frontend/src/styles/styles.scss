@@ -15,6 +15,10 @@
       font-weight: normal;
       font-style: normal;
 }
+// Root size drives every rem/em in the app (Bootstrap included); 90% of the browser default.
+html {
+    font-size: 90%;
+}
 body {
     font-family: Rubik, -apple-system, Arial, sans-serif;
 }
