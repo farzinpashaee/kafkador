@@ -24,6 +24,7 @@
   --app-surface: #666;
   --app-text: #000000;
   --app-text-muted: #6c757d;
+  --app-table-color: #343a40;
 
   --app-card-top-widget-text: #FFF;
   --app-card-top-widget-border: 0px solid #AAA;
@@ -53,8 +54,17 @@
   --app-surface: #1e1e1e;
   --app-text: #ffffff;
   --app-text-muted: #a0a0a0;
+  --app-table-color: var(--bs-emphasis-color);
 
   --app-card-top-widget-text: #AAA;
   --app-card-top-widget-border: #353a40;
   --app-card-top-widget-background: #222529;
+}
+
+// Bootstrap colours table text with the emphasis colour (black in light mode); use the theme's table colour instead.
+.table {
+  --bs-table-color: var(--app-table-color);
+  --bs-table-striped-color: var(--app-table-color);
+  --bs-table-active-color: var(--app-table-color);
+  --bs-table-hover-color: var(--app-table-color);
 }
