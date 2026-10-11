@@ -85,10 +85,12 @@
             <td routerLink="/topic/{{topic.name}}" class="cursor-pointer">{{ topic.messageCount ?? 'N/A' }}</td>
             <td routerLink="/topic/{{topic.name}}" class="cursor-pointer text-nowrap">{{ formatSize(topic.sizeBytes) }}</td>
             <td>
-              <button type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Delete topic {{topic.name}}"
-                      (click)="openDeleteDialog(topic)" data-bs-toggle="modal" data-bs-target="#deleteTopicModal">
-                <i class="bi bi-trash3" aria-hidden="true"></i>
-              </button>
+              @if (!topic.internal) {
+                <button type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Delete topic {{topic.name}}"
+                        (click)="openDeleteDialog(topic)" data-bs-toggle="modal" data-bs-target="#deleteTopicModal">
+                  <i class="bi bi-trash3" aria-hidden="true"></i>
+                </button>
+              }
             </td>
           </tr>
         } @empty {
