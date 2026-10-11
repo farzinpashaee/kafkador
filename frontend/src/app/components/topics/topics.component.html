@@ -7,6 +7,9 @@
   <div *ngIf="errors.get('getTopics')" class="alert alert-danger mt-2" role="alert">
     {{ errors.get('getTopics')?.message }}
   </div>
+  <div *ngIf="errors.get('bookmarks')" class="alert alert-danger mt-2" role="alert">
+    {{ errors.get('bookmarks')?.message }}
+  </div>
 
   <div class="row mt-2">
     <div class="col-12">
@@ -39,6 +42,15 @@
                        [checked]="showInternal" (change)="setShowInternal($any($event.target).checked)">
                 <label class="form-check-label text-s text-nowrap" for="showInternalTopicsSwitch">
                   Show internal topics ({{ internalTopicCount }})
+                </label>
+              </div>
+            </li>
+            <li>
+              <div class="form-check form-switch pe-4">
+                <input class="form-check-input" type="checkbox" id="bookmarkedTopicsSwitch"
+                       [checked]="bookmarkedOnly" (change)="setBookmarkedOnly($any($event.target).checked)">
+                <label class="form-check-label text-s text-nowrap" for="bookmarkedTopicsSwitch">
+                  Bookmarked only ({{ bookmarks().size }})
                 </label>
               </div>
             </li>
@@ -85,12 +97,19 @@
             <td routerLink="/topic/{{topic.name}}" class="cursor-pointer">{{ topic.messageCount ?? 'N/A' }}</td>
             <td routerLink="/topic/{{topic.name}}" class="cursor-pointer text-nowrap">{{ formatSize(topic.sizeBytes) }}</td>
             <td>
-              @if (!topic.internal) {
-                <button type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Delete topic {{topic.name}}"
-                        (click)="openDeleteDialog(topic)" data-bs-toggle="modal" data-bs-target="#deleteTopicModal">
-                  <i class="bi bi-trash3" aria-hidden="true"></i>
+              <div class="d-flex justify-content-end gap-2">
+                @if (!topic.internal) {
+                  <button type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Delete topic {{topic.name}}"
+                          (click)="openDeleteDialog(topic)" data-bs-toggle="modal" data-bs-target="#deleteTopicModal">
+                    <i class="bi bi-trash3" aria-hidden="true"></i>
+                  </button>
+                }
+                <button type="button" class="btn btn-link btn-icon p-0" [attr.aria-pressed]="isBookmarked(topic)"
+                        attr.aria-label="Bookmark topic {{topic.name}}" [attr.title]="isBookmarked(topic) ? 'Remove bookmark' : 'Bookmark'"
+                        (click)="toggleBookmark(topic)">
+                  <i class="bi" aria-hidden="true" [ngClass]="isBookmarked(topic) ? 'bi-bookmark-fill text-primary' : 'bi-bookmark'"></i>
                 </button>
-              }
+              </div>
             </td>
           </tr>
         } @empty {

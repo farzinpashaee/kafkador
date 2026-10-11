@@ -16,8 +16,9 @@ describe('ConsumersComponent', () => {
   ];
 
   beforeEach(async () => {
-    const api = jasmine.createSpyObj<ApiService>('ApiService', ['getConsumerGroups', 'getTopics', 'getChart']);
+    const api = jasmine.createSpyObj<ApiService>('ApiService', ['getConsumerGroups', 'getTopics', 'getChart', 'getBookmarks']);
     api.getConsumerGroups.and.returnValue(of({ body: { data: groups } } as any));
+    api.getBookmarks.and.returnValue(of({ data: [{ entityType: 'CONSUMER_GROUP', entityId: 'orders-service' }] } as any));
     api.getTopics.and.returnValue(of({ body: { data: [] } } as any));
     api.getChart.and.returnValue(throwError(() => ({ status: 428 })));
 
@@ -53,5 +54,12 @@ describe('ConsumersComponent', () => {
     component.filteredConsumerGroups = [];
     fixture.detectChanges();
     expect(exportButton().disabled).toBeTrue();
+  });
+
+  it('filters to bookmarked consumer groups', () => {
+    component.setBookmarkedOnly(true);
+    expect(component.filteredConsumerGroups.map(g => g.id)).toEqual(['orders-service']);
+    component.setBookmarkedOnly(false);
+    expect(component.filteredConsumerGroups.length).toBe(2);
   });
 });

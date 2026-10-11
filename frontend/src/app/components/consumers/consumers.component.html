@@ -31,6 +31,9 @@
   <div *ngIf="errors.get('getConsumerGroups')" class="alert alert-danger mt-2" role="alert">
     {{ errors.get('getConsumerGroups')?.message }}
   </div>
+  <div *ngIf="errors.get('bookmarks')" class="alert alert-danger mt-2" role="alert">
+    {{ errors.get('bookmarks')?.message }}
+  </div>
 
   <div class="row mt-2">
     <div class="col-12">
@@ -50,6 +53,23 @@
           class="form-control form-control-sm search-input-compact search-input-compact-width ms-auto"
           type="search"
           [formControl]="filter"/>
+        <div class="dropdown">
+          <button class="btn btn-sm dropdown-toggle outline-button" type="button" data-bs-toggle="dropdown"
+                  data-bs-auto-close="outside" aria-expanded="false">
+            <i class="bi bi-funnel" aria-hidden="true"></i> Filter
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-padded">
+            <li>
+              <div class="form-check form-switch pe-4">
+                <input class="form-check-input" type="checkbox" id="bookmarkedConsumerGroupsSwitch"
+                       [checked]="bookmarkedOnly" (change)="setBookmarkedOnly($any($event.target).checked)">
+                <label class="form-check-label text-s text-nowrap" for="bookmarkedConsumerGroupsSwitch">
+                  Bookmarked only ({{ bookmarks().size }})
+                </label>
+              </div>
+            </li>
+          </ul>
+        </div>
         <div class="dropdown">
           <button type="button" class="btn btn-sm outline-button dropdown-toggle" data-bs-toggle="dropdown"
                   aria-expanded="false" [disabled]="!filteredConsumerGroups.length">
@@ -76,6 +96,7 @@
           <th scope="col">Partition Assignor</th>
           <th scope="col">Group State</th>
           <th scope="col"></th>
+          <th scope="col"><span class="visually-hidden">Bookmark</span></th>
         </tr>
         </thead>
         <tbody>
@@ -94,11 +115,18 @@
                 <i class="bi bi-box-arrow-in-down" aria-hidden="true"></i>
               </button>
             </td>
+            <td>
+              <button type="button" class="btn btn-link btn-icon p-0" [attr.aria-pressed]="isBookmarked(consumerGroup)"
+                      attr.aria-label="Bookmark consumer group {{consumerGroup.id}}" [attr.title]="isBookmarked(consumerGroup) ? 'Remove bookmark' : 'Bookmark'"
+                      (click)="toggleBookmark(consumerGroup)">
+                <i class="bi" aria-hidden="true" [ngClass]="isBookmarked(consumerGroup) ? 'bi-bookmark-fill text-primary' : 'bi-bookmark'"></i>
+              </button>
+            </td>
           </tr>
           } @empty {
           <tr>
-            <td colspan="7" class="text-center text-s text-color-subtle py-3">
-              {{ filter.value ? 'No consumer groups match your search.' : 'No consumer groups found.' }}
+            <td colspan="8" class="text-center text-s text-color-subtle py-3">
+              {{ filter.value ? 'No consumer groups match your search.' : (bookmarkedOnly ? 'No bookmarked consumer groups.' : 'No consumer groups found.') }}
             </td>
           </tr>
           }

@@ -10,6 +10,7 @@ describe('TopicsComponent', () => {
   let component: TopicsComponent;
   let fixture: ComponentFixture<TopicsComponent>;
   let storage: Map<string, unknown>;
+  let api: jasmine.SpyObj<ApiService>;
 
   const topic = (name: string, overrides: Partial<TopicOverview> = {}): TopicOverview => ({
     name, internal: name.startsWith('_'), partitionCount: 1, replicationFactor: 3, outOfSyncReplicaCount: 0,
@@ -25,8 +26,11 @@ describe('TopicsComponent', () => {
 
   beforeEach(async () => {
     storage = new Map();
-    const api = jasmine.createSpyObj<ApiService>('ApiService', ['getTopicsOverview', 'getChart']);
+    api = jasmine.createSpyObj<ApiService>('ApiService', ['getTopicsOverview', 'getChart', 'getBookmarks', 'addBookmark', 'removeBookmark']);
     api.getTopicsOverview.and.returnValue(of({ data: topics } as any));
+    api.getBookmarks.and.returnValue(of({ data: [{ entityType: 'TOPIC', entityId: 'orders' }] } as any));
+    api.addBookmark.and.returnValue(of({} as any));
+    api.removeBookmark.and.returnValue(of(undefined));
     api.getChart.and.returnValue(throwError(() => ({ status: 428 })));
     const localStorage = {
       getItem: (key: string) => storage.get(key) ?? null,
@@ -83,5 +87,30 @@ describe('TopicsComponent', () => {
     expect(JSON.parse(component.exportContent('json', [topics[2]]))[0]).toEqual(jasmine.objectContaining({ name: 'orders', messages: 120 }));
     const xml = new DOMParser().parseFromString(component.exportContent('xml', [topics[2]]), 'application/xml');
     expect(xml.querySelector('topics > topic > name')?.textContent).toBe('orders');
+  });
+
+  it('filters to bookmarked topics and remembers the choice', () => {
+    expect(api.getBookmarks).toHaveBeenCalledWith('TOPIC');
+    component.setBookmarkedOnly(true);
+    expect(component.filteredTopics.map(t => t.name)).toEqual(['orders']);
+    expect(storage.get('topics.bookmarkedOnly')).toBeTrue();
+  });
+
+  it('toggles a bookmark and keeps it when saving succeeds', () => {
+    const payments = topics[3];
+    component.toggleBookmark(payments);
+    expect(api.addBookmark).toHaveBeenCalledWith({ entityType: 'TOPIC', entityId: 'payments' });
+    expect(component.isBookmarked(payments)).toBeTrue();
+
+    component.toggleBookmark(payments);
+    expect(api.removeBookmark).toHaveBeenCalledWith({ entityType: 'TOPIC', entityId: 'payments' });
+    expect(component.isBookmarked(payments)).toBeFalse();
+  });
+
+  it('rolls a bookmark back and shows an error when saving fails', () => {
+    api.addBookmark.and.returnValue(throwError(() => ({ status: 500, error: {} })));
+    component.toggleBookmark(topics[3]);
+    expect(component.isBookmarked(topics[3])).toBeFalse();
+    expect(component.errors.get('bookmarks')).toBeTruthy();
   });
 });

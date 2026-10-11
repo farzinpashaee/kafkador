@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { ActivatedRoute,Router,RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
@@ -6,7 +6,7 @@ import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { combineLatest } from 'rxjs';
 import { startWith, map, debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { ApiService, CommonService, ValidationService, LocalStorageService } from '../../services';
+import { ApiService, CommonService, ValidationService, LocalStorageService, BookmarkService } from '../../services';
 import { ConsumerGroup, Chart, Error, Connection, GenericResponse, Topic } from '../../models';
 import { PaginationComponent } from '../pagination/pagination.component';
 import { EXPORT_FORMATS, ExportField, ExportFormat, buildExport, downloadExport } from '../../services/table-export';
@@ -19,6 +19,8 @@ const EXPORT_FIELDS: ExportField<ConsumerGroup>[] = [
   { key: 'partitionAssignor', label: 'Partition assignor', value: g => g.partitionAssignor },
   { key: 'groupState', label: 'Group state', value: g => g.groupState }
 ];
+
+const BOOKMARKED_ONLY_STORAGE_KEY = 'consumers.bookmarkedOnly';
 
 @Component({
   selector: 'app-consumers',
@@ -49,6 +51,14 @@ export class ConsumersComponent {
   topics: Topic[] = [];
   consumerGroups: ConsumerGroup[] = [];
   filteredConsumerGroups: ConsumerGroup[] = [];
+  bookmarkedOnly = false;
+  private bookmarkService = inject(BookmarkService);
+  readonly bookmarks = this.bookmarkService.bookmarks('CONSUMER_GROUP');
+  // Re-apply the bookmark filter when bookmarks load or one is toggled.
+  private readonly bookmarkFilter = effect(() => {
+    this.bookmarks();
+    this.refilter();
+  });
   activeConnection: Connection | null = null;
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
@@ -70,6 +80,8 @@ export class ConsumersComponent {
 
   ngOnInit() {
     this.activeConnection = this.localStorageService.getItem<Connection>("activeConnection");
+    this.bookmarkedOnly = this.localStorageService.getItem<boolean>(BOOKMARKED_ONLY_STORAGE_KEY) ?? false;
+    this.bookmarkService.load('CONSUMER_GROUP', res => this.bookmarkError(res, 'Failed to get bookmarked consumer groups!'));
     this.flags.set('getConsumerGroupsLoading',true);
     this.flags.set('agentEnabled',true);
 
@@ -124,7 +136,35 @@ export class ConsumersComponent {
 
   search(text: string): ConsumerGroup[] {
     const term = text.toLowerCase();
-    return this.consumerGroups.filter((group: ConsumerGroup) => group.id.toLowerCase().includes(term));
+    const bookmarks = this.bookmarks();
+    return this.consumerGroups.filter((group: ConsumerGroup) =>
+      (!this.bookmarkedOnly || bookmarks.has(group.id)) && group.id.toLowerCase().includes(term));
+  }
+
+  setBookmarkedOnly(only: boolean): void {
+    this.bookmarkedOnly = only;
+    this.localStorageService.setItem(BOOKMARKED_ONLY_STORAGE_KEY, only);
+    this.refilter();
+    this.page = 1;
+  }
+
+  isBookmarked(consumerGroup: ConsumerGroup): boolean {
+    return this.bookmarks().has(consumerGroup.id);
+  }
+
+  toggleBookmark(consumerGroup: ConsumerGroup): void {
+    this.errors.delete('bookmarks');
+    this.bookmarkService.toggle('CONSUMER_GROUP', consumerGroup.id, res => this.bookmarkError(res, 'Failed to update the bookmark!'));
+  }
+
+  /** Recomputes the listed groups for the current search and bookmark filter, keeping the page in range. */
+  private refilter(): void {
+    this.filteredConsumerGroups = this.search(this.filter.value);
+    this.page = Math.min(this.page, Math.max(1, Math.ceil(this.filteredConsumerGroups.length / this.pageSize)));
+  }
+
+  private bookmarkError(res: HttpErrorResponse, message: string): void {
+    this.errors.set('bookmarks', this.commonService.prepareError(res.error?.error, '500', message));
   }
 
   /** Exports the consumer groups currently listed (search applied, all pages). */

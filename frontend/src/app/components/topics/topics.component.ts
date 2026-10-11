@@ -1,9 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ActivatedRoute,RouterModule } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
-import { ApiService, CommonService, LocalStorageService, ValidationService } from '../../services';
+import { ApiService, BookmarkService, CommonService, LocalStorageService, ValidationService } from '../../services';
 import { GenericResponse, TopicCreateRequest, TopicOverview, Chart, Error } from '../../models';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -13,6 +13,7 @@ import { EXPORT_FORMATS, ExportField, ExportFormat, buildExport, downloadExport,
 export type TopicSortKey = 'name' | 'partitionCount' | 'outOfSyncReplicaCount' | 'replicationFactor' | 'messageCount' | 'sizeBytes';
 
 const SHOW_INTERNAL_STORAGE_KEY = 'topics.showInternal';
+const BOOKMARKED_ONLY_STORAGE_KEY = 'topics.bookmarkedOnly';
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -65,6 +66,9 @@ export class TopicsComponent {
   filter = new FormControl('', { nonNullable: true });
   searchTerm = '';
   showInternal = true;
+  bookmarkedOnly = false;
+  private bookmarkService = inject(BookmarkService);
+  readonly bookmarks = this.bookmarkService.bookmarks('TOPIC');
   sortKey: TopicSortKey = 'name';
   sortAscending = true;
   readonly pageSize = 10;
@@ -104,12 +108,14 @@ export class TopicsComponent {
     { key: 'sizeBytes', label: 'Size', hint: 'Disk space used by the topic across all brokers, every replica counted' }
   ];
 
-  /** Topics matching the search box and the internal-topics filter, in the current sort order. */
+  /** Topics matching the search box and the internal-topics and bookmark filters, in the current sort order. */
   get filteredTopics(): TopicOverview[] {
     const term = this.searchTerm.trim().toLowerCase();
     const direction = this.sortAscending ? 1 : -1;
+    const bookmarks = this.bookmarks();
     return this.topics
-      .filter(t => (this.showInternal || !t.internal) && (!term || t.name.toLowerCase().includes(term)))
+      .filter(t => (this.showInternal || !t.internal) && (!this.bookmarkedOnly || bookmarks.has(t.name))
+        && (!term || t.name.toLowerCase().includes(term)))
       .sort((a, b) => direction * this.compare(a, b, this.sortKey));
   }
 
@@ -131,6 +137,8 @@ export class TopicsComponent {
     this.newTopic = this.blankTopic();
     this.deletedTopic = this.blankOverview();
     this.showInternal = this.localStorageService.getItem<boolean>(SHOW_INTERNAL_STORAGE_KEY) ?? true;
+    this.bookmarkedOnly = this.localStorageService.getItem<boolean>(BOOKMARKED_ONLY_STORAGE_KEY) ?? false;
+    this.bookmarkService.load('TOPIC', res => this.bookmarkError(res, 'Failed to get bookmarked topics!'));
     this.flags.set('getTopicLoading',true);
     this.flags.set('agentEnabled',true);
 
@@ -173,6 +181,25 @@ export class TopicsComponent {
     this.showInternal = show;
     this.page = 1;
     this.localStorageService.setItem(SHOW_INTERNAL_STORAGE_KEY, show);
+  }
+
+  setBookmarkedOnly(only: boolean): void {
+    this.bookmarkedOnly = only;
+    this.page = 1;
+    this.localStorageService.setItem(BOOKMARKED_ONLY_STORAGE_KEY, only);
+  }
+
+  isBookmarked(topic: TopicOverview): boolean {
+    return this.bookmarks().has(topic.name);
+  }
+
+  toggleBookmark(topic: TopicOverview): void {
+    this.errors.delete('bookmarks');
+    this.bookmarkService.toggle('TOPIC', topic.name, res => this.bookmarkError(res, 'Failed to update the bookmark!'));
+  }
+
+  private bookmarkError(res: HttpErrorResponse, message: string): void {
+    this.errors.set('bookmarks', this.commonService.prepareError(res.error?.error, '500', message));
   }
 
   sortBy(key: TopicSortKey): void {

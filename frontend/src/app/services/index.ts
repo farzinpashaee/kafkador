@@ -7,3 +7,4 @@ export * from './documentation.service';
 export * from './kafkador-title-strategy';
 export * from './local-storage.service';
 export * from './validation.service';
+export * from './bookmark.service';

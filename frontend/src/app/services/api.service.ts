@@ -1,7 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse,HttpResponse   } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Alert, Topic, TopicCreateRequest, SearchResult, ConsumerGroup, ConsumerGroupDetails, GenericResponse,
+import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Alert, Topic, TopicCreateRequest, SearchResult, ConsumerGroup, ConsumerGroupDetails, Bookmark, BookmarkEntityType, GenericResponse,
   SchemaRegistry, SchemaRegistryConfig, Chart, Event, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery,
   AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest,
   SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, SchemaLookupResult,
@@ -100,6 +100,20 @@ export class ApiService {
   public getConsumerGroupDetails(id:string): Observable<GenericResponse<ConsumerGroupDetails>> {
     return this.http.get<GenericResponse<ConsumerGroupDetails>>(`${ApiService.ApiBaseUrl}/consumer-groups/${encodeURIComponent(id)}`,
       { withCredentials: true });
+  }
+
+  public getBookmarks(type:BookmarkEntityType): Observable<GenericResponse<Bookmark[]>> {
+    return this.http.get<GenericResponse<Bookmark[]>>(`${ApiService.ApiBaseUrl}/bookmarks`,
+      { withCredentials: true, params: { type } });
+  }
+
+  public addBookmark(bookmark:Bookmark): Observable<GenericResponse<Bookmark>> {
+    return this.http.post<GenericResponse<Bookmark>>(`${ApiService.ApiBaseUrl}/bookmarks`, bookmark, { withCredentials: true });
+  }
+
+  public removeBookmark(bookmark:Bookmark): Observable<void> {
+    return this.http.delete<void>(`${ApiService.ApiBaseUrl}/bookmarks`,
+      { withCredentials: true, params: { type: bookmark.entityType, id: bookmark.entityId } });
   }
 
   public getDefaultConsumerGroupId(): Observable<HttpResponse<GenericResponse<string>>> {

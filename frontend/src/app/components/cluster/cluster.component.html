@@ -2,6 +2,9 @@
   <div class="alert alert-danger text-s p-2" role="alert" *ngIf="errors.get('getOverview')">
     {{ errors.get('getOverview')?.message }}
   </div>
+  <div class="alert alert-danger text-s p-2" role="alert" *ngIf="errors.get('bookmarks')">
+    {{ errors.get('bookmarks')?.message }}
+  </div>
 
   <p class="placeholder-glow" *ngIf="flags.get('getOverviewLoading')">
     <span class="placeholder col-12"></span>
@@ -76,6 +79,23 @@
                    aria-label="Search brokers" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()">
           </div>
           <div class="dropdown">
+            <button class="btn btn-sm dropdown-toggle outline-button" type="button" data-bs-toggle="dropdown"
+                    data-bs-auto-close="outside" aria-expanded="false">
+              <i class="bi bi-funnel" aria-hidden="true"></i> Filter
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-padded">
+              <li>
+                <div class="form-check form-switch pe-4">
+                  <input class="form-check-input" type="checkbox" id="bookmarkedBrokersSwitch"
+                         [checked]="bookmarkedOnly" (change)="setBookmarkedOnly($any($event.target).checked)">
+                  <label class="form-check-label text-s text-nowrap" for="bookmarkedBrokersSwitch">
+                    Bookmarked only ({{ bookmarks().size }})
+                  </label>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="dropdown">
             <button type="button" class="btn btn-sm outline-button dropdown-toggle" data-bs-toggle="dropdown"
                     aria-expanded="false" [disabled]="!sortedBrokers.length">
               Export
@@ -105,7 +125,7 @@
           <tbody id="clusterBrokers">
             <tr *ngIf="!pagedBrokers.length">
               <td [attr.colspan]="columns.length + 1" class="text-center text-s text-color-subtle py-3">
-                No brokers match "{{ searchTerm }}".
+                {{ bookmarkedOnly && !searchTerm ? 'No bookmarked brokers.' : 'No brokers match "' + searchTerm + '".' }}
               </td>
             </tr>
             <tr *ngFor="let broker of pagedBrokers" routerLink="/broker/{{broker.id}}" class="cursor-pointer">
@@ -123,7 +143,16 @@
               <td>
                 <span class="badge bg-dark"> <a class="badge-link">{{broker.host}}</a></span>
               </td>
-              <td><i class="bi bi-three-dots"></i></td>
+              <td>
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                  <i class="bi bi-three-dots" aria-hidden="true"></i>
+                  <button type="button" class="btn btn-link btn-icon p-0" [attr.aria-pressed]="isBookmarked(broker)"
+                          attr.aria-label="Bookmark broker {{broker.id}}" [attr.title]="isBookmarked(broker) ? 'Remove bookmark' : 'Bookmark'"
+                          (click)="toggleBookmark(broker); $event.stopPropagation()">
+                    <i class="bi" aria-hidden="true" [ngClass]="isBookmarked(broker) ? 'bi-bookmark-fill text-primary' : 'bi-bookmark'"></i>
+                  </button>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>

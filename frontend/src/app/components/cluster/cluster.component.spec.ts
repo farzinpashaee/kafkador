@@ -23,8 +23,9 @@ describe('ClusterComponent', () => {
   };
 
   async function create(overviewResponse = of({ data: overview } as any)) {
-    const api = jasmine.createSpyObj<ApiService>('ApiService', ['getClusterOverview']);
+    const api = jasmine.createSpyObj<ApiService>('ApiService', ['getClusterOverview', 'getBookmarks']);
     api.getClusterOverview.and.returnValue(overviewResponse);
+    api.getBookmarks.and.returnValue(of({ data: [{ entityType: 'BROKER', entityId: '2' }] } as any));
 
     await TestBed.configureTestingModule({
       imports: [ClusterComponent],
@@ -105,5 +106,12 @@ describe('ClusterComponent', () => {
 
     expect(component.errors.get('getOverview')).toBeTruthy();
     expect(component.overview).toBeUndefined();
+  });
+
+  it('filters to bookmarked brokers', async () => {
+    await create();
+    component.setBookmarkedOnly(true);
+    expect(component.sortedBrokers.map(b => b.id)).toEqual(['2']);
+    component.setBookmarkedOnly(false);
   });
 });

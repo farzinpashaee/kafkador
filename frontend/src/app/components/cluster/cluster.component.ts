@@ -1,9 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ApiService, CommonService, LocalStorageService } from '../../services';
+import { ApiService, CommonService, LocalStorageService, BookmarkService } from '../../services';
 import { Error, Connection, GenericResponse, ClusterOverview, BrokerOverview } from '../../models';
 import { PaginationComponent } from '../pagination/pagination.component';
 import { EXPORT_FORMATS, ExportField, ExportFormat, buildExport, downloadExport, formatBytes } from '../../services/table-export';
@@ -26,6 +26,8 @@ const EXPORT_FIELDS: ExportField<BrokerOverview>[] = [
   { key: 'rack', label: 'Rack', value: b => b.rack }
 ];
 
+const BOOKMARKED_ONLY_STORAGE_KEY = 'brokers.bookmarkedOnly';
+
 @Component({
   selector: 'app-cluster',
   imports: [CommonModule,FormsModule,RouterModule,PaginationComponent],
@@ -43,6 +45,9 @@ export class ClusterComponent{
   sortKey: BrokerSortKey = 'id';
   sortAscending = true;
   searchTerm = '';
+  bookmarkedOnly = false;
+  private bookmarkService = inject(BookmarkService);
+  readonly bookmarks = this.bookmarkService.bookmarks('BROKER');
   readonly exportFormats = EXPORT_FORMATS;
 
   readonly columns: { key: BrokerSortKey; label: string; hint?: string }[] = [
@@ -57,10 +62,12 @@ export class ClusterComponent{
     { key: 'host', label: 'Host' }
   ];
 
-  /** Brokers matching the search box, in the current sort order; what the table pages through and exports. */
+  /** Brokers matching the search box and bookmark filter, in the current sort order; what the table pages through and exports. */
   get sortedBrokers(): BrokerOverview[] {
     const term = this.searchTerm.trim().toLowerCase();
-    const brokers = (this.overview?.brokers ?? []).filter(b => !term || this.searchableText(b).includes(term));
+    const bookmarks = this.bookmarks();
+    const brokers = (this.overview?.brokers ?? []).filter(b => (!this.bookmarkedOnly || bookmarks.has(String(b.id)))
+      && (!term || this.searchableText(b).includes(term)));
     const direction = this.sortAscending ? 1 : -1;
     return brokers.sort((a, b) => direction * this.compare(a, b, this.sortKey));
   }
@@ -75,6 +82,8 @@ export class ClusterComponent{
 
   ngOnInit() {
     this.activeConnection = this.localStorageService.getItem<Connection>("activeConnection");
+    this.bookmarkedOnly = this.localStorageService.getItem<boolean>(BOOKMARKED_ONLY_STORAGE_KEY) ?? false;
+    this.bookmarkService.load('BROKER', res => this.bookmarkError(res, 'Failed to get bookmarked brokers!'));
     this.flags.set('getOverviewLoading',true);
     this.apiService.getClusterOverview().subscribe({
       next: (res: GenericResponse<ClusterOverview>) => {
@@ -92,6 +101,25 @@ export class ClusterComponent{
     this.sortAscending = this.sortKey === key ? !this.sortAscending : true;
     this.sortKey = key;
     this.page = 1;
+  }
+
+  setBookmarkedOnly(only: boolean): void {
+    this.bookmarkedOnly = only;
+    this.page = 1;
+    this.localStorageService.setItem(BOOKMARKED_ONLY_STORAGE_KEY, only);
+  }
+
+  isBookmarked(broker: BrokerOverview): boolean {
+    return this.bookmarks().has(String(broker.id));
+  }
+
+  toggleBookmark(broker: BrokerOverview): void {
+    this.errors.delete('bookmarks');
+    this.bookmarkService.toggle('BROKER', String(broker.id), res => this.bookmarkError(res, 'Failed to update the bookmark!'));
+  }
+
+  private bookmarkError(res: HttpErrorResponse, message: string): void {
+    this.errors.set('bookmarks', this.commonService.prepareError(res.error?.error, '500', message));
   }
 
   onSearch(): void {
