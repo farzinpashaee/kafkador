@@ -260,6 +260,17 @@ public class ApiController {
                 .success(HttpStatus.OK);
     }
 
+    @GetMapping("/consumer-groups/{id}")
+    public ResponseEntity<GenericResponse<ConsumerGroupDetailsDto>> getConsumerGroup(@PathVariable @NotBlank String id)
+            throws KafkaAdminApiException, ConsumerGroupNotFoundException {
+        ConsumerService consumersService = (ConsumerService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONSUMER));
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<ConsumerGroupDetailsDto>()
+                .data(consumersService.getConsumerGroupDetails(connection.getClusterId(), id))
+                .success(HttpStatus.OK);
+    }
+
     @GetMapping("/consumer-groups/default-id")
     public ResponseEntity<GenericResponse<String>> getDefaultConsumerGroupId() {
         ConsumerService consumersService = (ConsumerService) applicationContext

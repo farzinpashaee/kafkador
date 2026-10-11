@@ -3,10 +3,13 @@ package com.csl.kafkador.service;
 import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.domain.ConsumerGroup;
+import com.csl.kafkador.domain.dto.ConsumerGroupDetailsDto;
 import com.csl.kafkador.exception.ConfigNotFoundException;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
+import com.csl.kafkador.exception.ConsumerGroupNotFoundException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.service.config.KafkadorConfigService;
+import com.csl.kafkador.util.ConsumerGroupDetailsCalculator;
 import com.csl.kafkador.util.DtoMapper;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -14,11 +17,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
+import org.apache.kafka.clients.admin.ListOffsetsResult;
+import org.apache.kafka.clients.admin.OffsetSpec;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.GroupState;
 import org.apache.kafka.common.KafkaFuture;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.GroupIdNotFoundException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -27,9 +36,14 @@ import java.time.Duration;
 import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +56,7 @@ import java.util.stream.Collectors;
 public class ConsumerService {
 
     private static final String DEFAULT_GROUP_ID_CONFIG_KEY = "kafkador.consumer.instance.id";
+    private static final long ADMIN_TIMEOUT_SECONDS = 15;
 
     private final ApplicationContext applicationContext;
     private final ApplicationConfig applicationConfig;
@@ -95,6 +110,57 @@ public class ConsumerService {
             log.error("Failed to list consumer groups for cluster {}", clusterId, e);
             throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
         }
+    }
+
+    /** The group's state and members plus, per topic and partition, its committed offsets and lag. */
+    public ConsumerGroupDetailsDto getConsumerGroupDetails(String clusterId, String groupId)
+            throws KafkaAdminApiException, ConsumerGroupNotFoundException {
+        try {
+            Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
+            ConsumerGroupDescription group = await(admin.describeConsumerGroups(List.of(groupId)).describedGroups().get(groupId));
+            // Older brokers describe an unknown group as DEAD instead of failing.
+            if (group.groupState() == GroupState.DEAD) {
+                throw new ConsumerGroupNotFoundException("Consumer group '" + groupId + "' does not exist");
+            }
+            Map<TopicPartition, OffsetAndMetadata> committed = new HashMap<>(
+                    await(admin.listConsumerGroupOffsets(groupId).partitionsToOffsetAndMetadata()));
+
+            Set<TopicPartition> partitions = new HashSet<>(committed.keySet());
+            group.members().forEach(m -> partitions.addAll(m.assignment().topicPartitions()));
+            return ConsumerGroupDetailsCalculator.calculate(group, committed, endOffsets(admin, partitions));
+        } catch (ConnectionSessionExpiredException | ConsumerGroupNotFoundException e) {
+            throw e;
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof GroupIdNotFoundException) {
+                throw new ConsumerGroupNotFoundException("Consumer group '" + groupId + "' does not exist");
+            }
+            log.error("Failed to describe consumer group {} on cluster {}", groupId, clusterId, e);
+            throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Failed to describe consumer group {} on cluster {}", groupId, clusterId, e);
+            throw new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
+        }
+    }
+
+    /** Latest offset per partition; a partition that can't be read (e.g. deleted topic, no leader) is left out. */
+    private Map<TopicPartition, Long> endOffsets(Admin admin, Set<TopicPartition> partitions) {
+        if (partitions.isEmpty()) return Map.of();
+        Map<TopicPartition, OffsetSpec> request = new HashMap<>();
+        partitions.forEach(tp -> request.put(tp, OffsetSpec.latest()));
+        ListOffsetsResult result = admin.listOffsets(request);
+        Map<TopicPartition, Long> offsets = new HashMap<>();
+        for (TopicPartition tp : partitions) {
+            try {
+                offsets.put(tp, await(result.partitionResult(tp)).offset());
+            } catch (Exception e) {
+                log.debug("No end offset for {}: {}", tp, e.getMessage());
+            }
+        }
+        return offsets;
+    }
+
+    private static <T> T await(KafkaFuture<T> future) throws Exception {
+        return future.get(ADMIN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
     public SseEmitter consume(String topic, String groupId) {

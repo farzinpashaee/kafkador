@@ -1,0 +1,149 @@
+<div class="view-element" id="consumerGroupView">
+  <div class="alert alert-danger text-s p-2" role="alert" *ngIf="errors.get('getGroup')">
+    {{ errors.get('getGroup')?.message }}
+  </div>
+
+  <p class="placeholder-glow" *ngIf="flags.get('getGroupLoading') && !group">
+    <span class="placeholder col-12"></span>
+    <span class="placeholder col-10"></span>
+  </p>
+
+  <ng-container *ngIf="group">
+    <section aria-labelledby="groupStatsHeading">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <h6 id="groupStatsHeading" class="mb-0">Consumer group</h6>
+        <span class="text-s text-color-subtle">
+          {{ group.type }}<ng-container *ngIf="group.partitionAssignor"> · {{ group.partitionAssignor }} assignor</ng-container>
+        </span>
+      </div>
+      <div class="stat-grid stat-grid-6">
+        <div class="stat-tile">
+          <div class="stat-label">State</div>
+          <div class="stat-value">
+            <span class="badge state-badge" [ngClass]="stateClass(group.state)">{{ group.state ?? 'Unknown' }}</span>
+          </div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Members</div>
+          <div class="stat-value">{{ group.memberCount }}</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Assigned topics</div>
+          <div class="stat-value">{{ group.topicCount }}</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Assigned partitions</div>
+          <div class="stat-value">{{ group.partitionCount }}</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Coordinator ID</div>
+          <div class="stat-value" [attr.title]="group.coordinatorHost ?? null">{{ group.coordinatorId ?? 'N/A' }}</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Total lag</div>
+          <div class="stat-value">{{ formatNumber(group.totalLag) }}</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="row mt-4">
+      <div class="d-flex align-items-start">
+        <div>
+          <h5>Topics</h5>
+          <p class="text-s">Topics this consumer group is consuming, with its lag on each</p>
+        </div>
+        <div class="d-flex align-items-center gap-2 ms-auto">
+          <div class="search-box">
+            <input type="search" class="form-control form-control-sm" placeholder="Search by topic name"
+                   aria-label="Search topics" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()">
+          </div>
+          <div class="dropdown">
+            <button type="button" class="btn btn-sm outline-button dropdown-toggle" data-bs-toggle="dropdown"
+                    aria-expanded="false" [disabled]="!filteredTopics.length">
+              Export
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li *ngFor="let option of exportFormats">
+                <button type="button" class="dropdown-item" (click)="export(option.format)">{{ option.label }}</button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+          <tr>
+            <th scope="col" class="expand-cell"><span class="visually-hidden">Expand</span></th>
+            <th scope="col" *ngFor="let column of columns" [attr.aria-sort]="ariaSort(column.key)">
+              <button type="button" class="sort-button" (click)="sortBy(column.key)" [attr.title]="column.hint ?? null">
+                {{ column.label }}
+                <i class="bi" aria-hidden="true"
+                   [ngClass]="sortKey !== column.key ? 'bi-arrow-down-up opacity-50' : (sortAscending ? 'bi-sort-up' : 'bi-sort-down')"></i>
+              </button>
+            </th>
+          </tr>
+          </thead>
+          <tbody>
+          @for (topic of pagedTopics; track topic.name) {
+            <tr class="cursor-pointer" (click)="toggle(topic)">
+              <td class="expand-cell">
+                <button type="button" class="btn btn-link btn-icon p-0" [attr.aria-expanded]="expanded.has(topic.name)"
+                        attr.aria-label="Show partitions of {{topic.name}}" (click)="toggle(topic); $event.stopPropagation()">
+                  <i class="bi" aria-hidden="true" [ngClass]="expanded.has(topic.name) ? 'bi-dash-square' : 'bi-plus-square'"></i>
+                </button>
+              </td>
+              <th scope="row">
+                <a routerLink="/topic/{{topic.name}}" class="topic-link" (click)="$event.stopPropagation()">{{ topic.name }}</a>
+              </th>
+              <td>{{ topic.partitionCount }}</td>
+              <td>{{ topic.memberCount }}</td>
+              <td>{{ formatNumber(topic.lag) }}</td>
+            </tr>
+            <tr *ngIf="expanded.has(topic.name)" class="partition-row">
+              <td></td>
+              <td [attr.colspan]="columns.length">
+                <table class="table table-sm mb-0 text-s">
+                  <thead>
+                  <tr>
+                    <th scope="col">Partition</th>
+                    <th scope="col">Committed offset</th>
+                    <th scope="col">End offset</th>
+                    <th scope="col">Consumer lag</th>
+                    <th scope="col">Consumer ID</th>
+                    <th scope="col">Host</th>
+                    <th scope="col">Client ID</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr *ngFor="let p of topic.partitions">
+                    <td>{{ p.partition }}</td>
+                    <td>{{ formatNumber(p.committedOffset) }}</td>
+                    <td>{{ formatNumber(p.endOffset) }}</td>
+                    <td>{{ formatNumber(p.lag) }}</td>
+                    <td class="text-break">{{ p.consumerId ?? '—' }}</td>
+                    <td>{{ p.host ?? '—' }}</td>
+                    <td>{{ p.clientId ?? '—' }}</td>
+                  </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td [attr.colspan]="columns.length + 1" class="text-center text-s text-color-subtle py-3">
+                @if (searchTerm) {
+                  No topics match "{{ searchTerm }}".
+                } @else {
+                  This consumer group has no committed offsets or assigned partitions.
+                }
+              </td>
+            </tr>
+          }
+          </tbody>
+        </table>
+      </div>
+      <app-pagination [totalItems]="filteredTopics.length" [pageSize]="pageSize" [page]="page" (pageChange)="page = $event"></app-pagination>
+    </div>
+  </ng-container>
+</div>

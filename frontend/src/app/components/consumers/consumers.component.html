@@ -80,7 +80,7 @@
         </thead>
         <tbody>
           @for (consumerGroup of pagedConsumerGroups; track consumerGroup.id) {
-          <tr>
+          <tr class="cursor-pointer" (click)="openGroup(consumerGroup, $event)">
             <th scope="row">{{consumerGroup.id}}</th>
             <td>{{consumerGroup.type}}</td>
             <td>{{consumerGroup.coordinator}}</td>

@@ -1,0 +1,48 @@
+.sort-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+
+  .bi {
+    font-size: 0.8em;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
+  }
+}
+
+td {
+  font-variant-numeric: tabular-nums;
+}
+
+.expand-cell {
+  width: 2.5em;
+}
+
+.topic-link {
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.partition-row > td {
+  padding-top: 0;
+}
+
+.state-badge {
+  font-size: 0.7em;
+  vertical-align: middle;
+}
+
+.search-box .form-control {
+  width: 14em;
+  max-width: 50vw;
+}

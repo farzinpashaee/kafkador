@@ -163,6 +163,12 @@ export class ConsumersComponent {
     });
   }
 
+  /** Opens the group's details page, unless the click was on one of the row's own buttons. */
+  openGroup(consumerGroup: ConsumerGroup, event: MouseEvent): void {
+    if ((event.target as HTMLElement).closest('button, a')) return;
+    this.router.navigate(['/consumer', consumerGroup.id]);
+  }
+
   openListenDialog(consumerGroup: ConsumerGroup): void {
     this.errors.delete('listenConsumerGroup');
     this.listenGroupId = consumerGroup.id;

@@ -7,6 +7,7 @@ export * from './topic-create-request';
 export * from './topic-overview';
 export * from './consumer';
 export * from './consumer-group';
+export * from './consumer-group-details';
 export * from './search-result';
 export * from './chart';
 export * from './alert';

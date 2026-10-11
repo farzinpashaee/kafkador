@@ -58,7 +58,7 @@ public class RestExceptionController {
 
     @ExceptionHandler({ClusterNotFoundException.class, BrokerNotFoundException.class,
             AlertNotFoundException.class, AiChatSessionNotFoundException.class, ConfigNotFoundException.class,
-            TopicNotFoundException.class})
+            TopicNotFoundException.class, ConsumerGroupNotFoundException.class})
     public ResponseEntity<GenericResponse<Void>> handleNotFound(Exception ex) {
         return new GenericResponse.Builder<Void>()
                 .code(String.valueOf(HttpStatus.NOT_FOUND.value()))

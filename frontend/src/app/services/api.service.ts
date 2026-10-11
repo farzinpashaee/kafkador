@@ -1,7 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse,HttpResponse   } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Alert, Topic, TopicCreateRequest, SearchResult, ConsumerGroup, GenericResponse,
+import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Alert, Topic, TopicCreateRequest, SearchResult, ConsumerGroup, ConsumerGroupDetails, GenericResponse,
   SchemaRegistry, SchemaRegistryConfig, Chart, Event, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery,
   AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest,
   SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, SchemaLookupResult,
@@ -95,6 +95,11 @@ export class ApiService {
   public getConsumerGroups(): Observable<HttpResponse<GenericResponse<ConsumerGroup[]>>> {
     return this.http.get<GenericResponse<ConsumerGroup[]>>(`${ApiService.ApiBaseUrl}/consumer-groups`,
       { withCredentials: true ,observe: 'response'} );
+  }
+
+  public getConsumerGroupDetails(id:string): Observable<GenericResponse<ConsumerGroupDetails>> {
+    return this.http.get<GenericResponse<ConsumerGroupDetails>>(`${ApiService.ApiBaseUrl}/consumer-groups/${encodeURIComponent(id)}`,
+      { withCredentials: true });
   }
 
   public getDefaultConsumerGroupId(): Observable<HttpResponse<GenericResponse<string>>> {
