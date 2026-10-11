@@ -158,6 +158,38 @@ span.placeholder{
     cursor: pointer;
 }
 
+/*
+ * Centre button and dropdown item content on both axes. Flex drops the plain spaces
+ * templates put between an icon and its label, so a gap provides the spacing instead
+ * and the icon's own margins are cleared to keep it uniform.
+ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35em;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.btn > .bi,
+.dropdown-item > .bi {
+  display: inline-flex;
+  align-items: center;
+  // A line holding only the icon gets no text strut, so give the icon a full line's
+  // height; otherwise icon-only buttons come out shorter than labelled ones.
+  height: 1lh;
+  margin-inline: 0 !important;
+}
+
+.dropdown-toggle::after {
+  margin-left: 0;
+}
+
 .btn-icon {
   line-height: 1;
   color: inherit;
