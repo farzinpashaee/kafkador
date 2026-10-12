@@ -4,28 +4,46 @@
   <span class="placeholder col-8"></span>
 </p>
 <div class="row" *ngIf="!flags.get('getConsumerGroupsLoading')">
-  <div class="row align-items-start">
-    <div class="col-12 col-md-12 col-lg-12">
-      <div class="card card-top-widget">
-        <div class="card-body text-white d-flex">
-          <div class="flex-grow-1">
-            <h5 class="card-title">Consumers</h5>
-            <p class="card-text text-s text-color-subtle">
-              Total Number of Consumer Groups: {{consumerGroups.length}}
-            </p>
-          </div>
-          <div class="ms-auto chart-container-medium" *ngIf="activeConnection?.agentEnabled">
-            <ngx-charts-bar-vertical
-              [results]="data"
-              [scheme]="cartTopWidgetWhiteScheme"
-              [xAxis]="false"
-              [gradient]="true"
-              [yAxis]="false" class="chart-full-size" >
-            </ngx-charts-bar-vertical>
-          </div>
+  <div class="row g-4">
+    <section class="col-12 col-xl-5" aria-labelledby="consumerGroupsStatsHeading">
+      <h6 id="consumerGroupsStatsHeading" class="mb-2">Consumer groups</h6>
+      <div class="stat-grid stat-grid-3">
+        <div class="stat-tile">
+          <div class="stat-label">Group count</div>
+          <div class="stat-value">{{ consumerGroups.length }}</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label" title="Groups using the classic rebalance protocol">Classic</div>
+          <div class="stat-value">{{ typeCount('classic') }}</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label" title="Groups using the newer consumer rebalance protocol (KIP-848)">Consumer protocol</div>
+          <div class="stat-value">{{ typeCount('consumer') }}</div>
         </div>
       </div>
-    </div>
+    </section>
+
+    <section class="col-12 col-xl-7" aria-labelledby="consumerGroupStatesHeading">
+      <h6 id="consumerGroupStatesHeading" class="mb-2">Group states</h6>
+      <div class="stat-grid stat-grid-4">
+        <div class="stat-tile">
+          <div class="stat-label">Stable</div>
+          <div class="stat-value">{{ stateCounts.stable }}</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label" title="Groups with no active members">Empty</div>
+          <div class="stat-value">{{ stateCounts.empty }}</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label" title="Groups currently rebalancing, reconciling or assigning partitions">Rebalancing</div>
+          <div class="stat-value">{{ stateCounts.rebalancing }}</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label" title="Dead or unknown state">Other</div>
+          <div class="stat-value">{{ stateCounts.other }}</div>
+        </div>
+      </div>
+    </section>
   </div>
 
   <div *ngIf="errors.get('getConsumerGroups')" class="alert alert-danger mt-2" role="alert">

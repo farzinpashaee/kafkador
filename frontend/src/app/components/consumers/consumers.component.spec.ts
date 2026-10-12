@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
 
 import { ConsumersComponent } from './consumers.component';
 import { ApiService, LocalStorageService } from '../../services';
@@ -16,11 +16,9 @@ describe('ConsumersComponent', () => {
   ];
 
   beforeEach(async () => {
-    const api = jasmine.createSpyObj<ApiService>('ApiService', ['getConsumerGroups', 'getTopics', 'getChart', 'getBookmarks']);
+    const api = jasmine.createSpyObj<ApiService>('ApiService', ['getConsumerGroups', 'getBookmarks']);
     api.getConsumerGroups.and.returnValue(of({ body: { data: groups } } as any));
     api.getBookmarks.and.returnValue(of({ data: [{ entityType: 'CONSUMER_GROUP', entityId: 'orders-service' }] } as any));
-    api.getTopics.and.returnValue(of({ body: { data: [] } } as any));
-    api.getChart.and.returnValue(throwError(() => ({ status: 428 })));
 
     await TestBed.configureTestingModule({
       imports: [ConsumersComponent],
@@ -61,5 +59,16 @@ describe('ConsumersComponent', () => {
     expect(component.filteredConsumerGroups.map(g => g.id)).toEqual(['orders-service']);
     component.setBookmarkedOnly(false);
     expect(component.filteredConsumerGroups.length).toBe(2);
+  });
+
+  it('summarises the groups by state and protocol type', () => {
+    component.consumerGroups = [
+      ...groups,
+      { id: 'rebalancing', type: 'CLASSIC', coordinator: '1', groupState: 'PreparingRebalance', partitionAssignor: '', isSimpleConsumerGroup: false },
+      { id: 'gone', type: 'CLASSIC', coordinator: '1', groupState: 'Dead', partitionAssignor: '', isSimpleConsumerGroup: false }
+    ];
+    expect(component.stateCounts).toEqual({ stable: 1, empty: 1, rebalancing: 1, other: 1 });
+    expect(component.typeCount('classic')).toBe(3);
+    expect(component.typeCount('consumer')).toBe(1);
   });
 });
