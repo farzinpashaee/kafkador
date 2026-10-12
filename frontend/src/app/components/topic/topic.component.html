@@ -129,7 +129,7 @@
       <app-topic-records *ngIf="recordsOpened" [topicName]="topicName" [partitionCount]="topic.partitions"></app-topic-records>
     </div>
     <div class="tab-pane fade" id="configurations" role="tabpanel" aria-labelledby="overview-tab" tabindex="0">
-      <div class="d-flex justify-content-end align-items-center gap-2">
+      <div class="d-flex align-items-center gap-2">
         <div class="flex-grow-0">
           <input placeholder="Search" id="table-filtering-search" class="form-control form-control-sm search-input-compact search-input-compact-width" type="search" aria-label="Search configurations" [formControl]="filter" />
         </div>
@@ -137,7 +137,7 @@
           <button class="btn btn-sm dropdown-toggle outline-button" type="button"  data-bs-toggle="dropdown"  aria-expanded="false">
             <i class="bi bi-funnel"></i> Filter
           </button>
-          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-padded">
+          <ul class="dropdown-menu dropdown-menu-padded">
             <li>
               <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" id="configsVisibleSwitch" (change)="filterSensitive$.next($event.target.checked)">
@@ -149,6 +149,17 @@
                 <input class="form-check-input" type="checkbox" id="configsEditableSwitch" (change)="filterEditable$.next($event.target.checked)">
                 <label class="form-check-label text-s" for="configsEditableSwitch">Editable</label>
               </div>
+            </li>
+          </ul>
+        </div>
+        <div class="dropdown ms-auto">
+          <button type="button" class="btn btn-sm outline-button dropdown-toggle" data-bs-toggle="dropdown"
+                  aria-expanded="false" [disabled]="!topicConfig.length">
+            Export
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li *ngFor="let option of exportFormats">
+              <button type="button" class="dropdown-item" (click)="exportConfigs(option.format)">{{ option.label }}</button>
             </li>
           </ul>
         </div>

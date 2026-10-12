@@ -28,25 +28,25 @@
           class="form-control form-control-sm search-input-compact search-input-compact-width"
           type="search"
           [formControl]="filter"/>
-        <div class="dropdown">
-          <button type="button" class="btn btn-sm outline-button dropdown-toggle" data-bs-toggle="dropdown"
-                  aria-expanded="false" [disabled]="!filteredBindings.length">
-            Export
-          </button>
-          <ul class="dropdown-menu">
-            <li *ngFor="let option of exportFormats">
-              <button type="button" class="dropdown-item" (click)="export(option.format)">{{ option.label }}</button>
-            </li>
-          </ul>
-        </div>
         <button type="button" class="btn btn-sm outline-button" aria-label="Refresh" title="Refresh"
                 (click)="loadBindings()" [disabled]="flags.get('refreshingAclBindings')">
           <span *ngIf="flags.get('refreshingAclBindings')" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
           <i *ngIf="!flags.get('refreshingAclBindings')" class="bi bi-arrow-clockwise" aria-hidden="true"></i>
         </button>
+        <div class="dropdown ms-auto">
+          <button type="button" class="btn btn-sm outline-button dropdown-toggle" data-bs-toggle="dropdown"
+                  aria-expanded="false" [disabled]="!filteredBindings.length">
+            Export
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li *ngFor="let option of exportFormats">
+              <button type="button" class="dropdown-item" (click)="export(option.format)">{{ option.label }}</button>
+            </li>
+          </ul>
+        </div>
         <button
           type="button"
-          class="btn btn-primary ms-auto"
+          class="btn btn-primary"
           data-bs-toggle="modal"
           data-bs-target="#createAclBindingModal">
           <i class="bi bi-plus-circle me-1"></i>

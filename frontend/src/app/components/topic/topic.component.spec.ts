@@ -61,4 +61,15 @@ describe('TopicComponent', () => {
     fixture.detectChanges();
     expect(apiServiceSpy.getTopicConsumerGroups).toHaveBeenCalledWith(topic.name);
   });
+
+  it('exports the listed configurations with sensitive values masked', () => {
+    const configs = [
+      { name: 'retention.ms', value: '604800000', source: 'DEFAULT_CONFIG', type: 'LONG', sensitive: false, readOnly: false } as any,
+      { name: 'ssl.key.password', value: 'secret', source: 'DYNAMIC_TOPIC_CONFIG', type: 'PASSWORD', sensitive: true, readOnly: true } as any
+    ];
+    const csv = component.configExportContent('csv', configs).split('\r\n');
+    expect(csv[0]).toBe('Name,Value,Source,Type,Sensitive,Read only');
+    expect(csv[1]).toBe('retention.ms,604800000,DEFAULT_CONFIG,LONG,false,false');
+    expect(csv[2]).toBe('ssl.key.password,********,DYNAMIC_TOPIC_CONFIG,PASSWORD,true,true');
+  });
 });

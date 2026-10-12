@@ -5,6 +5,8 @@ import { CommonModule, AsyncPipe, DecimalPipe  } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { startWith, map } from 'rxjs/operators';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
+import { CONFIG_EXPORT_FIELDS } from '../../services/config-export';
+import { EXPORT_FORMATS, ExportFormat, buildExport, downloadExport } from '../../services/table-export';
 import { ApiService, DocumentationService, CommonService } from '../../services';
 import { Broker, Config, GenericResponse, Error } from '../../models';
 
@@ -19,6 +21,7 @@ export class BrokerComponent {
   brokerId!: string;
   broker!: Broker;
   brokerConfig!: Config[];
+  readonly exportFormats = EXPORT_FORMATS;
   isLoading: boolean = true;
   documentation!: string;
   selectedEditConfig?: Config;
@@ -94,6 +97,15 @@ export class BrokerComponent {
       const matchesEditable = !this.filterEditable$.value || config.readOnly === false;
       return matchesText && matchesSensitive && matchesEditable;
     });
+  }
+
+  /** Exports the configurations currently listed (search and filters applied). */
+  exportConfigs(format: ExportFormat): void {
+    downloadExport(this.configExportContent(format, this.brokerConfig ?? []), format, `broker-${this.brokerId}-configs`);
+  }
+
+  configExportContent(format: ExportFormat, configs: Config[]): string {
+    return buildExport(format, CONFIG_EXPORT_FIELDS, configs, 'configs', 'config');
   }
 
   getConfigValue(key: String): string | undefined {

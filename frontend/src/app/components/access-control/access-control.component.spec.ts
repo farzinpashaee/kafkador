@@ -75,7 +75,7 @@ describe('AccessControlComponent', () => {
     expect(csv[1]).toBe('TOPIC,Events,LITERAL,User:*,*,ALL,DENY');
   });
 
-  it('puts the search, Export and Refresh before the New ACL Binding button', () => {
+  it('puts the search and Refresh on the left, Export and New ACL Binding on the right', () => {
     const toolbar = (fixture.nativeElement as HTMLElement).querySelector('#acl-filtering-search')!.parentElement!;
     const buttons = Array.from(toolbar.querySelectorAll(':scope > button, :scope > .dropdown > button'));
     const position = (el: Element) => Array.from(toolbar.querySelectorAll('*')).indexOf(el);
@@ -83,9 +83,9 @@ describe('AccessControlComponent', () => {
     const exportButton = buttons.find(b => b.textContent?.trim() === 'Export')!;
     const refresh = buttons.find(b => b.getAttribute('aria-label') === 'Refresh')!;
     const create = buttons.find(b => b.textContent?.includes('New ACL Binding'))!;
-    expect(position(search)).toBeLessThan(position(exportButton));
-    expect(position(exportButton)).toBeLessThan(position(refresh));
-    expect(position(refresh)).toBeLessThan(position(create));
-    expect(create.classList).toContain('ms-auto');
+    expect(position(search)).toBeLessThan(position(refresh));
+    expect(position(refresh)).toBeLessThan(position(exportButton));
+    expect(position(exportButton)).toBeLessThan(position(create));
+    expect(exportButton.parentElement!.classList).toContain('ms-auto');
   });
 });
