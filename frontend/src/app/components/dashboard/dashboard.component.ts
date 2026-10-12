@@ -19,7 +19,7 @@ import { PaginationComponent } from '../pagination/pagination.component';
 export class DashboardComponent {
 
   alerts!: Alert[];
-  cluster!: Cluster;
+  cluster?: Cluster;
   topics!: Topic[];
   activeConnection: Connection | null = null;
   consumerGroups!: ConsumerGroup[];

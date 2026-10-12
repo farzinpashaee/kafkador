@@ -4,3 +4,8 @@
   height: 480px;
 }
 
+
+// The bar charts sitting in the stat cards fill their tile instead.
+:host ::ng-deep .stat-chart ngx-charts-bar-vertical {
+  height: 100%;
+}

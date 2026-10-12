@@ -1,4 +1,4 @@
-<div class="row align-items-start">
+<div>
   <div class="alert alert-danger text-s p-2" role="alert" *ngIf="errors.get('getCluster')">
     {{ errors.get('getCluster')?.message }}
   </div>
@@ -6,76 +6,70 @@
     {{ errors.get('getAlerts')?.message }}
   </div>
 
-  <div class="col-12 col-md-12 col-lg-4">
-      <div class="card card-top-widget">
-        <div class="card-body text-white d-flex">
-          <div class="spinner-border" role="status" *ngIf="flags.get('getClusterLoading')"></div>
-          <div class="flex-grow-1"  *ngIf="!flags.get('getClusterLoading')">
-            <h5 class="card-title">Cluster ({{cluster.name}})</h5>
-            <p class="text-s text-color-subtle">
-              Brokers: {{cluster.brokers.length}} <br/>
-              Controller: {{cluster.controller.host}}
-            </p>
-          </div>
-          <div class="ms-auto chart-container-small">
-            <ngx-charts-bar-vertical
-              *ngIf="activeConnection?.agentEnabled"
-              [results]="data"
-              [scheme]="cartTopWidgetWhiteScheme"
-              [xAxis]="false"
-              [gradient]="true"
-              [yAxis]="false" class="chart-full-size" >
-            </ngx-charts-bar-vertical>
-          </div>
+  <div class="row g-4">
+    <section class="col-12 col-xl-6" aria-labelledby="dashboardClusterHeading">
+      <h6 id="dashboardClusterHeading" class="mb-2">Cluster</h6>
+      <div class="stat-grid" [ngClass]="activeConnection?.agentEnabled ? 'stat-grid-4' : 'stat-grid-3'">
+        <div class="stat-tile">
+          <div class="stat-label">Name</div>
+          <div class="stat-value"><span class="spinner-border spinner-border-sm" role="status" *ngIf="flags.get('getClusterLoading')"><span class="visually-hidden">Loading...</span></span><ng-container *ngIf="!flags.get('getClusterLoading')">{{ cluster?.name }}</ng-container></div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Broker count</div>
+          <div class="stat-value"><span class="spinner-border spinner-border-sm" role="status" *ngIf="flags.get('getClusterLoading')"><span class="visually-hidden">Loading...</span></span><ng-container *ngIf="!flags.get('getClusterLoading')">{{ cluster?.brokers?.length }}</ng-container></div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Controller</div>
+          <div class="stat-value"><span class="spinner-border spinner-border-sm" role="status" *ngIf="flags.get('getClusterLoading')"><span class="visually-hidden">Loading...</span></span><ng-container *ngIf="!flags.get('getClusterLoading')">{{ cluster?.controller?.host ?? 'n/a' }}</ng-container></div>
+        </div>
+        <div class="stat-tile stat-chart" *ngIf="activeConnection?.agentEnabled">
+          <ngx-charts-bar-vertical
+            [results]="data"
+            [scheme]="cartTopWidgetWhiteScheme"
+            [xAxis]="false"
+            [gradient]="true"
+            [yAxis]="false" class="chart-full-size">
+          </ngx-charts-bar-vertical>
         </div>
       </div>
-    </div>
-    <div class="col-12 col-md-12 col-lg-4">
-      <div class="card card-top-widget">
-        <div class="card-body text-white d-flex">
-          <div class="spinner-border" role="status" *ngIf="flags.get('getTopicLoading')"></div>
-          <div class="flex-grow-1"  *ngIf="!flags.get('getTopicLoading')">
-            <h5 class="card-title">Topics</h5>
-            <p class="text-s text-color-subtle">
-              Total Number of Topics: {{topics.length}} <br/>
-            </p>
-          </div>
-          <div class="ms-auto chart-container-small">
-            <ngx-charts-bar-vertical
-              *ngIf="activeConnection?.agentEnabled"
-              [results]="data2"
-              [scheme]="cartTopWidgetWhiteScheme"
-              [xAxis]="false"
-              [gradient]="true"
-              [yAxis]="false" class="chart-full-size">
-            </ngx-charts-bar-vertical>
-          </div>
+    </section>
+    <section class="col-12 col-md-6 col-xl-3" aria-labelledby="dashboardTopicsHeading">
+      <h6 id="dashboardTopicsHeading" class="mb-2">Topics</h6>
+      <div class="stat-grid" [ngClass]="activeConnection?.agentEnabled ? 'stat-grid-2' : 'stat-grid-1'">
+        <div class="stat-tile">
+          <div class="stat-label">Topic count</div>
+          <div class="stat-value"><span class="spinner-border spinner-border-sm" role="status" *ngIf="flags.get('getTopicLoading')"><span class="visually-hidden">Loading...</span></span><ng-container *ngIf="!flags.get('getTopicLoading')">{{ topics.length }}</ng-container></div>
+        </div>
+        <div class="stat-tile stat-chart" *ngIf="activeConnection?.agentEnabled">
+          <ngx-charts-bar-vertical
+            [results]="data2"
+            [scheme]="cartTopWidgetWhiteScheme"
+            [xAxis]="false"
+            [gradient]="true"
+            [yAxis]="false" class="chart-full-size">
+          </ngx-charts-bar-vertical>
         </div>
       </div>
-    </div>
-    <div class="col-12 col-md-12 col-lg-4">
-      <div class="card card-top-widget">
-        <div class="card-body text-white d-flex">
-          <div class="spinner-border" role="status" *ngIf="flags.get('getConsumerGroupLoading')"></div>
-          <div class="flex-grow-1"  *ngIf="!flags.get('getConsumerGroupLoading')">
-            <h5 class="card-title">Consumers</h5>
-            <p class="text-s text-color-subtle">
-              Consumer Groups: {{consumerGroups.length}} <br/>
-            </p>
-          </div>
-          <div class="ms-auto chart-container-small">
-            <ngx-charts-bar-vertical
-              *ngIf="activeConnection?.agentEnabled"
-              [results]="data3"
-              [scheme]="cartTopWidgetWhiteScheme"
-              [xAxis]="false"
-              [gradient]="true"
-              [yAxis]="false" class="chart-full-size">
-            </ngx-charts-bar-vertical>
-          </div>
+    </section>
+    <section class="col-12 col-md-6 col-xl-3" aria-labelledby="dashboardConsumersHeading">
+      <h6 id="dashboardConsumersHeading" class="mb-2">Consumers</h6>
+      <div class="stat-grid" [ngClass]="activeConnection?.agentEnabled ? 'stat-grid-2' : 'stat-grid-1'">
+        <div class="stat-tile">
+          <div class="stat-label">Consumer groups</div>
+          <div class="stat-value"><span class="spinner-border spinner-border-sm" role="status" *ngIf="flags.get('getConsumerGroupLoading')"><span class="visually-hidden">Loading...</span></span><ng-container *ngIf="!flags.get('getConsumerGroupLoading')">{{ consumerGroups.length }}</ng-container></div>
+        </div>
+        <div class="stat-tile stat-chart" *ngIf="activeConnection?.agentEnabled">
+          <ngx-charts-bar-vertical
+            [results]="data3"
+            [scheme]="cartTopWidgetWhiteScheme"
+            [xAxis]="false"
+            [gradient]="true"
+            [yAxis]="false" class="chart-full-size">
+          </ngx-charts-bar-vertical>
         </div>
       </div>
-    </div>
+    </section>
+  </div>
 </div>
 <div class="row mt-4" *ngIf="activeConnection?.agentEnabled">
   <div class="col-12 col-md-6 col-lg-8 chart-column-min">
