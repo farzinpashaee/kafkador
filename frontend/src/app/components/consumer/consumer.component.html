@@ -53,10 +53,8 @@
           <p class="text-s">Topics this consumer group is consuming, with its lag on each</p>
         </div>
         <div class="d-flex align-items-center gap-2 ms-auto">
-          <div class="search-box">
-            <input type="search" class="form-control form-control-sm" placeholder="Search by topic name"
+          <input type="search" class="form-control form-control-sm search-input-compact search-input-compact-width" placeholder="Search by topic name"
                    aria-label="Search topics" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()">
-          </div>
           <div class="dropdown">
             <button type="button" class="btn btn-sm outline-button dropdown-toggle" data-bs-toggle="dropdown"
                     aria-expanded="false" [disabled]="!filteredTopics.length">
@@ -70,7 +68,7 @@
           </div>
         </div>
       </div>
-      <div class="table-responsive">
+      <div class="table-responsive mt-2">
         <table class="table">
           <thead>
           <tr>

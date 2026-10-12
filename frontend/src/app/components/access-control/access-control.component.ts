@@ -7,6 +7,17 @@ import { startWith, map, debounceTime, distinctUntilChanged } from 'rxjs/operato
 import { ApiService, CommonService, ValidationService } from '../../services';
 import { GenericResponse, AclBinding, Error } from '../../models';
 import { PaginationComponent } from '../pagination/pagination.component';
+import { EXPORT_FORMATS, ExportField, ExportFormat, buildExport, downloadExport } from '../../services/table-export';
+
+const EXPORT_FIELDS: ExportField<AclBinding>[] = [
+  { key: 'resourceType', label: 'Resource type', value: b => b.resourceType },
+  { key: 'resourceName', label: 'Resource name', value: b => b.resourceName },
+  { key: 'patternType', label: 'Pattern', value: b => b.patternType },
+  { key: 'principal', label: 'Principal', value: b => b.principal },
+  { key: 'host', label: 'Host', value: b => b.host },
+  { key: 'operation', label: 'Operation', value: b => b.operation },
+  { key: 'permissionType', label: 'Permission', value: b => b.permissionType }
+];
 
 /** Same rule as the server: "Type:name", e.g. User:alice or User:* (the name may contain further colons). */
 export const PRINCIPAL_PATTERN = /^[^:\s]+:\S.*$/;
@@ -28,6 +39,7 @@ export class AccessControlComponent {
   filter = new FormControl('', { nonNullable: true });
   readonly pageSize = 10;
   page = 1;
+  readonly exportFormats = EXPORT_FORMATS;
 
   get pagedBindings(): AclBinding[] {
     return this.filteredBindings.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
@@ -51,6 +63,12 @@ export class AccessControlComponent {
         this.page = 1;
       });
 
+    this.loadBindings();
+  }
+
+  /** Loads the bindings; the first load shows the page placeholder, a refresh only the Refresh button's spinner. */
+  loadBindings(){
+    this.flags.set('refreshingAclBindings', true);
     this.apiService.getAclBindings().subscribe({ next: (res: HttpResponse<GenericResponse<AclBinding[]>>) => {
         this.bindings = res.body?.data ?? [];
         this.filteredBindings = this.search(this.filter.value);
@@ -58,13 +76,24 @@ export class AccessControlComponent {
         this.errors.delete('getAclBindings');
         this.flags.set('authorizerNotConfigured', false);
         this.flags.set('getAclBindingsLoading',false);
+        this.flags.set('refreshingAclBindings',false);
       },
       error: (res:HttpErrorResponse) => {
         this.flags.set('authorizerNotConfigured', res.status === 428);
-        this.errors.set("getAclBindings",this.commonService.prepareError(res.error.error,'500','Failed to get ACL bindings!'));
+        this.errors.set("getAclBindings",this.commonService.prepareError(res.error?.error,'500','Failed to get ACL bindings!'));
         this.flags.set('getAclBindingsLoading',false);
+        this.flags.set('refreshingAclBindings',false);
       }
     });
+  }
+
+  /** Exports the bindings currently listed (search applied, all pages). */
+  export(format: ExportFormat): void {
+    downloadExport(this.exportContent(format, this.filteredBindings), format, 'acl-bindings');
+  }
+
+  exportContent(format: ExportFormat, bindings: AclBinding[]): string {
+    return buildExport(format, EXPORT_FIELDS, bindings, 'aclBindings', 'aclBinding');
   }
 
   createAclBinding(){

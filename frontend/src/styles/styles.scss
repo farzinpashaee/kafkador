@@ -287,8 +287,10 @@ span.placeholder{
   height: 1em;
 }
 
+// The standard width of list-page search inputs (the Topics page's), whatever wraps them.
 .search-input-compact-width {
-  max-width: 250px;
+  width: 250px;
+  max-width: 100%;
 }
 
 .chart-container-small {

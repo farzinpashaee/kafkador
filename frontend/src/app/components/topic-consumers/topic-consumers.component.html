@@ -24,10 +24,8 @@
     <p class="text-s">Groups that have committed offsets on this topic or have members assigned its partitions</p>
   </div>
   <div class="d-flex align-items-center gap-2 ms-auto">
-    <div class="search-box">
-      <input type="search" class="form-control form-control-sm" placeholder="Search consumer groups"
+    <input type="search" class="form-control form-control-sm search-input-compact search-input-compact-width" placeholder="Search consumer groups"
              aria-label="Search consumer groups" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()">
-    </div>
     <div class="dropdown">
       <button type="button" class="btn btn-sm outline-button dropdown-toggle" data-bs-toggle="dropdown"
               aria-expanded="false" [disabled]="!filteredGroups.length">
@@ -57,7 +55,7 @@
 </p>
 
 <ng-container *ngIf="loaded">
-  <div class="table-responsive">
+  <div class="table-responsive mt-2">
     <table class="table">
       <thead>
       <tr>

@@ -50,7 +50,7 @@ describe('TopicsComponent', () => {
   it('lists every topic, internal ones included, sorted by name', () => {
     expect(component.filteredTopics.map(t => t.name)).toEqual(['__consumer_offsets', '_schemas', 'orders', 'payments']);
     expect(component.internalTopicCount).toBe(2);
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('IN');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Internal');
   });
 
   it('hides internal topics when the filter is switched off and remembers the choice', () => {
