@@ -27,3 +27,4 @@ export * from './meta';
 export * from './event';
 
 export * from './bookmark';
+export * from './topic-record';

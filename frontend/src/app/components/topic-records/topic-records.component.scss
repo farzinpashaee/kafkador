@@ -1,0 +1,85 @@
+.sort-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+
+  .bi {
+    font-size: 0.8em;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
+  }
+}
+
+td,
+th {
+  font-variant-numeric: tabular-nums;
+}
+
+.expand-cell {
+  width: 2.5em;
+}
+
+// Key and value previews stay on one line; the expanded row shows them in full.
+.preview-cell {
+  max-width: 24em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.record-detail-row > td {
+  padding-top: 0;
+}
+
+.record-body {
+  max-height: 24em;
+  margin: 0;
+  padding: 0.5em 0.75em;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius-sm);
+  background-color: var(--bs-tertiary-bg);
+}
+
+.records-offset {
+  width: 9em;
+}
+
+.records-filter-value {
+  width: 18em;
+  max-width: 60vw;
+}
+
+.partition-menu {
+  max-height: 20em;
+  overflow-y: auto;
+}
+
+// Pulsing dot on the Live button while records are streaming in.
+.live-dot {
+  display: inline-block;
+  width: 0.55em;
+  height: 0.55em;
+  border-radius: 50%;
+  background-color: currentColor;
+  animation: live-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot {
+    animation: none;
+  }
+}

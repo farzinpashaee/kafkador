@@ -7,6 +7,7 @@ import { startWith, map } from 'rxjs/operators';
 import { BehaviorSubject, combineLatest, Observable, Subscription } from 'rxjs';
 import { ApiService, DocumentationService, CommonService} from '../../services';
 import { Broker, GenericResponse, Config, Topic, Error } from '../../models';
+import { TopicRecordsComponent } from '../topic-records/topic-records.component';
 
 const MAX_VISIBLE_TEST_MESSAGES = 200;
 // Matches the length of the fade-out highlight in topic.component.scss.
@@ -20,7 +21,7 @@ export interface ConsumedMessage {
 
 @Component({
   selector: 'app-topic',
-  imports: [CommonModule,FormsModule,RouterModule,ReactiveFormsModule],
+  imports: [CommonModule,FormsModule,RouterModule,ReactiveFormsModule,TopicRecordsComponent],
   templateUrl: './topic.component.html',
   styleUrl: './topic.component.scss'
 })
@@ -30,6 +31,7 @@ export class TopicComponent implements OnDestroy {
   topic!: Topic;
   topicConfig!: Config[];
   isLoading: boolean = true;
+  recordsOpened = false;
   documentation!: string;
   selectedEditConfig?: Config;
   errors: Map<string, Error> = new Map();

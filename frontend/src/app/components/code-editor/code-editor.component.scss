@@ -1,0 +1,50 @@
+$line-height: 1.5em;
+
+.code-editor {
+  display: flex;
+  height: calc(var(--code-editor-rows, 3) * #{$line-height} + 1em);
+  overflow: hidden;
+  font-family: var(--bs-font-monospace);
+  font-size: 0.875em;
+  line-height: $line-height;
+  border: var(--bs-border-width) solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  background-color: var(--bs-body-bg);
+
+  &:focus-within {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--bs-primary) 25%, transparent);
+  }
+
+  &.is-invalid {
+    border-color: var(--bs-form-invalid-border-color);
+  }
+}
+
+.code-editor-gutter {
+  flex: 0 0 auto;
+  min-width: 2.75em;
+  padding: 0.5em 0.5em 0.5em 0.25em;
+  overflow: hidden;
+  text-align: right;
+  user-select: none;
+  color: var(--bs-secondary-color);
+  background-color: var(--bs-tertiary-bg);
+  border-right: var(--bs-border-width) solid var(--bs-border-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.code-editor-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.5em 0.75em;
+  border: 0;
+  outline: 0;
+  resize: none;
+  overflow: auto;
+  white-space: pre;
+  font: inherit;
+  line-height: inherit;
+  color: var(--bs-body-color);
+  background: transparent;
+}

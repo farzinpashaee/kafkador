@@ -8,15 +8,18 @@ import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 @Service("SimpleProducerService")
 @RequiredArgsConstructor
 public class SimpleProducerService implements ProducerService<String, String> {
+
+    private static final long SEND_TIMEOUT_SECONDS = 30;
 
     private final ApplicationConfig applicationConfig;
     private final ApplicationContext applicationContext;
@@ -37,16 +40,11 @@ public class SimpleProducerService implements ProducerService<String, String> {
     public Event<String, String> produce(String topic, Event<String, String> event) throws KafkadorException {
         try (KafkaProducer<String, String> producer = new KafkaProducer<>(getProperties())) {
             ProducerRecord<String, String> record = new ProducerRecord<>(topic, event.getKey(), event.getValue());
-            producer.send(record, (RecordMetadata metadata, Exception exception) -> {
-                if (exception == null) {
-                    System.out.printf("Message sent successfully to topic %s, partition %d, offset %d%n",
-                            metadata.topic(), metadata.partition(), metadata.offset());
-                } else {
-                    exception.printStackTrace();
-                }
-            });
-            producer.flush();
+            // Wait for the broker's acknowledgement so a failed send reaches the caller instead of only the log.
+            producer.send(record).get(SEND_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             return event;
+        } catch (ExecutionException e) {
+            throw new KafkadorException(e.getCause() == null ? e.getMessage() : e.getCause().getMessage());
         } catch (Exception e) {
             throw new KafkadorException(e.getMessage());
         }

@@ -1,0 +1,11 @@
+<div class="code-editor" [class.is-invalid]="invalid" [style.--code-editor-rows]="rows">
+  <div class="code-editor-gutter" #gutter aria-hidden="true">
+    @for (line of lineNumbers; track line) {
+      <div>{{ line }}</div>
+    }
+  </div>
+  <textarea #textarea class="code-editor-input" [id]="inputId" [value]="value" [placeholder]="placeholder"
+            wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off"
+            [attr.aria-invalid]="invalid"
+            (input)="onInput(textarea.value)" (scroll)="onScroll(textarea)" (keydown)="onKeydown($event, textarea)"></textarea>
+</div>

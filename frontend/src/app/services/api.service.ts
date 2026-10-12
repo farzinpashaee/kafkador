@@ -1,7 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse,HttpResponse   } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Alert, Topic, TopicCreateRequest, SearchResult, ConsumerGroup, ConsumerGroupDetails, Bookmark, BookmarkEntityType, GenericResponse,
+import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Alert, Topic, TopicCreateRequest, SearchResult, ConsumerGroup, ConsumerGroupDetails, TopicRecordSearchRequest, TopicRecordSearchResult, TopicRecordProduceRequest, TopicRecordProduceResult, TopicRecord, RecordSerde, RecordFilter, Bookmark, BookmarkEntityType, GenericResponse,
   SchemaRegistry, SchemaRegistryConfig, Chart, Event, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery,
   AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest,
   SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, SchemaLookupResult,
@@ -85,6 +85,16 @@ export class ApiService {
   public createTopic(topic:TopicCreateRequest): Observable<HttpResponse<GenericResponse<Topic>>> {
     return this.http.post<GenericResponse<Topic>>(`${ApiService.ApiBaseUrl}/topics`,topic,
       { withCredentials: true ,observe: 'response' });
+  }
+
+  public produceTopicRecord(name:string, request:TopicRecordProduceRequest): Observable<GenericResponse<TopicRecordProduceResult>> {
+    return this.http.post<GenericResponse<TopicRecordProduceResult>>(
+      `${ApiService.ApiBaseUrl}/topics/${encodeURIComponent(name)}/records`, request, { withCredentials: true });
+  }
+
+  public searchTopicRecords(name:string, request:TopicRecordSearchRequest): Observable<GenericResponse<TopicRecordSearchResult>> {
+    return this.http.post<GenericResponse<TopicRecordSearchResult>>(
+      `${ApiService.ApiBaseUrl}/topics/${encodeURIComponent(name)}/records/search`, request, { withCredentials: true });
   }
 
   public deleteTopic(name:string): Observable<HttpResponse<void>> {
@@ -279,6 +289,39 @@ export class ApiService {
       eventSource.onmessage = (event) => this.zone.run(() => subscriber.next(event.data));
       eventSource.onerror = () => this.zone.run(() => {
         subscriber.error(new Error('Connection to the message stream was lost.'));
+        eventSource.close();
+      });
+
+      return () => eventSource.close();
+    });
+  }
+
+  /**
+   * Live mode of the Records tab: emits each batch of records produced after the stream started, or an empty batch
+   * once the server is positioned and listening. A "failure" event from the server, or a dropped connection, errors
+   * the Observable with a readable message; unsubscribing closes the connection, which stops the server's consumer.
+   */
+  public listenTopicRecords(topic: string, options: { partitions: number[]; keySerde: RecordSerde; valueSerde: RecordSerde;
+                              filters: RecordFilter[] }): Observable<TopicRecord[]> {
+    return new Observable<TopicRecord[]>((subscriber) => {
+      let params = new HttpParams().set('keySerde', options.keySerde).set('valueSerde', options.valueSerde);
+      if (options.partitions.length) params = params.set('partitions', options.partitions.join(','));
+      if (options.filters.length) params = params.set('filters', JSON.stringify(options.filters));
+      const url = `${ApiService.ApiBaseUrl}/topics/${encodeURIComponent(topic)}/records/live?${params.toString()}`;
+      const eventSource = new EventSource(url, { withCredentials: true });
+      let failed = false;
+
+      eventSource.addEventListener('ready', () => this.zone.run(() => subscriber.next([])));
+      eventSource.addEventListener('records', (event) =>
+        this.zone.run(() => subscriber.next(JSON.parse((event as MessageEvent).data) as TopicRecord[])));
+      eventSource.addEventListener('failure', (event) => this.zone.run(() => {
+        failed = true;
+        subscriber.error(new Error(JSON.parse((event as MessageEvent).data).message ?? 'Live stream stopped.'));
+        eventSource.close();
+      }));
+      // EventSource would quietly reconnect; a dropped live stream is reported instead, and the user restarts it.
+      eventSource.onerror = () => this.zone.run(() => {
+        if (!failed) subscriber.error(new Error('The live stream was disconnected.'));
         eventSource.close();
       });
 

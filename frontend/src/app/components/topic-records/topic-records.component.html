@@ -1,0 +1,286 @@
+<div class="d-flex align-items-start">
+  <div>
+    <h5>Records</h5>
+    <p class="text-s">Browse the records of this topic. Reading never commits offsets or joins a consumer group.</p>
+  </div>
+</div>
+
+<div class="d-flex flex-wrap align-items-center gap-2">
+  <label class="visually-hidden" for="recordsSeekType">Read from</label>
+  <select id="recordsSeekType" class="form-select form-select-sm w-auto" [(ngModel)]="seekType" (ngModelChange)="onSeekTypeChange()" [disabled]="live">
+    <option *ngFor="let seek of seekTypes" [ngValue]="seek.value">{{ seek.label }}</option>
+  </select>
+  <ng-container *ngIf="seekType === 'OFFSET'">
+    <label class="visually-hidden" for="recordsOffset">Start offset</label>
+    <input id="recordsOffset" type="number" min="0" class="form-control form-control-sm records-offset" placeholder="Offset"
+           [(ngModel)]="offset" (keyup.enter)="load()" [disabled]="live">
+  </ng-container>
+  <ng-container *ngIf="seekType === 'TIMESTAMP'">
+    <label class="visually-hidden" for="recordsFromTime">Start time</label>
+    <input id="recordsFromTime" type="datetime-local" step="1" class="form-control form-control-sm w-auto"
+           [(ngModel)]="fromTime" (keyup.enter)="load()" [disabled]="live">
+  </ng-container>
+
+  <div class="dropdown">
+    <button class="btn btn-sm dropdown-toggle outline-button" type="button" data-bs-toggle="dropdown"
+            data-bs-auto-close="outside" aria-expanded="false" [disabled]="live">
+      {{ partitionLabel }}
+    </button>
+    <ul class="dropdown-menu dropdown-menu-padded partition-menu">
+      <li>
+        <div class="form-check pe-4">
+          <input class="form-check-input" type="checkbox" id="recordsAllPartitions"
+                 [checked]="!selectedPartitions.size" (change)="selectAllPartitions()">
+          <label class="form-check-label text-s" for="recordsAllPartitions">All partitions</label>
+        </div>
+      </li>
+      <li *ngFor="let partition of partitions">
+        <div class="form-check pe-4">
+          <input class="form-check-input" type="checkbox" [id]="'recordsPartition' + partition"
+                 [checked]="selectedPartitions.has(partition)" (change)="togglePartition(partition, $any($event.target).checked)">
+          <label class="form-check-label text-s" [for]="'recordsPartition' + partition">Partition {{ partition }}</label>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <label class="visually-hidden" for="recordsKeySerde">Key serde</label>
+  <select id="recordsKeySerde" class="form-select form-select-sm w-auto" [(ngModel)]="keySerde" (ngModelChange)="load()" [disabled]="live">
+    <option *ngFor="let serde of serdes" [ngValue]="serde.value">Key: {{ serde.label }}</option>
+  </select>
+  <label class="visually-hidden" for="recordsValueSerde">Value serde</label>
+  <select id="recordsValueSerde" class="form-select form-select-sm w-auto" [(ngModel)]="valueSerde" (ngModelChange)="load()" [disabled]="live">
+    <option *ngFor="let serde of serdes" [ngValue]="serde.value">Value: {{ serde.label }}</option>
+  </select>
+  <label class="visually-hidden" for="recordsLimit">Number of records</label>
+  <select id="recordsLimit" class="form-select form-select-sm w-auto" [(ngModel)]="limit" (ngModelChange)="load()" [disabled]="live">
+    <option *ngFor="let l of limits" [ngValue]="l">{{ l }} records</option>
+  </select>
+
+  <button type="button" class="btn btn-sm outline-button" (click)="addFilter()" [disabled]="live || filters.length >= 10">
+    <i class="bi bi-funnel" aria-hidden="true"></i> Add filter
+  </button>
+  <button type="button" class="btn btn-sm" [ngClass]="live ? 'btn-outline-danger is-live' : 'outline-button'"
+          [attr.aria-pressed]="live" [attr.title]="live ? 'Stop listening' : 'Show new records as they are produced'"
+          (click)="toggleLive()" [disabled]="!live && !filtersReady">
+    <span *ngIf="live" class="live-dot" aria-hidden="true"></span>
+    <i *ngIf="!live" class="bi bi-broadcast" aria-hidden="true"></i>
+    {{ live ? 'Stop live' : 'Live' }}
+  </button>
+  <button type="button" class="btn btn-sm outline-button" aria-label="Refresh" title="Refresh"
+          (click)="load()" [disabled]="loading || !canLoad">
+    <span *ngIf="loading" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+    <i *ngIf="!loading" class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+  </button>
+
+  <div class="d-flex align-items-center gap-2 ms-auto">
+    <div class="dropdown">
+      <button type="button" class="btn btn-sm outline-button dropdown-toggle" data-bs-toggle="dropdown"
+              aria-expanded="false" [disabled]="!sortedRecords.length">
+        Export
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li *ngFor="let option of exportFormats">
+          <button type="button" class="dropdown-item" (click)="export(option.format)">{{ option.label }}</button>
+        </li>
+      </ul>
+    </div>
+    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#produceRecordModal"
+            (click)="openProduceDialog()">
+      <i class="bi bi-send" aria-hidden="true"></i> Produce
+    </button>
+  </div>
+</div>
+
+<div *ngIf="filters.length" class="mt-2 d-flex flex-column gap-2">
+  <div *ngFor="let filter of filters; let i = index" class="d-flex flex-wrap align-items-center gap-2">
+    <label class="visually-hidden" [for]="'recordsFilterField' + i">Filter field</label>
+    <select [id]="'recordsFilterField' + i" class="form-select form-select-sm w-auto" [(ngModel)]="filter.field" [disabled]="live">
+      <option *ngFor="let field of filterFields" [ngValue]="field.value">{{ field.label }}</option>
+    </select>
+    <label class="visually-hidden" [for]="'recordsFilterOperator' + i">Filter operator</label>
+    <select [id]="'recordsFilterOperator' + i" class="form-select form-select-sm w-auto" [(ngModel)]="filter.operator" [disabled]="live">
+      <option *ngFor="let operator of filterOperators" [ngValue]="operator.value">{{ operator.label }}</option>
+    </select>
+    <label class="visually-hidden" [for]="'recordsFilterValue' + i">Filter text</label>
+    <input [id]="'recordsFilterValue' + i" type="text" class="form-control form-control-sm records-filter-value"
+           placeholder="Text, then Enter or Refresh" [(ngModel)]="filter.value" (keyup.enter)="load()" [disabled]="live">
+    <button type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Remove filter {{ i + 1 }}" (click)="removeFilter(i)" [disabled]="live">
+      <i class="bi bi-x-lg" aria-hidden="true"></i>
+    </button>
+  </div>
+</div>
+
+<div *ngIf="errors.get('records')" class="alert alert-danger text-s p-2 mt-2 mb-0" role="alert">
+  {{ errors.get('records')?.message }}
+</div>
+
+<p class="text-s text-color-subtle mt-2 mb-0" *ngIf="live" role="status">
+  <ng-container *ngIf="liveConnecting">Connecting…</ng-container>
+  <ng-container *ngIf="!liveConnecting">
+    Live · {{ liveReceived | number }} new record{{ liveReceived === 1 ? '' : 's' }}<ng-container *ngIf="filters.length"> matched</ng-container>
+    <ng-container *ngIf="liveReceived > result!.records.length"> · showing the latest {{ result!.records.length }}</ng-container>
+  </ng-container>
+</p>
+<p class="text-s text-color-subtle mt-2 mb-0" *ngIf="result && !live">
+  {{ result.records.length }} record{{ result.records.length === 1 ? '' : 's' }}
+  <ng-container *ngIf="filters.length"> matched, {{ result.scannedCount | number }} scanned</ng-container>
+  <ng-container *ngIf="result.scanLimitReached">
+    · stopped at the scan limit; choose fewer partitions or a later start to look further
+  </ng-container>
+</p>
+
+<p class="placeholder-glow mt-3" *ngIf="loading && !result">
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-10"></span>
+</p>
+
+<div class="table-responsive mt-2" *ngIf="result">
+  <table class="table records-table">
+    <thead>
+    <tr>
+      <th scope="col" class="expand-cell"><span class="visually-hidden">Expand</span></th>
+      <th scope="col" *ngFor="let column of columns" [attr.aria-sort]="ariaSort(column.key)">
+        <button type="button" class="sort-button" (click)="sortBy(column.key)">
+          {{ column.label }}
+          <i class="bi" aria-hidden="true"
+             [ngClass]="sortKey !== column.key ? 'bi-arrow-down-up opacity-50' : (sortAscending ? 'bi-sort-up' : 'bi-sort-down')"></i>
+        </button>
+      </th>
+      <th scope="col">Key</th>
+      <th scope="col">Value</th>
+    </tr>
+    </thead>
+    <tbody>
+    @for (record of pagedRecords; track rowId(record)) {
+      <tr class="cursor-pointer" (click)="toggle(record)">
+        <td class="expand-cell">
+          <button type="button" class="btn btn-link btn-icon p-0" [attr.aria-expanded]="expanded.has(rowId(record))"
+                  attr.aria-label="Show record {{ record.offset }} of partition {{ record.partition }}"
+                  (click)="toggle(record); $event.stopPropagation()">
+            <i class="bi" aria-hidden="true" [ngClass]="expanded.has(rowId(record)) ? 'bi-dash-square' : 'bi-plus-square'"></i>
+          </button>
+        </td>
+        <th scope="row">{{ record.offset }}</th>
+        <td>{{ record.partition }}</td>
+        <td class="text-nowrap">{{ formatTimestamp(record.timestamp) }}</td>
+        <td class="preview-cell" [class.text-color-subtle]="record.key == null">{{ record.key ?? 'null' }}</td>
+        <td class="preview-cell" [class.text-color-subtle]="record.value == null">{{ record.value ?? 'null' }}</td>
+      </tr>
+      <tr *ngIf="expanded.has(rowId(record))" class="record-detail-row">
+        <td></td>
+        <td colspan="5">
+          <div class="row g-3">
+            <div class="col-12 col-xl-4">
+              <div class="text-s fw-semibold mb-1">Key <span class="text-color-subtle fw-normal">· {{ formatSize(record.keySize) }}</span></div>
+              <pre class="record-body text-s">{{ formatBody(record.key) }}</pre>
+            </div>
+            <div class="col-12 col-xl-8">
+              <div class="text-s fw-semibold mb-1">Value <span class="text-color-subtle fw-normal">· {{ formatSize(record.valueSize) }}</span></div>
+              <pre class="record-body text-s">{{ formatBody(record.value) }}</pre>
+            </div>
+          </div>
+          <div class="text-s fw-semibold mt-2 mb-1">Headers</div>
+          <table class="table table-sm mb-0 text-s" *ngIf="record.headers.length; else noHeaders">
+            <tbody>
+            <tr *ngFor="let header of record.headers">
+              <th scope="row" class="text-nowrap">{{ header.key }}</th>
+              <td class="text-break">{{ header.value ?? 'null' }}</td>
+            </tr>
+            </tbody>
+          </table>
+          <ng-template #noHeaders><p class="text-s text-color-subtle mb-0">No headers</p></ng-template>
+          <p class="text-s text-color-subtle mt-2 mb-0" *ngIf="record.timestampType">Timestamp type: {{ record.timestampType }}</p>
+        </td>
+      </tr>
+    } @empty {
+      <tr>
+        <td [attr.colspan]="6" class="text-center text-s text-color-subtle py-3">
+          {{ live ? 'Waiting for new records…' : (filters.length ? 'No records match the filters.' : 'No records to show from this position.') }}
+        </td>
+      </tr>
+    }
+    </tbody>
+  </table>
+</div>
+<app-pagination *ngIf="result" [totalItems]="sortedRecords.length" [pageSize]="pageSize" [page]="page" (pageChange)="page = $event"></app-pagination>
+
+<!-- Produce record -->
+<div class="modal fade" id="produceRecordModal" tabindex="-1" aria-labelledby="produceRecordModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="produceRecordModalLabel">Produce to '{{ topicName }}'</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3 mb-3">
+          <div class="col-12 col-md-4">
+            <label for="producePartition" class="form-label">Partition</label>
+            <select id="producePartition" class="form-select" [(ngModel)]="producePartition">
+              <option [ngValue]="null">Any (picked by key)</option>
+              <option *ngFor="let partition of partitions" [ngValue]="partition">Partition #{{ partition }}</option>
+            </select>
+          </div>
+          <div class="col-6 col-md-4">
+            <label for="produceKeySerde" class="form-label">Key serde</label>
+            <select id="produceKeySerde" class="form-select" [(ngModel)]="produceKeySerde">
+              <option *ngFor="let serde of serdes" [ngValue]="serde.value">{{ serde.label }}</option>
+            </select>
+          </div>
+          <div class="col-6 col-md-4">
+            <label for="produceValueSerde" class="form-label">Value serde</label>
+            <select id="produceValueSerde" class="form-select" [(ngModel)]="produceValueSerde">
+              <option *ngFor="let serde of serdes" [ngValue]="serde.value">{{ serde.label }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="produceRecordKey" class="form-label">Key</label>
+          <app-code-editor inputId="produceRecordKey" [rows]="2" [(value)]="produceKey" [invalid]="!!produceKeyError"
+                           placeholder="Empty sends a null key"></app-code-editor>
+          <div class="form-text text-danger" *ngIf="produceKeyError">{{ produceKeyError }}</div>
+        </div>
+        <div class="mb-3">
+          <label for="produceRecordValue" class="form-label">Value</label>
+          <app-code-editor inputId="produceRecordValue" [rows]="10" [(value)]="produceValue" [invalid]="!!produceValueError"
+                           placeholder="Empty sends a null value (a tombstone on compacted topics)"></app-code-editor>
+          <div class="form-text text-danger" *ngIf="produceValueError">{{ produceValueError }}</div>
+        </div>
+        <div class="mb-3">
+          <label for="produceRecordHeaders" class="form-label">Headers</label>
+          <app-code-editor inputId="produceRecordHeaders" [rows]="3" [(value)]="produceHeaders"
+                           [invalid]="!!parsedHeaders.error"></app-code-editor>
+          <div class="form-text" [class.text-danger]="parsedHeaders.error">
+            {{ parsedHeaders.error ?? 'A JSON object of header names to values, e.g. {"trace-id": "abc"}' }}
+          </div>
+        </div>
+
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="keepProduceContents" [(ngModel)]="keepProduceContents">
+          <label class="form-check-label text-s" for="keepProduceContents">Keep contents after producing a message</label>
+          <i class="bi bi-info-circle text-color-subtle ms-1" aria-hidden="true"
+             title="Leaves the dialog open with the same key, value and headers, to send several similar records"></i>
+        </div>
+
+        <div *ngIf="produceResult" class="alert alert-success text-s p-2 mt-3 mb-0" role="status">
+          Produced to partition {{ produceResult.partition }} at offset {{ produceResult.offset }}.
+        </div>
+        <div *ngIf="errors.get('produce')" class="alert alert-danger text-s p-2 mt-3 mb-0" role="alert">
+          {{ errors.get('produce')?.message }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <ng-container *ngIf="!producing">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ produceResult ? 'Close' : 'Cancel' }}</button>
+          <button type="button" class="btn btn-primary" [disabled]="!canProduce" (click)="produce()">Produce message</button>
+        </ng-container>
+        <div *ngIf="producing">
+          <span class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Producing...</span></span>
+          Producing...&nbsp;
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

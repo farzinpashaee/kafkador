@@ -91,8 +91,8 @@ public class RestExceptionController {
                 .failed(HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler(InvalidTopicConfigException.class)
-    public ResponseEntity<GenericResponse<Void>> handleInvalidTopicConfig(InvalidTopicConfigException ex) {
+    @ExceptionHandler({InvalidTopicConfigException.class, InvalidRecordRequestException.class})
+    public ResponseEntity<GenericResponse<Void>> handleInvalidRequest(Exception ex) {
         return new GenericResponse.Builder<Void>()
                 .code(String.valueOf(HttpStatus.BAD_REQUEST.value()))
                 .message(ex.getMessage())

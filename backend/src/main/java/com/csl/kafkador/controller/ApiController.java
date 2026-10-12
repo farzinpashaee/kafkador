@@ -37,6 +37,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import com.csl.kafkador.domain.options.RecordSerde;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +58,9 @@ public class ApiController {
     private final ConnectionService connectionService;
     private final MetricService metricService;
     private final SessionSettingsService sessionSettingsService;
+    private final TopicRecordService topicRecordService;
+    private final TopicRecordProducerService topicRecordProducerService;
+    private final TopicRecordLiveService topicRecordLiveService;
 
     @GetMapping("/settings/session")
     public ResponseEntity<GenericResponse<SessionConfigDto>> getSessionConfig() {
@@ -181,6 +185,36 @@ public class ApiController {
         return new GenericResponse.Builder<Topic>()
                 .data(created)
                 .success(HttpStatus.CREATED, headers);
+    }
+
+    /** Produces one record from the topic Records tab, with the key and value encoded by the chosen serdes. */
+    @PostMapping("/topics/{name}/records")
+    public ResponseEntity<GenericResponse<TopicRecordProduceResultDto>> produceTopicRecord(@PathVariable @NotBlank String name,
+                                                                                          @Valid @RequestBody TopicRecordProduceRequestDto request)
+            throws KafkaAdminApiException, TopicNotFoundException, InvalidRecordRequestException {
+        return new GenericResponse.Builder<TopicRecordProduceResultDto>()
+                .data(topicRecordProducerService.produce(name, request))
+                .success(HttpStatus.CREATED);
+    }
+
+    /** Live mode of the Records tab: streams records produced from now on. Filters are a JSON array, as in a search. */
+    @GetMapping(value = "/topics/{name}/records/live", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter listenTopicRecords(@PathVariable @NotBlank String name,
+                                         @RequestParam(defaultValue = "") List<Integer> partitions,
+                                         @RequestParam(defaultValue = "STRING") RecordSerde keySerde,
+                                         @RequestParam(defaultValue = "STRING") RecordSerde valueSerde,
+                                         @RequestParam(required = false) String filters) throws InvalidRecordRequestException {
+        return topicRecordLiveService.listen(name, partitions, keySerde, valueSerde, TopicRecordLiveService.parseFilters(filters));
+    }
+
+    /** Reads records for the topic Records tab. POST because the query (filters, partitions) doesn't fit a URL well. */
+    @PostMapping("/topics/{name}/records/search")
+    public ResponseEntity<GenericResponse<TopicRecordSearchResultDto>> searchTopicRecords(@PathVariable @NotBlank String name,
+                                                                                         @Valid @RequestBody TopicRecordSearchRequestDto request)
+            throws KafkaAdminApiException, TopicNotFoundException, InvalidRecordRequestException {
+        return new GenericResponse.Builder<TopicRecordSearchResultDto>()
+                .data(topicRecordService.search(name, request))
+                .success(HttpStatus.OK);
     }
 
     @DeleteMapping("/topics/{name}")

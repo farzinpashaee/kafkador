@@ -13,6 +13,13 @@
       </button>
     </li>
     <li class="nav-item" role="presentation">
+      <button class="nav-link" id="records-tab" data-bs-toggle="tab"
+              data-bs-target="#records" type="button" role="tab"
+              aria-controls="records" aria-selected="false" (click)="recordsOpened = true">
+        <i class="bi bi-card-list"></i> Records
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
       <button class="nav-link" id="configurations-tab" data-bs-toggle="tab"
               data-bs-target="#configurations" type="button" role="tab"
               aria-controls="configurations" aria-selected="true">
@@ -116,6 +123,10 @@
           </div>
         </section>
       </div>
+    </div>
+    <div class="tab-pane fade" id="records" role="tabpanel" aria-labelledby="records-tab" tabindex="0">
+      <!-- Created on first open so viewing a topic doesn't read any records until asked. -->
+      <app-topic-records *ngIf="recordsOpened" [topicName]="topicName" [partitionCount]="topic.partitions"></app-topic-records>
     </div>
     <div class="tab-pane fade" id="configurations" role="tabpanel" aria-labelledby="overview-tab" tabindex="0">
       <div class="d-flex justify-content-end align-items-center gap-2">
