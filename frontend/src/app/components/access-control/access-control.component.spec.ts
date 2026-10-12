@@ -1,17 +1,27 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of, throwError } from 'rxjs';
 
-import { AccessControlComponent } from './access-control.component';
+import { AccessControlComponent, PRINCIPAL_PATTERN } from './access-control.component';
+import { ApiService, CommonService } from '../../services';
 
 describe('AccessControlComponent', () => {
   let component: AccessControlComponent;
   let fixture: ComponentFixture<AccessControlComponent>;
+  let api: jasmine.SpyObj<ApiService>;
 
   beforeEach(async () => {
+    api = jasmine.createSpyObj<ApiService>('ApiService', ['getAclBindings', 'createAclBinding']);
+    api.getAclBindings.and.returnValue(of({ body: { data: [] } } as any));
+    api.createAclBinding.and.returnValue(of({ body: { data: null } } as any));
+
     await TestBed.configureTestingModule({
-      imports: [AccessControlComponent]
+      imports: [AccessControlComponent],
+      providers: [{ provide: ApiService, useValue: api }]
     })
     .compileComponents();
 
+    // Bootstrap's modal API isn't loaded in unit tests.
+    spyOn(TestBed.inject(CommonService), 'hideModal');
     fixture = TestBed.createComponent(AccessControlComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -19,5 +29,36 @@ describe('AccessControlComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('accepts only Type:name principals', () => {
+    expect(PRINCIPAL_PATTERN.test('User:alice')).toBeTrue();
+    expect(PRINCIPAL_PATTERN.test('User:*')).toBeTrue();
+    expect(PRINCIPAL_PATTERN.test('User:CN=alice,OU=dev')).toBeTrue();
+    expect(PRINCIPAL_PATTERN.test('Farzin')).toBeFalse();
+    expect(PRINCIPAL_PATTERN.test('User:')).toBeFalse();
+    expect(PRINCIPAL_PATTERN.test(':alice')).toBeFalse();
+  });
+
+  it('stops a principal without its type and suggests the User: form', () => {
+    component.newBinding = { ...component.newBinding, resourceName: 'ORDERS', principal: 'Farzin' };
+    component.createAclBinding();
+    expect(api.createAclBinding).not.toHaveBeenCalled();
+    expect(component.errors.get('createAclBinding')?.message).toContain('"User:Farzin"');
+  });
+
+  it('creates a binding with a valid principal', () => {
+    component.newBinding = { ...component.newBinding, resourceName: 'ORDERS', principal: 'User:Farzin' };
+    component.createAclBinding();
+    expect(api.createAclBinding).toHaveBeenCalled();
+    expect(component.errors.get('createAclBinding')).toBeUndefined();
+  });
+
+  it('shows the reason the cluster gives for rejecting a binding', () => {
+    api.createAclBinding.and.returnValue(throwError(() => ({ status: 400,
+      error: { error: { code: '400', message: 'Could not parse principal from `x`' } } })));
+    component.newBinding = { ...component.newBinding, resourceName: 'ORDERS', principal: 'User:x' };
+    component.createAclBinding();
+    expect(component.errors.get('createAclBinding')?.message).toContain('Could not parse principal');
   });
 });

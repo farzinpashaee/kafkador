@@ -28,3 +28,4 @@ export * from './meta';
 export * from './bookmark';
 export * from './topic-record';
 export * from './topic-consumer-group';
+export * from './cluster-credentials';

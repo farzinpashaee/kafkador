@@ -229,7 +229,7 @@ public class ApiController {
 
     @PostMapping("/connections")
     public ResponseEntity<GenericResponse<ConnectionDto>> createConnection(@Valid @RequestBody ConnectionDto connection)
-            throws KafkaAdminApiException, DuplicatedClusterException {
+            throws KafkaAdminApiException, DuplicatedClusterException, ClusterCredentialsRequiredException {
         ConnectionDto created = connectionService.create(connection);
         URI location = ServletUriComponentsBuilder.fromCurrentRequestUri()
                 .path("/{id}")
@@ -244,7 +244,7 @@ public class ApiController {
 
     @PutMapping("/connections/{id}")
     public ResponseEntity<GenericResponse<ConnectionDto>> updateConnection(@PathVariable @NotBlank String id, @Valid @RequestBody ConnectionDto connection)
-            throws ClusterNotFoundException, KafkaAdminApiException, DuplicatedClusterException {
+            throws ClusterNotFoundException, KafkaAdminApiException, DuplicatedClusterException, ClusterCredentialsRequiredException {
         ConnectionDto updated = connectionService.update(id, connection);
         return new GenericResponse.Builder<ConnectionDto>()
                 .data(updated)
@@ -266,8 +266,10 @@ public class ApiController {
     }
 
     @PostMapping("/connections/{id}/connect")
-    public ResponseEntity<GenericResponse<ConnectionDto>> connect(@PathVariable @NotBlank String id) throws ClusterNotFoundException {
-        ConnectionDto connection = connectionService.connect(id);
+    public ResponseEntity<GenericResponse<ConnectionDto>> connect(@PathVariable @NotBlank String id,
+                                                                 @Valid @RequestBody(required = false) ConnectRequestDto request)
+            throws ClusterNotFoundException, KafkaAdminApiException, ClusterCredentialsRequiredException {
+        ConnectionDto connection = connectionService.connect(id, request == null ? null : request.getCredentials());
         return new GenericResponse.Builder<ConnectionDto>()
                 .data(connection)
                 .success(HttpStatus.OK);
@@ -364,7 +366,7 @@ public class ApiController {
 
     @PostMapping("/acl")
     public ResponseEntity<GenericResponse<AclBindingDto>> createAclBinding(@Valid @RequestBody AclBindingDto binding)
-            throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException {
+            throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException, InvalidAclBindingException {
         AclService aclService = (AclService) applicationContext.getBean("AclService");
         ConnectionDto connection = connectionService.getActiveConnection();
         AclBindingDto created = aclService.createAclBinding(connection.getClusterId(), binding);
@@ -375,7 +377,7 @@ public class ApiController {
 
     @DeleteMapping("/acl")
     public ResponseEntity<Void> deleteAclBinding(@Valid @RequestBody AclBindingDto binding)
-            throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException {
+            throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException, InvalidAclBindingException {
         AclService aclService = (AclService) applicationContext.getBean("AclService");
         ConnectionDto connection = connectionService.getActiveConnection();
         aclService.deleteAclBinding(connection.getClusterId(), binding);

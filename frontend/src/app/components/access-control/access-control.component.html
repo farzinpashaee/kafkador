@@ -221,11 +221,25 @@ super.users=User:ANONYMOUS</code></pre>
         <p class="text-s mb-1">If your cluster still uses ZooKeeper:</p>
         <pre class="p-2 bg-body-tertiary text-s"><code>authorizer.class.name=kafka.security.authorizer.AclAuthorizer
 super.users=User:ANONYMOUS</code></pre>
-        <p class="text-s text-color-subtle">
-          Adjust <code>super.users</code> to match whichever principal your cluster actually authenticates as —
-          it's shown here as <code>ANONYMOUS</code> because that's Kafka's default when no authentication is
-          configured either.
-        </p>
+        <div class="alert alert-warning text-s" role="note">
+          <strong>Super users bypass every ACL, DENY rules included.</strong>
+          Clients on a listener without authentication (PLAINTEXT) all connect as <code>User:ANONYMOUS</code>, so
+          listing <code>User:ANONYMOUS</code> in <code>super.users</code> exempts <em>every</em> such client from ACLs
+          — the ACLs you create here will appear to have no effect on them. Use it only to get started on a
+          local test cluster.
+        </div>
+        <p class="text-s">For ACLs that actually restrict clients:</p>
+        <ul class="text-s">
+          <li>Enable authentication (e.g. a <code>SASL_PLAINTEXT</code> or <code>SASL_SSL</code> listener) so each
+            client connects as its own principal, such as <code>User:orders-service</code>.</li>
+          <li>Put only an admin principal in <code>super.users</code>, e.g. <code>super.users=User:admin</code>, and
+            connect Kafkador as that user — it will ask for the credentials when you connect.</li>
+          <li>Keep the brokers' own principal there too: if brokers talk to each other (or to the controllers) over a
+            PLAINTEXT listener, they are <code>User:ANONYMOUS</code> and need to stay super users — then keep that
+            listener internal and point clients at the authenticated one.</li>
+          <li>Leave <code>allow.everyone.if.no.acl.found</code> at its default (<code>false</code>), so resources
+            without ACLs are denied rather than open to everyone.</li>
+        </ul>
 
         <h6 class="text-s">2. Restart the broker</h6>
         <p class="text-s">

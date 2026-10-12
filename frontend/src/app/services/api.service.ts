@@ -1,7 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse,HttpResponse   } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Alert, Topic, TopicCreateRequest, SearchResult, ConsumerGroup, ConsumerGroupDetails, TopicConsumerGroup, TopicRecordSearchRequest, TopicRecordSearchResult, TopicRecordProduceRequest, TopicRecordProduceResult, TopicRecord, RecordSerde, RecordFilter, Bookmark, BookmarkEntityType, GenericResponse,
+import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Alert, Topic, TopicCreateRequest, SearchResult, ConsumerGroup, ConsumerGroupDetails, TopicConsumerGroup, TopicRecordSearchRequest, TopicRecordSearchResult, TopicRecordProduceRequest, TopicRecordProduceResult, TopicRecord, RecordSerde, RecordFilter, Bookmark, BookmarkEntityType, ClusterCredentials, GenericResponse,
   SchemaRegistry, SchemaRegistryConfig, Chart, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery,
   AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest,
   SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, SchemaLookupResult,
@@ -252,8 +252,10 @@ export class ApiService {
       { withCredentials: true ,observe: 'response' });
   }
 
-  public connect(id:string): Observable<GenericResponse<Connection>> {
-    return this.http.post<GenericResponse<Connection>>(`${ApiService.ApiBaseUrl}/connections/${id}/connect`,{},{ withCredentials: true });
+  /** Connects this session; {@code credentials} only when the cluster asked for them (CREDENTIALS_REQUIRED). */
+  public connect(id:string, credentials?: ClusterCredentials): Observable<GenericResponse<Connection>> {
+    return this.http.post<GenericResponse<Connection>>(`${ApiService.ApiBaseUrl}/connections/${id}/connect`,
+      credentials ? { credentials } : {}, { withCredentials: true });
   }
 
   public disconnect(): Observable<HttpResponse<GenericResponse<Connection>>> {

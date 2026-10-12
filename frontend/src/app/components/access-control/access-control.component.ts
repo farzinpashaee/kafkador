@@ -8,6 +8,9 @@ import { ApiService, CommonService, ValidationService } from '../../services';
 import { GenericResponse, AclBinding, Error } from '../../models';
 import { PaginationComponent } from '../pagination/pagination.component';
 
+/** Same rule as the server: "Type:name", e.g. User:alice or User:* (the name may contain further colons). */
+export const PRINCIPAL_PATTERN = /^[^:\s]+:\S.*$/;
+
 @Component({
   selector: 'app-access-control',
   imports: [CommonModule,FormsModule,ReactiveFormsModule,PaginationComponent],
@@ -67,6 +70,11 @@ export class AccessControlComponent {
   createAclBinding(){
     const errors = this.validationService.validateRequiredFields(
       this.newBinding, ['resourceType', 'resourceName', 'patternType', 'principal', 'host', 'operation', 'permissionType']);
+    const principal = this.newBinding.principal?.trim() ?? '';
+    // Kafka principals are "Type:name"; a bare name is the most common mistake, so suggest the User: form.
+    if (!errors.length && !PRINCIPAL_PATTERN.test(principal)) {
+      errors.push(`Principal must be in the form Type:name, e.g. "User:${principal.replace(/:/g, '') || 'alice'}" or "User:*"`);
+    }
     if (errors.length > 0) {
       this.errors.set("createAclBinding",{code:'400',message:errors[0],datetime:''});
       return;

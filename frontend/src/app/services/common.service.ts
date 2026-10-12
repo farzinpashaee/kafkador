@@ -16,6 +16,12 @@ export class CommonService {
     modal?.hide();
   }
 
+  /** Opens a modal from code, for dialogs that appear in response to a request rather than a click. */
+  showModal(id:string) {
+    const el = document.getElementById(id);
+    if (el) bootstrap.Modal.getOrCreateInstance(el).show();
+  }
+
   /**
    * Starts closing every open Bootstrap modal. Called when a navigation starts: Bootstrap puts the grey backdrop
    * directly on <body>, outside Angular, so a modal whose component is destroyed while open (browser Back, the

@@ -1,6 +1,7 @@
 package com.csl.kafkador.domain.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -17,7 +18,9 @@ public class AclBindingDto {
     @NotBlank(message = "Pattern type is required")
     private String patternType;
 
+    /** Kafka principals are "Type:name", e.g. User:alice, or User:* for every user. */
     @NotBlank(message = "Principal is required")
+    @Pattern(regexp = "[^:\\s]+:\\S.*", message = "Principal must be in the form Type:name, e.g. User:alice or User:*")
     private String principal;
 
     @NotBlank(message = "Host is required")

@@ -32,6 +32,15 @@ public class RestExceptionController {
                 .failed(HttpStatus.UNAUTHORIZED);
     }
 
+    /** 403 rather than 401: the browser's session is fine, the cluster wants (other) credentials. */
+    @ExceptionHandler(ClusterCredentialsRequiredException.class)
+    public ResponseEntity<GenericResponse<Void>> handleClusterCredentialsRequired(ClusterCredentialsRequiredException ex) {
+        return new GenericResponse.Builder<Void>()
+                .code(ClusterCredentialsRequiredException.CODE)
+                .message(ex.getMessage())
+                .failed(HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(DuplicatedClusterException.class)
     public ResponseEntity<GenericResponse<Void>> handleDuplicatedClusterException(DuplicatedClusterException ex) {
         return new GenericResponse.Builder<Void>()
@@ -91,7 +100,7 @@ public class RestExceptionController {
                 .failed(HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler({InvalidTopicConfigException.class, InvalidRecordRequestException.class})
+    @ExceptionHandler({InvalidTopicConfigException.class, InvalidRecordRequestException.class, InvalidAclBindingException.class})
     public ResponseEntity<GenericResponse<Void>> handleInvalidRequest(Exception ex) {
         return new GenericResponse.Builder<Void>()
                 .code(String.valueOf(HttpStatus.BAD_REQUEST.value()))

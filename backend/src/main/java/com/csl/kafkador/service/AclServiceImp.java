@@ -4,6 +4,7 @@ import com.csl.kafkador.domain.dto.AclBindingDto;
 import com.csl.kafkador.exception.AuthorizerNotConfiguredException;
 import com.csl.kafkador.exception.ClusterNotFoundException;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
+import com.csl.kafkador.exception.InvalidAclBindingException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.acl.AclOperation;
 import org.apache.kafka.common.acl.AclPermissionType;
+import org.apache.kafka.common.errors.InvalidRequestException;
 import org.apache.kafka.common.errors.SecurityDisabledException;
 import org.apache.kafka.common.resource.PatternType;
 import org.apache.kafka.common.resource.ResourcePattern;
@@ -54,7 +56,7 @@ public class AclServiceImp implements AclService {
     }
 
     @Override
-    public AclBindingDto createAclBinding(String clusterId, AclBindingDto binding) throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException {
+    public AclBindingDto createAclBinding(String clusterId, AclBindingDto binding) throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException, InvalidAclBindingException {
         try {
             Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
             AclBinding aclBinding = new AclBinding(
@@ -75,12 +77,12 @@ public class AclServiceImp implements AclService {
         } catch (ConnectionSessionExpiredException e) {
             throw e;
         } catch (Exception e) {
-            throw translateFailure(e);
+            throw translateWriteFailure(e);
         }
     }
 
     @Override
-    public void deleteAclBinding(String clusterId, AclBindingDto binding) throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException {
+    public void deleteAclBinding(String clusterId, AclBindingDto binding) throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException, InvalidAclBindingException {
         try {
             Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
             AclBindingFilter filter = new AclBindingFilter(
@@ -100,7 +102,7 @@ public class AclServiceImp implements AclService {
         } catch (ConnectionSessionExpiredException e) {
             throw e;
         } catch (Exception e) {
-            throw translateFailure(e);
+            throw translateWriteFailure(e);
         }
     }
 
@@ -117,6 +119,22 @@ public class AclServiceImp implements AclService {
                     "No ACL authorizer is configured on this Kafka broker, so ACLs can't be listed, created, or deleted yet.");
         }
         return new KafkaAdminApiException("Error initializing or using AdminClient: " + e.getMessage());
+    }
+
+    /**
+     * Like {@link #translateFailure}, plus the ways a create or delete can be wrong rather than fail: Kafka rejecting the
+     * binding (bad principal, invalid pattern / operation combination) or a type name this Kafka version doesn't know.
+     * Those carry a message the user can act on, so they're reported as bad requests with that message.
+     */
+    private KafkaAdminApiException translateWriteFailure(Exception e) throws AuthorizerNotConfiguredException, InvalidAclBindingException {
+        Throwable cause = e instanceof ExecutionException && e.getCause() != null ? e.getCause() : e;
+        if (cause instanceof InvalidRequestException) {
+            throw new InvalidAclBindingException(cause.getMessage());
+        }
+        if (e instanceof IllegalArgumentException) {
+            throw new InvalidAclBindingException("Unknown resource type, pattern type, operation or permission type: " + e.getMessage());
+        }
+        return translateFailure(e);
     }
 
     private AclBindingDto toDto(AclBinding binding) {
