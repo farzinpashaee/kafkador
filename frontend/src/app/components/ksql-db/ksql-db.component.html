@@ -20,14 +20,55 @@
     {{ errors.get('loadData')?.message }}
   </div>
 
-  <div class="card card-top-widget mb-2" *ngIf="serverInfo">
-    <div class="card-body text-white">
-      <h5 class="card-title">ksqlDB Server</h5>
-      <p class="card-text text-s text-color-subtle mb-0">
-        Version {{ serverInfo.version }} &middot; Status: {{ serverInfo.serverStatus }} &middot; Service ID: {{ serverInfo.ksqlServiceId }}
-      </p>
-    </div>
+  <div class="row g-4 mb-4" *ngIf="serverInfo">
+    <section class="col-12 col-xl-6" aria-labelledby="ksqlServerHeading">
+      <h6 id="ksqlServerHeading" class="mb-2">ksqlDB server</h6>
+      <div class="stat-grid stat-grid-3">
+        <div class="stat-tile">
+          <div class="stat-label">Version</div>
+          <div class="stat-value">{{ serverInfo.version || 'n/a' }}</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Status</div>
+          <div class="stat-value">{{ serverInfo.serverStatus || 'n/a' }}</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Service ID</div>
+          <div class="stat-value">{{ serverInfo.ksqlServiceId || 'n/a' }}</div>
+        </div>
+      </div>
+    </section>
+    <section class="col-12 col-xl-6" aria-labelledby="ksqlObjectsHeading">
+      <h6 id="ksqlObjectsHeading" class="mb-2">Objects</h6>
+      <div class="stat-grid stat-grid-3">
+        <div class="stat-tile">
+          <div class="stat-label">Streams</div>
+          <div class="stat-value">
+            <ng-container *ngTemplateOutlet="count; context: { value: streams.length }"></ng-container>
+          </div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Tables</div>
+          <div class="stat-value">
+            <ng-container *ngTemplateOutlet="count; context: { value: tables.length }"></ng-container>
+          </div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Queries</div>
+          <div class="stat-value">
+            <ng-container *ngTemplateOutlet="count; context: { value: queries.length }"></ng-container>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
+
+  <ng-template #count let-value="value">
+    <span *ngIf="flags.get('dataLoading')" class="spinner-border spinner-border-sm" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </span>
+    <ng-container *ngIf="!flags.get('dataLoading')">{{ value }}</ng-container>
+  </ng-template>
 
   <p class="placeholder-glow" *ngIf="flags.get('dataLoading')">
     <span class="placeholder col-12"></span>
