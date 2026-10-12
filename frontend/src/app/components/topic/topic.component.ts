@@ -1,37 +1,30 @@
-import { ChangeDetectorRef, Component, OnDestroy, PipeTransform  } from '@angular/core';
+import { Component } from '@angular/core';
 import { ActivatedRoute,RouterModule } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
-import { CommonModule, AsyncPipe, DecimalPipe  } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { startWith, map } from 'rxjs/operators';
-import { BehaviorSubject, combineLatest, Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, combineLatest } from 'rxjs';
 import { ApiService, DocumentationService, CommonService} from '../../services';
-import { Broker, GenericResponse, Config, Topic, Error } from '../../models';
+import { GenericResponse, Config, Topic, Error } from '../../models';
 import { TopicRecordsComponent } from '../topic-records/topic-records.component';
-
-const MAX_VISIBLE_TEST_MESSAGES = 200;
-// Matches the length of the fade-out highlight in topic.component.scss.
-const NEW_MESSAGE_HIGHLIGHT_MS = 3000;
-
-export interface ConsumedMessage {
-  id: number;
-  text: string;
-  receivedAt: number;
-}
+import { TopicConsumersComponent } from '../topic-consumers/topic-consumers.component';
 
 @Component({
   selector: 'app-topic',
-  imports: [CommonModule,FormsModule,RouterModule,ReactiveFormsModule,TopicRecordsComponent],
+  imports: [CommonModule,FormsModule,RouterModule,ReactiveFormsModule,TopicRecordsComponent,TopicConsumersComponent],
   templateUrl: './topic.component.html',
   styleUrl: './topic.component.scss'
 })
-export class TopicComponent implements OnDestroy {
+export class TopicComponent {
 
   topicName!: string;
   topic!: Topic;
   topicConfig!: Config[];
   isLoading: boolean = true;
+  // The Records and Consumers tabs are created on first open, so viewing a topic doesn't query them until asked.
   recordsOpened = false;
+  consumersOpened = false;
   documentation!: string;
   selectedEditConfig?: Config;
   errors: Map<string, Error> = new Map();
@@ -41,30 +34,9 @@ export class TopicComponent implements OnDestroy {
   filterSensitive$ = new BehaviorSubject<boolean>(false);
   filterEditable$ = new BehaviorSubject<boolean>(false);
 
-  listening: boolean = false;
-  activeGroupId: string = '';
-  consumedMessages: ConsumedMessage[] = [];
-  private nextMessageId = 0;
-  producerEvent: string = '';
-  showMessageFilter: boolean = false;
-  messageFilter: string = '';
-  private testTopicSubscription?: Subscription;
-
-  get filteredMessages(): ConsumedMessage[] {
-    if (!this.showMessageFilter || !this.messageFilter.trim()) return this.consumedMessages;
-    const term = this.messageFilter.toLowerCase();
-    return this.consumedMessages.filter(message => message.text.toLowerCase().includes(term));
-  }
-
-  /** Still within its highlight window; rows re-rendered later (e.g. when the filter changes) don't flash again. */
-  isNewMessage(message: ConsumedMessage): boolean {
-    return Date.now() - message.receivedAt < NEW_MESSAGE_HIGHLIGHT_MS;
-  }
-
   constructor(private apiService: ApiService,
     private documentationService: DocumentationService,
     private commonService: CommonService,
-    private cdr: ChangeDetectorRef,
     private route: ActivatedRoute) {}
 
   ngOnInit() {
@@ -83,19 +55,6 @@ export class TopicComponent implements OnDestroy {
         .subscribe((filtered: Config[]) => {
           this.topicConfig = filtered;
         });
-
-      if (this.route.snapshot.queryParamMap.get('listen') === 'true') {
-        const groupId = this.route.snapshot.queryParamMap.get('groupId') ?? undefined;
-        this.cdr.detectChanges();
-        this.commonService.showTab('test-topic-tab');
-        this.startListening(groupId);
-      } else {
-        // Show the group id that "Start Listening" would use, before the user clicks it.
-        this.apiService.getDefaultConsumerGroupId().subscribe({
-          next: (res: HttpResponse<GenericResponse<string>>) => { this.activeGroupId = res.body?.data ?? ''; },
-          error: () => {}
-        });
-      }
     });
   }
 
@@ -142,86 +101,6 @@ export class TopicComponent implements OnDestroy {
   getConfigValue(key: String): string | undefined {
     const matchedItem = this.topicConfig.find((item: Config) => item.name === key);
     return matchedItem ? matchedItem.value : undefined;
-  }
-
-  ngOnDestroy(): void {
-    this.testTopicSubscription?.unsubscribe();
-  }
-
-  toggleListening(): void {
-    if (this.listening) {
-      this.stopListening();
-    } else {
-      this.startListening();
-    }
-  }
-
-  startListening(groupId?: string): void {
-    this.errors.delete('testTopicConsumer');
-    if (groupId) {
-      this.beginListening(groupId);
-      return;
-    }
-    // No group id was explicitly given (a plain "Start Listening" click, not a
-    // navigation from the Consumers page) — reuse the saved default group id,
-    // creating one on the first-ever listen if none exists yet.
-    this.apiService.getDefaultConsumerGroupId().subscribe({
-      next: (res: HttpResponse<GenericResponse<string>>) => {
-        this.beginListening(res.body?.data || `kafkador-test-${Date.now()}`);
-      },
-      error: () => {
-        this.beginListening(`kafkador-test-${Date.now()}`);
-      }
-    });
-  }
-
-  private beginListening(groupId: string): void {
-    this.listening = true;
-    this.activeGroupId = groupId;
-    this.testTopicSubscription = this.apiService.consumeTopicMessages(this.topicName, this.activeGroupId).subscribe({
-      next: (message: string) => {
-        const consumed: ConsumedMessage = { id: this.nextMessageId++, text: message, receivedAt: Date.now() };
-        this.consumedMessages = [consumed, ...this.consumedMessages].slice(0, MAX_VISIBLE_TEST_MESSAGES);
-      },
-      error: (err) => {
-        this.listening = false;
-        this.errors.set('testTopicConsumer', this.commonService.prepareError(undefined, '500', err?.message ?? 'Connection to the message stream was lost.'));
-      }
-    });
-  }
-
-  stopListening(): void {
-    this.testTopicSubscription?.unsubscribe();
-    this.listening = false;
-  }
-
-  toggleFilter(): void {
-    this.showMessageFilter = !this.showMessageFilter;
-    if (!this.showMessageFilter) this.messageFilter = '';
-  }
-
-  openProduceDialog(): void {
-    this.errors.delete('sendEvent');
-    this.producerEvent = '';
-  }
-
-  sendEvent(): void {
-    if (!this.producerEvent.trim()) {
-      return;
-    }
-    this.errors.delete('sendEvent');
-    this.flags.set('sendingEvent', true);
-    this.apiService.produceTopicMessage(this.topicName, { value: this.producerEvent }).subscribe({
-      next: () => {
-        this.flags.set('sendingEvent', false);
-        this.producerEvent = '';
-        this.commonService.hideModal('produceEventModal');
-      },
-      error: (res: HttpErrorResponse) => {
-        this.errors.set('sendEvent', this.commonService.prepareError(res.error?.error, '500', 'Failed to send event!'));
-        this.flags.set('sendingEvent', false);
-      }
-    });
   }
 
 }

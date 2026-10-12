@@ -1,8 +1,8 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse,HttpResponse   } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Alert, Topic, TopicCreateRequest, SearchResult, ConsumerGroup, ConsumerGroupDetails, TopicRecordSearchRequest, TopicRecordSearchResult, TopicRecordProduceRequest, TopicRecordProduceResult, TopicRecord, RecordSerde, RecordFilter, Bookmark, BookmarkEntityType, GenericResponse,
-  SchemaRegistry, SchemaRegistryConfig, Chart, Event, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery,
+import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Alert, Topic, TopicCreateRequest, SearchResult, ConsumerGroup, ConsumerGroupDetails, TopicConsumerGroup, TopicRecordSearchRequest, TopicRecordSearchResult, TopicRecordProduceRequest, TopicRecordProduceResult, TopicRecord, RecordSerde, RecordFilter, Bookmark, BookmarkEntityType, GenericResponse,
+  SchemaRegistry, SchemaRegistryConfig, Chart, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery,
   AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest,
   SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, SchemaLookupResult,
   AiConfig, AiChatResponse, AiChatSession, SessionConfig, DatabaseSetupStatus, DatabaseCredentials } from '../models';
@@ -107,6 +107,11 @@ export class ApiService {
       { withCredentials: true ,observe: 'response'} );
   }
 
+  public getTopicConsumerGroups(topic:string): Observable<GenericResponse<TopicConsumerGroup[]>> {
+    return this.http.get<GenericResponse<TopicConsumerGroup[]>>(
+      `${ApiService.ApiBaseUrl}/topics/${encodeURIComponent(topic)}/consumer-groups`, { withCredentials: true });
+  }
+
   public getConsumerGroupDetails(id:string): Observable<GenericResponse<ConsumerGroupDetails>> {
     return this.http.get<GenericResponse<ConsumerGroupDetails>>(`${ApiService.ApiBaseUrl}/consumer-groups/${encodeURIComponent(id)}`,
       { withCredentials: true });
@@ -124,11 +129,6 @@ export class ApiService {
   public removeBookmark(bookmark:Bookmark): Observable<void> {
     return this.http.delete<void>(`${ApiService.ApiBaseUrl}/bookmarks`,
       { withCredentials: true, params: { type: bookmark.entityType, id: bookmark.entityId } });
-  }
-
-  public getDefaultConsumerGroupId(): Observable<HttpResponse<GenericResponse<string>>> {
-    return this.http.get<GenericResponse<string>>(`${ApiService.ApiBaseUrl}/consumer-groups/default-id`,
-      { withCredentials: true, observe: 'response' });
   }
 
   public getSchemaSubjects(): Observable<GenericResponse<SchemaRegistry>> {
@@ -272,31 +272,6 @@ export class ApiService {
   }
 
   /**
-   * Opens a live Server-Sent Events stream of messages consumed from `topic` under
-   * consumer group `groupId`. HttpClient has no SSE support, so this wraps the
-   * native EventSource API in an Observable that closes the connection when
-   * unsubscribed (component teardown, navigation away, etc).
-   *
-   * zone.js doesn't patch EventSource callbacks, so they're re-entered into the Angular zone; otherwise
-   * new messages wouldn't render until some unrelated event (a click) triggered change detection.
-   */
-  public consumeTopicMessages(topic: string, groupId: string): Observable<string> {
-    return new Observable<string>((subscriber) => {
-      const params = new HttpParams().set('groupId', groupId);
-      const url = `${ApiService.ApiBaseUrl}/topics/${encodeURIComponent(topic)}/messages/stream?${params.toString()}`;
-      const eventSource = new EventSource(url, { withCredentials: true });
-
-      eventSource.onmessage = (event) => this.zone.run(() => subscriber.next(event.data));
-      eventSource.onerror = () => this.zone.run(() => {
-        subscriber.error(new Error('Connection to the message stream was lost.'));
-        eventSource.close();
-      });
-
-      return () => eventSource.close();
-    });
-  }
-
-  /**
    * Live mode of the Records tab: emits each batch of records produced after the stream started, or an empty batch
    * once the server is positioned and listening. A "failure" event from the server, or a dropped connection, errors
    * the Observable with a readable message; unsubscribing closes the connection, which stops the server's consumer.
@@ -327,12 +302,6 @@ export class ApiService {
 
       return () => eventSource.close();
     });
-  }
-
-  public produceTopicMessage(topic: string, event: Event): Observable<GenericResponse<Event>> {
-    return this.http.post<GenericResponse<Event>>(
-      `${ApiService.ApiBaseUrl}/topics/${encodeURIComponent(topic)}/messages`, event,
-      { withCredentials: true });
   }
 
   public getKafkaConnectConfig(): Observable<HttpResponse<GenericResponse<KafkaConnectConfig>>> {

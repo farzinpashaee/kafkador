@@ -24,7 +24,7 @@ export * from './database-setup';
 export * from './generic-response';
 export * from './link';
 export * from './meta';
-export * from './event';
 
 export * from './bookmark';
 export * from './topic-record';
+export * from './topic-consumer-group';

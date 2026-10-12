@@ -1,0 +1,30 @@
+.sort-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+
+  .bi {
+    font-size: 0.8em;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
+  }
+}
+
+td {
+  font-variant-numeric: tabular-nums;
+}
+
+.state-badge {
+  font-size: 0.75em;
+}
+
+.search-box .form-control {
+  width: 14em;
+  max-width: 50vw;
+}

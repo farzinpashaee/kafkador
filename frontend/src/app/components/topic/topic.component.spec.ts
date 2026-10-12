@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { convertToParamMap } from '@angular/router';
-import { Subject, throwError, of } from 'rxjs';
+import { of } from 'rxjs';
 
 import { TopicComponent } from './topic.component';
 import { ApiService, DocumentationService, CommonService } from '../../services';
@@ -11,7 +11,6 @@ describe('TopicComponent', () => {
   let component: TopicComponent;
   let fixture: ComponentFixture<TopicComponent>;
   let apiServiceSpy: jasmine.SpyObj<ApiService>;
-  let messages$: Subject<string>;
 
   const topic: Topic = {
     id: '1',
@@ -23,12 +22,9 @@ describe('TopicComponent', () => {
   };
 
   beforeEach(async () => {
-    messages$ = new Subject<string>();
-    apiServiceSpy = jasmine.createSpyObj('ApiService', [
-      'getTopicDetails', 'consumeTopicMessages', 'produceTopicMessage'
-    ]);
+    apiServiceSpy = jasmine.createSpyObj('ApiService', ['getTopicDetails', 'getTopicConsumerGroups', 'searchTopicRecords']);
     apiServiceSpy.getTopicDetails.and.returnValue(of({ data: topic } as GenericResponse<Topic>));
-    apiServiceSpy.consumeTopicMessages.and.returnValue(messages$.asObservable());
+    apiServiceSpy.getTopicConsumerGroups.and.returnValue(of({ data: [] } as any));
 
     await TestBed.configureTestingModule({
       imports: [TopicComponent],
@@ -53,76 +49,16 @@ describe('TopicComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('highlights a consumed message only during the first 3 seconds after it arrives', () => {
-    const now = Date.now();
-    expect(component.isNewMessage({ id: 0, text: '{}', receivedAt: now })).toBeTrue();
-    expect(component.isNewMessage({ id: 1, text: '{}', receivedAt: now - 3001 })).toBeFalse();
+  it('has Details, Records, Configurations and Consumers tabs', () => {
+    const tabs = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('.nav-link'))
+      .map(tab => tab.textContent?.trim());
+    expect(tabs).toEqual(['Details', 'Records', 'Configurations', 'Consumers']);
   });
 
-  it('starts listening and appends the latest consumed message to the front', () => {
-    component.startListening();
-    expect(component.listening).toBeTrue();
-
-    messages$.next('{ Event 1 Received }');
-    messages$.next('{ Event 2 Received }');
-
-    expect(component.consumedMessages.map(m => m.text)).toEqual(['{ Event 2 Received }', '{ Event 1 Received }']);
-  });
-
-  it('stops listening and unsubscribes from the stream', () => {
-    component.startListening();
-    component.stopListening();
-
-    expect(component.listening).toBeFalse();
-    expect(messages$.observed).toBeFalse();
-  });
-
-  it('toggleListening flips between start and stop', () => {
-    component.toggleListening();
-    expect(component.listening).toBeTrue();
-
-    component.toggleListening();
-    expect(component.listening).toBeFalse();
-  });
-
-  it('surfaces an error and stops listening when the stream errors out', () => {
-    component.startListening();
-    messages$.error(new Error('boom'));
-
-    expect(component.listening).toBeFalse();
-    expect(component.errors.get('testTopicConsumer')?.message).toBe('boom');
-  });
-
-  it('sends the producer input and clears it on success', () => {
-    apiServiceSpy.produceTopicMessage.and.returnValue(of({ data: { value: 'hello' } } as GenericResponse<any>));
-    component.producerEvent = '{ hello: "world" }';
-
-    component.sendEvent();
-
-    expect(apiServiceSpy.produceTopicMessage).toHaveBeenCalledWith(topic.name, { value: '{ hello: "world" }' });
-    expect(component.producerEvent).toBe('');
-    expect(component.flags.get('sendingEvent')).toBeFalse();
-  });
-
-  it('does not send blank producer input', () => {
-    component.producerEvent = '   ';
-    component.sendEvent();
-    expect(apiServiceSpy.produceTopicMessage).not.toHaveBeenCalled();
-  });
-
-  it('surfaces an error when sending fails', () => {
-    apiServiceSpy.produceTopicMessage.and.returnValue(throwError(() => ({ error: null })));
-    component.producerEvent = '{ bad: true }';
-
-    component.sendEvent();
-
-    expect(component.errors.get('sendEvent')?.message).toBe('Failed to send event!');
-    expect(component.flags.get('sendingEvent')).toBeFalse();
-  });
-
-  it('unsubscribes from the stream on destroy', () => {
-    component.startListening();
-    component.ngOnDestroy();
-    expect(messages$.observed).toBeFalse();
+  it('only loads the consumer groups once the Consumers tab is opened', () => {
+    expect(apiServiceSpy.getTopicConsumerGroups).not.toHaveBeenCalled();
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('#consumers-tab')!.click();
+    fixture.detectChanges();
+    expect(apiServiceSpy.getTopicConsumerGroups).toHaveBeenCalledWith(topic.name);
   });
 });

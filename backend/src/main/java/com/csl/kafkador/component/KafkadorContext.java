@@ -41,8 +41,7 @@ public class KafkadorContext {
         SCHEMA_REGISTRY("schema-registry", "SchemaRegistryService"),
         KSQL_DB("ksql-db", "KsqlDbService"),
         KAFKA_CONNECT("kafka-connect", "KafkaConnectService"),
-        CONSUMER("consumer", "ConsumerService"),
-        PRODUCER("producer", "ProducerService");
+        CONSUMER("consumer", "ConsumerService");
 
         private String key;
         private String defaultImplementation;

@@ -1,12 +1,14 @@
 package com.csl.kafkador.util;
 
 import com.csl.kafkador.domain.dto.ConsumerGroupDetailsDto;
+import com.csl.kafkador.domain.dto.TopicConsumerGroupDto;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.MemberDescription;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartition;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -71,6 +73,42 @@ public final class ConsumerGroupDetailsCalculator {
                 .setPartitionCount(partitions.size())
                 .setTotalLag(sumKnown(topics.stream().map(ConsumerGroupDetailsDto.Topic::getLag).toList()))
                 .setTopics(topics);
+    }
+
+    /**
+     * The groups that consume {@code topic}: those with a committed offset on it or a member assigned one of its
+     * partitions, ordered by group id. Other topics the groups read are left out.
+     *
+     * @param committedOffsets per group id, committed offsets on the topic; null values mean nothing committed
+     * @param endOffsets       latest offset per partition of the topic
+     */
+    public static List<TopicConsumerGroupDto> forTopic(String topic, Collection<ConsumerGroupDescription> groups,
+                                                       Map<String, Map<TopicPartition, OffsetAndMetadata>> committedOffsets,
+                                                       Map<TopicPartition, Long> endOffsets) {
+        return groups.stream()
+                .sorted(Comparator.comparing(ConsumerGroupDescription::groupId))
+                .map(group -> {
+                    Map<TopicPartition, OffsetAndMetadata> committed = new HashMap<>();
+                    committedOffsets.getOrDefault(group.groupId(), Map.of()).forEach((tp, offset) -> {
+                        if (offset != null && tp.topic().equals(topic)) committed.put(tp, offset);
+                    });
+                    ConsumerGroupDetailsDto details = calculate(group, committed, endOffsets);
+                    return details.getTopics().stream()
+                            .filter(t -> t.getName().equals(topic))
+                            .findFirst()
+                            .map(t -> new TopicConsumerGroupDto()
+                                    .setGroupId(details.getId())
+                                    .setState(details.getState())
+                                    .setType(details.getType())
+                                    .setCoordinatorId(details.getCoordinatorId())
+                                    .setMemberCount(t.getMemberCount())
+                                    .setGroupMemberCount(details.getMemberCount())
+                                    .setPartitionCount(t.getPartitionCount())
+                                    .setLag(t.getLag()))
+                            .orElse(null);
+                })
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     private static ConsumerGroupDetailsDto.Partition partitionRow(TopicPartition tp, OffsetAndMetadata committed,

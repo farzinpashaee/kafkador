@@ -6,8 +6,8 @@ import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { combineLatest } from 'rxjs';
 import { startWith, map, debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { ApiService, CommonService, ValidationService, LocalStorageService, BookmarkService } from '../../services';
-import { ConsumerGroup, Chart, Error, Connection, GenericResponse, Topic } from '../../models';
+import { ApiService, CommonService, LocalStorageService, BookmarkService } from '../../services';
+import { ConsumerGroup, Chart, Error, Connection, GenericResponse } from '../../models';
 import { PaginationComponent } from '../pagination/pagination.component';
 import { EXPORT_FORMATS, ExportField, ExportFormat, buildExport, downloadExport } from '../../services/table-export';
 
@@ -44,11 +44,6 @@ export class ConsumersComponent {
     domain: ['#FFF']
   };
 
-  newConsumerGroupId = '';
-  topicName = '';
-  listenGroupId = '';
-  listenTopicName = '';
-  topics: Topic[] = [];
   consumerGroups: ConsumerGroup[] = [];
   filteredConsumerGroups: ConsumerGroup[] = [];
   bookmarkedOnly = false;
@@ -73,7 +68,6 @@ export class ConsumersComponent {
 
   constructor(private apiService: ApiService,
     private commonService: CommonService,
-    private validationService: ValidationService,
     private localStorageService: LocalStorageService,
     private router: Router,
     private route: ActivatedRoute) {}
@@ -108,16 +102,6 @@ export class ConsumersComponent {
         this.errors.set("getConsumerGroups",this.commonService.prepareError(res.error.error,'500','Failed to get consumer groups!'));
         this.flags.set('getConsumerGroupsLoading',false);
       }
-    });
-
-    this.apiService.getTopics().subscribe({ next: (res: HttpResponse<GenericResponse<Topic[]>>) => {
-          this.topics = res.body?.data ?? [];
-          this.flags.set('getTopicLoading',false);
-        },
-        error: (res:HttpErrorResponse) => {
-          this.errors.set("getTopics",this.commonService.prepareError(res.error.error,'500','Failed to get topics!'));
-          this.flags.set('getTopicLoading',false);
-        }
     });
 
     this.apiService.getChart('x','q').subscribe({ next: (res: HttpResponse<GenericResponse<Chart>>) => {
@@ -177,57 +161,10 @@ export class ConsumersComponent {
     return buildExport(format, EXPORT_FIELDS, consumerGroups, 'consumerGroups', 'consumerGroup');
   }
 
-  useInstanceConsumerId(): void {
-    this.apiService.getDefaultConsumerGroupId().subscribe({
-      next: (res: HttpResponse<GenericResponse<string>>) => {
-        if (res.body?.data) this.newConsumerGroupId = res.body.data;
-      },
-      error: (res:HttpErrorResponse) => {
-        this.errors.set("createConsumerGroup",this.commonService.prepareError(res.error.error,'500','Failed to get instance consumer ID!'));
-      }
-    });
-  }
-
-  createAndListen(): void {
-    const errors = this.validationService.validateRequiredFields(
-      { id: this.newConsumerGroupId, topic: this.topicName }, ['id', 'topic']);
-    if (errors.length > 0) {
-      this.errors.set("createConsumerGroup",{code:'400',message:errors[0],datetime:''});
-      return;
-    }
-    this.errors.delete('createConsumerGroup');
-    this.commonService.hideModal('createConsumerGroupModal');
-    this.router.navigate(['/topic', this.topicName], {
-      queryParams: { groupId: this.newConsumerGroupId, listen: 'true' },
-      fragment: 'testTopic'
-    });
-  }
-
   /** Opens the group's details page, unless the click was on one of the row's own buttons. */
   openGroup(consumerGroup: ConsumerGroup, event: MouseEvent): void {
     if ((event.target as HTMLElement).closest('button, a')) return;
     this.router.navigate(['/consumer', consumerGroup.id]);
-  }
-
-  openListenDialog(consumerGroup: ConsumerGroup): void {
-    this.errors.delete('listenConsumerGroup');
-    this.listenGroupId = consumerGroup.id;
-    this.listenTopicName = '';
-  }
-
-  listenToExistingGroup(): void {
-    const errors = this.validationService.validateRequiredFields(
-      { topic: this.listenTopicName }, ['topic']);
-    if (errors.length > 0) {
-      this.errors.set("listenConsumerGroup",{code:'400',message:errors[0],datetime:''});
-      return;
-    }
-    this.errors.delete('listenConsumerGroup');
-    this.commonService.hideModal('listenConsumerGroupModal');
-    this.router.navigate(['/topic', this.listenTopicName], {
-      queryParams: { groupId: this.listenGroupId, listen: 'true' },
-      fragment: 'testTopic'
-    });
   }
 
 }

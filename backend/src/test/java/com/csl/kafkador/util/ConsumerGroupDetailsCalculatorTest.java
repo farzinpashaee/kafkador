@@ -1,6 +1,7 @@
 package com.csl.kafkador.util;
 
 import com.csl.kafkador.domain.dto.ConsumerGroupDetailsDto;
+import com.csl.kafkador.domain.dto.TopicConsumerGroupDto;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.MemberAssignment;
 import org.apache.kafka.clients.admin.MemberDescription;
@@ -82,6 +83,43 @@ class ConsumerGroupDetailsCalculatorTest {
         assertThat(details.getTopics()).isEmpty();
         assertThat(details.getTopicCount()).isZero();
         assertThat(details.getTotalLag()).isNull();
+    }
+
+    @Test
+    void forTopicListsOnlyTheGroupsReadingThatTopic() {
+        MemberDescription ordersReader = new MemberDescription("consumer-1", "client-1", "/10.0.0.1",
+                new MemberAssignment(Set.of(tp("orders", 0), tp("payments", 0))));
+        ConsumerGroupDescription active = new ConsumerGroupDescription("billing", false, List.of(ordersReader), "range",
+                GroupType.CLASSIC, GroupState.STABLE, COORDINATOR, Set.of(), Optional.empty(), Optional.empty());
+        ConsumerGroupDescription empty = new ConsumerGroupDescription("audit", false, List.of(), "", GroupType.CLASSIC,
+                GroupState.EMPTY, COORDINATOR, Set.of(), Optional.empty(), Optional.empty());
+        ConsumerGroupDescription unrelated = new ConsumerGroupDescription("shipping", false, List.of(), "", GroupType.CLASSIC,
+                GroupState.EMPTY, COORDINATOR, Set.of(), Optional.empty(), Optional.empty());
+
+        // The offsets request asks for every partition of the topic, so groups get null for ones they never committed.
+        Map<TopicPartition, OffsetAndMetadata> billing = new HashMap<>();
+        billing.put(tp("orders", 0), new OffsetAndMetadata(95));
+        billing.put(tp("orders", 1), null);
+        Map<TopicPartition, OffsetAndMetadata> audit = new HashMap<>();
+        audit.put(tp("orders", 0), null);
+        audit.put(tp("orders", 1), new OffsetAndMetadata(10));
+        Map<TopicPartition, OffsetAndMetadata> shipping = new HashMap<>();
+        shipping.put(tp("orders", 0), null);
+        shipping.put(tp("orders", 1), null);
+
+        List<TopicConsumerGroupDto> rows = ConsumerGroupDetailsCalculator.forTopic("orders", List.of(unrelated, active, empty),
+                Map.of("billing", billing, "audit", audit, "shipping", shipping),
+                Map.of(tp("orders", 0), 100L, tp("orders", 1), 40L));
+
+        assertThat(rows).extracting(TopicConsumerGroupDto::getGroupId).containsExactly("audit", "billing");
+        TopicConsumerGroupDto billingRow = rows.get(1);
+        assertThat(billingRow.getState()).isEqualTo("Stable");
+        assertThat(billingRow.getMemberCount()).isEqualTo(1);
+        assertThat(billingRow.getGroupMemberCount()).isEqualTo(1);
+        assertThat(billingRow.getPartitionCount()).isEqualTo(1);
+        assertThat(billingRow.getLag()).isEqualTo(5L);
+        assertThat(rows.get(0).getMemberCount()).isZero();
+        assertThat(rows.get(0).getLag()).isEqualTo(30L);
     }
 
     private static ConsumerGroupDescription group(GroupState state, List<MemberDescription> members) {

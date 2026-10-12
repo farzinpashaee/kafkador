@@ -294,6 +294,17 @@ public class ApiController {
                 .success(HttpStatus.OK);
     }
 
+    @GetMapping("/topics/{name}/consumer-groups")
+    public ResponseEntity<GenericResponse<List<TopicConsumerGroupDto>>> getTopicConsumerGroups(@PathVariable @NotBlank String name)
+            throws KafkaAdminApiException, TopicNotFoundException {
+        ConsumerService consumersService = (ConsumerService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONSUMER));
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<List<TopicConsumerGroupDto>>()
+                .data(consumersService.getTopicConsumerGroups(connection.getClusterId(), name))
+                .success(HttpStatus.OK);
+    }
+
     @GetMapping("/consumer-groups/{id}")
     public ResponseEntity<GenericResponse<ConsumerGroupDetailsDto>> getConsumerGroup(@PathVariable @NotBlank String id)
             throws KafkaAdminApiException, ConsumerGroupNotFoundException {
@@ -302,16 +313,6 @@ public class ApiController {
         ConnectionDto connection = connectionService.getActiveConnection();
         return new GenericResponse.Builder<ConsumerGroupDetailsDto>()
                 .data(consumersService.getConsumerGroupDetails(connection.getClusterId(), id))
-                .success(HttpStatus.OK);
-    }
-
-    @GetMapping("/consumer-groups/default-id")
-    public ResponseEntity<GenericResponse<String>> getDefaultConsumerGroupId() {
-        ConsumerService consumersService = (ConsumerService) applicationContext
-                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONSUMER));
-        ConnectionDto connection = connectionService.getActiveConnection();
-        return new GenericResponse.Builder<String>()
-                .data(consumersService.getOrCreateDefaultGroupId(connection.getClusterId()))
                 .success(HttpStatus.OK);
     }
 
@@ -350,22 +351,6 @@ public class ApiController {
         return new GenericResponse.Builder<AlertDto>()
                 .data(alertService.getAlert(id))
                 .success(HttpStatus.OK);
-    }
-
-    @PostMapping("/topics/{topic}/messages")
-    public ResponseEntity<GenericResponse<Event<String, String>>> produce(@Valid @RequestBody Event<String, String> event, @PathVariable @NotBlank String topic) throws KafkadorException {
-        ProducerService producerService = (ProducerService) applicationContext.getBean("SimpleProducerService");
-        Event<String, String> produced = producerService.produce(topic, event);
-        return new GenericResponse.Builder<Event<String, String>>()
-                .data(produced)
-                .success(HttpStatus.ACCEPTED);
-    }
-
-    @GetMapping(value = "/topics/{topic}/messages/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter consume(@PathVariable @NotBlank String topic,
-                               @RequestParam(defaultValue = "kafkador") @NotBlank String groupId) throws KafkadorException {
-        ConsumerService consumersService = (ConsumerService) applicationContext.getBean("ConsumerService");
-        return consumersService.consume(topic, groupId);
     }
 
     @GetMapping("/acl")

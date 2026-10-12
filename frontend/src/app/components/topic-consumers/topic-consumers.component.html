@@ -1,0 +1,97 @@
+<div class="row g-4 mb-4" *ngIf="loaded && !errors.get('groups')">
+  <section class="col-12 col-xl-6" aria-labelledby="topicConsumersStatsHeading">
+    <h6 id="topicConsumersStatsHeading" class="mb-2">Consumers of this topic</h6>
+    <div class="stat-grid stat-grid-3">
+      <div class="stat-tile">
+        <div class="stat-label">Consumer groups</div>
+        <div class="stat-value">{{ groups.length }}</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label" title="Groups with at least one member assigned a partition of this topic">Active groups</div>
+        <div class="stat-value">{{ activeGroupCount }}</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label">Total lag</div>
+        <div class="stat-value">{{ formatNumber(totalLag) }}</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="d-flex align-items-start">
+  <div>
+    <h5>Consumer groups</h5>
+    <p class="text-s">Groups that have committed offsets on this topic or have members assigned its partitions</p>
+  </div>
+  <div class="d-flex align-items-center gap-2 ms-auto">
+    <div class="search-box">
+      <input type="search" class="form-control form-control-sm" placeholder="Search consumer groups"
+             aria-label="Search consumer groups" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()">
+    </div>
+    <div class="dropdown">
+      <button type="button" class="btn btn-sm outline-button dropdown-toggle" data-bs-toggle="dropdown"
+              aria-expanded="false" [disabled]="!filteredGroups.length">
+        Export
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li *ngFor="let option of exportFormats">
+          <button type="button" class="dropdown-item" (click)="export(option.format)">{{ option.label }}</button>
+        </li>
+      </ul>
+    </div>
+    <button type="button" class="btn btn-sm outline-button" aria-label="Refresh" title="Refresh"
+            (click)="load()" [disabled]="loading">
+      <span *ngIf="loading" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+      <i *ngIf="!loading" class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+    </button>
+  </div>
+</div>
+
+<div *ngIf="errors.get('groups')" class="alert alert-danger text-s p-2" role="alert">
+  {{ errors.get('groups')?.message }}
+</div>
+
+<p class="placeholder-glow" *ngIf="loading && !loaded">
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-10"></span>
+</p>
+
+<ng-container *ngIf="loaded">
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+      <tr>
+        <th scope="col" *ngFor="let column of columns" [attr.aria-sort]="ariaSort(column.key)">
+          <button type="button" class="sort-button" (click)="sortBy(column.key)" [attr.title]="column.hint ?? null">
+            {{ column.label }}
+            <i class="bi" aria-hidden="true"
+               [ngClass]="sortKey !== column.key ? 'bi-arrow-down-up opacity-50' : (sortAscending ? 'bi-sort-up' : 'bi-sort-down')"></i>
+          </button>
+        </th>
+      </tr>
+      </thead>
+      <tbody>
+      @for (group of pagedGroups; track group.groupId) {
+        <tr [routerLink]="['/consumer', group.groupId]" class="cursor-pointer">
+          <th scope="row">{{ group.groupId }}</th>
+          <td><span class="badge state-badge" [ngClass]="stateClass(group.state)">{{ group.state ?? 'Unknown' }}</span></td>
+          <td>{{ group.memberCount }} <span class="text-color-subtle">of {{ group.groupMemberCount }}</span></td>
+          <td>{{ group.partitionCount }}</td>
+          <td>{{ formatNumber(group.lag) }}</td>
+        </tr>
+      } @empty {
+        <tr>
+          <td [attr.colspan]="columns.length" class="text-center text-s text-color-subtle py-3">
+            @if (searchTerm) {
+              No consumer groups match "{{ searchTerm }}".
+            } @else {
+              No consumer group is reading this topic.
+            }
+          </td>
+        </tr>
+      }
+      </tbody>
+    </table>
+  </div>
+  <app-pagination [totalItems]="filteredGroups.length" [pageSize]="pageSize" [page]="page" (pageChange)="page = $event"></app-pagination>
+</ng-container>
