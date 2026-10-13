@@ -1,4 +1,6 @@
-.header-drop-down{
+// 20% larger than the global .dropdown-item size (0.8em).
+.header-drop-down .dropdown-item {
+  font-size: 0.96em;
 }
 
 .search-result-description {
