@@ -5,7 +5,7 @@ import { ApiService } from './api.service';
 import { BookmarkEntityType } from '../models';
 
 /**
- * Which topics, brokers and consumer groups of the active cluster are bookmarked. Each list page
+ * Which topics, brokers, consumer groups and ksqlDB streams, tables and queries of the active cluster are bookmarked. Each list page
  * calls load() for its type; toggle() updates the row's icon immediately and rolls back if saving fails.
  */
 @Injectable({
@@ -18,7 +18,10 @@ export class BookmarkService {
   private readonly ids: Record<BookmarkEntityType, WritableSignal<ReadonlySet<string>>> = {
     TOPIC: signal<ReadonlySet<string>>(new Set()),
     BROKER: signal<ReadonlySet<string>>(new Set()),
-    CONSUMER_GROUP: signal<ReadonlySet<string>>(new Set())
+    CONSUMER_GROUP: signal<ReadonlySet<string>>(new Set()),
+    KSQL_STREAM: signal<ReadonlySet<string>>(new Set()),
+    KSQL_TABLE: signal<ReadonlySet<string>>(new Set()),
+    KSQL_QUERY: signal<ReadonlySet<string>>(new Set())
   };
 
   /** The bookmarked ids of one type, as a signal so filtered lists can react to changes. */

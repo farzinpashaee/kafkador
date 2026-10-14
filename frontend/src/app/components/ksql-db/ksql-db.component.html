@@ -20,6 +20,10 @@
     {{ errors.get('loadData')?.message }}
   </div>
 
+  <div *ngIf="errors.get('bookmarks')" class="alert alert-danger" role="alert">
+    {{ errors.get('bookmarks')?.message }}
+  </div>
+
   <div class="row g-4 mb-4" *ngIf="serverInfo">
     <section class="col-12 col-xl-6" aria-labelledby="ksqlServerHeading">
       <h6 id="ksqlServerHeading" class="mb-2">ksqlDB server</h6>
@@ -63,6 +67,65 @@
     </section>
   </div>
 
+  <!-- Search and Filter on the left, Export on the right, as on the other list pages. -->
+  <ng-template #toolbar let-tab="tab" let-facets="facets" let-noun="noun" let-rows="rows">
+    <div class="d-flex align-items-center gap-2">
+      <label class="visually-hidden" [attr.for]="tab + '-search'">Search {{ noun }}</label>
+      <input [id]="tab + '-search'" type="search" placeholder="Search {{ noun }}"
+             class="form-control form-control-sm search-input-compact search-input-compact-width"
+             [ngModel]="searchTermOf(tab)" (ngModelChange)="setSearchTerm(tab, $event)">
+      <div class="dropdown">
+        <button class="btn btn-sm dropdown-toggle outline-button" type="button" data-bs-toggle="dropdown"
+                data-bs-auto-close="outside" aria-expanded="false">
+          <i class="bi bi-funnel" aria-hidden="true"></i> Filter
+          <span *ngIf="activeFilterCount(tab)" class="badge rounded-pill text-bg-secondary">{{ activeFilterCount(tab) }}</span>
+        </button>
+        <div class="dropdown-menu dropdown-menu-padded pe-3">
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" [id]="tab + '-bookmarked-only'"
+                   [checked]="isBookmarkedOnly(tab)" (change)="setBookmarkedOnly(tab, $any($event.target).checked)">
+            <label class="form-check-label text-s text-nowrap" [for]="tab + '-bookmarked-only'">
+              Bookmarked only ({{ bookmarkCount(tab) }})
+            </label>
+          </div>
+          <div *ngFor="let facet of facets" class="mt-2">
+            <div class="text-s fw-semibold mb-1">{{ facet.label }}</div>
+            <div *ngFor="let option of facetOptions(tab, facet); let i = index" class="form-check">
+              <input class="form-check-input" type="checkbox" [id]="tab + '-' + facet.key + '-' + i"
+                     [checked]="isSelected(tab, facet.key, option.value)"
+                     (change)="toggleFacet(tab, facet.key, option.value, $any($event.target).checked)">
+              <label class="form-check-label text-s text-nowrap" [for]="tab + '-' + facet.key + '-' + i">
+                {{ option.value }} ({{ option.count }})
+              </label>
+            </div>
+            <div *ngIf="!facetOptions(tab, facet).length" class="text-s text-color-subtle">No values</div>
+          </div>
+          <button type="button" class="btn btn-link btn-sm p-0 mt-2" [disabled]="!activeFilterCount(tab)"
+                  (click)="clearFilters(tab)">Clear filters</button>
+        </div>
+      </div>
+      <div class="dropdown ms-auto">
+        <button type="button" class="btn btn-sm outline-button dropdown-toggle" data-bs-toggle="dropdown"
+                aria-expanded="false" [disabled]="!rows">
+          Export
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li *ngFor="let option of exportFormats">
+            <button type="button" class="dropdown-item" (click)="export(tab, option.format)">{{ option.label }}</button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #bookmarkButton let-tab="tab" let-id="id" let-label="label">
+    <button type="button" class="btn btn-link btn-icon p-0" [attr.aria-pressed]="isBookmarked(tab, id)"
+            attr.aria-label="Bookmark {{ label }} {{ id }}" [attr.title]="isBookmarked(tab, id) ? 'Remove bookmark' : 'Bookmark'"
+            (click)="toggleBookmark(tab, id)">
+      <i class="bi" aria-hidden="true" [ngClass]="isBookmarked(tab, id) ? 'bi-bookmark-fill text-primary' : 'bi-bookmark'"></i>
+    </button>
+  </ng-template>
+
   <ng-template #count let-value="value">
     <span *ngIf="flags.get('dataLoading')" class="spinner-border spinner-border-sm" role="status">
       <span class="visually-hidden">Loading...</span>
@@ -103,7 +166,8 @@
 
     <div class="tab-content border border-top-0 p-3" id="ksqlDbTabsContent">
       <div class="tab-pane fade show active" id="streams" role="tabpanel" aria-labelledby="streams-tab" tabindex="0">
-        <div class="table-responsive">
+        <ng-container *ngTemplateOutlet="toolbar; context: { tab: 'streams', facets: sourceFacets, noun: 'streams', rows: filteredStreams.length }"></ng-container>
+        <div class="table-responsive mt-2">
           <table class="table">
             <thead>
             <tr>
@@ -111,6 +175,7 @@
               <th scope="col">Topic</th>
               <th scope="col">Key Format</th>
               <th scope="col">Value Format</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
             </tr>
             </thead>
             <tbody>
@@ -120,20 +185,26 @@
                 <td>{{ stream.topic }}</td>
                 <td>{{ stream.keyFormat }}</td>
                 <td>{{ stream.valueFormat }}</td>
+                <td class="text-end">
+                  <ng-container *ngTemplateOutlet="bookmarkButton; context: { tab: 'streams', id: stream.name, label: 'stream' }"></ng-container>
+                </td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="4" class="text-center text-s text-color-subtle py-3">No streams found.</td>
+                <td colspan="5" class="text-center text-s text-color-subtle py-3">
+                  {{ streams.length ? 'No streams match the search and filters.' : 'No streams found.' }}
+                </td>
               </tr>
             }
             </tbody>
           </table>
-          <app-pagination [totalItems]="streams.length" [pageSize]="pageSize" [page]="streamsPage" (pageChange)="streamsPage = $event"></app-pagination>
+          <app-pagination [totalItems]="filteredStreams.length" [pageSize]="pageSize" [page]="streamsPage" (pageChange)="streamsPage = $event"></app-pagination>
         </div>
       </div>
 
       <div class="tab-pane fade" id="tables" role="tabpanel" aria-labelledby="tables-tab" tabindex="0">
-        <div class="table-responsive">
+        <ng-container *ngTemplateOutlet="toolbar; context: { tab: 'tables', facets: sourceFacets, noun: 'tables', rows: filteredTables.length }"></ng-container>
+        <div class="table-responsive mt-2">
           <table class="table">
             <thead>
             <tr>
@@ -141,6 +212,7 @@
               <th scope="col">Topic</th>
               <th scope="col">Key Format</th>
               <th scope="col">Value Format</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
             </tr>
             </thead>
             <tbody>
@@ -150,20 +222,26 @@
                 <td>{{ table.topic }}</td>
                 <td>{{ table.keyFormat }}</td>
                 <td>{{ table.valueFormat }}</td>
+                <td class="text-end">
+                  <ng-container *ngTemplateOutlet="bookmarkButton; context: { tab: 'tables', id: table.name, label: 'table' }"></ng-container>
+                </td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="4" class="text-center text-s text-color-subtle py-3">No tables found.</td>
+                <td colspan="5" class="text-center text-s text-color-subtle py-3">
+                  {{ tables.length ? 'No tables match the search and filters.' : 'No tables found.' }}
+                </td>
               </tr>
             }
             </tbody>
           </table>
-          <app-pagination [totalItems]="tables.length" [pageSize]="pageSize" [page]="tablesPage" (pageChange)="tablesPage = $event"></app-pagination>
+          <app-pagination [totalItems]="filteredTables.length" [pageSize]="pageSize" [page]="tablesPage" (pageChange)="tablesPage = $event"></app-pagination>
         </div>
       </div>
 
       <div class="tab-pane fade" id="queries" role="tabpanel" aria-labelledby="queries-tab" tabindex="0">
-        <div class="table-responsive">
+        <ng-container *ngTemplateOutlet="toolbar; context: { tab: 'queries', facets: queryFacets, noun: 'queries', rows: filteredQueries.length }"></ng-container>
+        <div class="table-responsive mt-2">
           <table class="table">
             <thead>
             <tr>
@@ -172,7 +250,7 @@
               <th scope="col">Status</th>
               <th scope="col">Sources</th>
               <th scope="col">Sinks</th>
-              <th scope="col"></th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
             </tr>
             </thead>
             <tbody>
@@ -184,20 +262,25 @@
                 <td>{{ query.sources?.join(', ') }}</td>
                 <td>{{ query.sinks?.join(', ') }}</td>
                 <td>
-                  <button type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Terminate query {{query.id}}"
-                          (click)="openTerminateDialog(query)" data-bs-toggle="modal" data-bs-target="#terminateQueryModal">
-                    <i class="bi bi-x-circle" aria-hidden="true"></i>
-                  </button>
+                  <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Terminate query {{query.id}}"
+                            (click)="openTerminateDialog(query)" data-bs-toggle="modal" data-bs-target="#terminateQueryModal">
+                      <i class="bi bi-x-circle" aria-hidden="true"></i>
+                    </button>
+                    <ng-container *ngTemplateOutlet="bookmarkButton; context: { tab: 'queries', id: query.id, label: 'query' }"></ng-container>
+                  </div>
                 </td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="6" class="text-center text-s text-color-subtle py-3">No persistent queries found.</td>
+                <td colspan="6" class="text-center text-s text-color-subtle py-3">
+                  {{ queries.length ? 'No persistent queries match the search and filters.' : 'No persistent queries found.' }}
+                </td>
               </tr>
             }
             </tbody>
           </table>
-          <app-pagination [totalItems]="queries.length" [pageSize]="pageSize" [page]="queriesPage" (pageChange)="queriesPage = $event"></app-pagination>
+          <app-pagination [totalItems]="filteredQueries.length" [pageSize]="pageSize" [page]="queriesPage" (pageChange)="queriesPage = $event"></app-pagination>
         </div>
       </div>
     </div>

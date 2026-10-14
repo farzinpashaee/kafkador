@@ -4,5 +4,8 @@ package com.csl.kafkador.domain.options;
 public enum BookmarkEntityType {
     TOPIC,
     BROKER,
-    CONSUMER_GROUP
+    CONSUMER_GROUP,
+    KSQL_STREAM,
+    KSQL_TABLE,
+    KSQL_QUERY
 }
