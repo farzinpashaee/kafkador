@@ -22,9 +22,10 @@ describe('TopicComponent', () => {
   };
 
   beforeEach(async () => {
-    apiServiceSpy = jasmine.createSpyObj('ApiService', ['getTopicDetails', 'getTopicConsumerGroups', 'searchTopicRecords']);
+    apiServiceSpy = jasmine.createSpyObj('ApiService', ['getTopicDetails', 'getTopicConsumerGroups', 'searchTopicRecords', 'getTopicMetrics']);
     apiServiceSpy.getTopicDetails.and.returnValue(of({ data: topic } as GenericResponse<Topic>));
     apiServiceSpy.getTopicConsumerGroups.and.returnValue(of({ data: [] } as any));
+    apiServiceSpy.getTopicMetrics.and.returnValue(of({ data: { sources: [], series: [], seriesLimitReached: false } } as any));
 
     await TestBed.configureTestingModule({
       imports: [TopicComponent],
@@ -49,10 +50,17 @@ describe('TopicComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('has Details, Records, Configurations and Consumers tabs', () => {
+  it('has Details, Records, Configurations, Consumers and Metrics tabs', () => {
     const tabs = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('.nav-link'))
       .map(tab => tab.textContent?.trim());
-    expect(tabs).toEqual(['Details', 'Records', 'Configurations', 'Consumers']);
+    expect(tabs).toEqual(['Details', 'Records', 'Configurations', 'Consumers', 'Metrics']);
+  });
+
+  it('only reads the metrics topics once the Metrics tab is opened', () => {
+    expect(apiServiceSpy.getTopicMetrics).not.toHaveBeenCalled();
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('#metrics-tab')!.click();
+    fixture.detectChanges();
+    expect(apiServiceSpy.getTopicMetrics).toHaveBeenCalledWith(topic.name);
   });
 
   it('only loads the consumer groups once the Consumers tab is opened', () => {

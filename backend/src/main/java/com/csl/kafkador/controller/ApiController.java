@@ -61,6 +61,7 @@ public class ApiController {
     private final TopicRecordService topicRecordService;
     private final TopicRecordProducerService topicRecordProducerService;
     private final TopicRecordLiveService topicRecordLiveService;
+    private final ConfluentMetricsService confluentMetricsService;
 
     @GetMapping("/settings/session")
     public ResponseEntity<GenericResponse<SessionConfigDto>> getSessionConfig() {
@@ -118,6 +119,13 @@ public class ApiController {
         ConnectionDto connection = connectionService.getActiveConnection();
         brokerService.updateConfig(connection.getClusterId(), id, configEntry);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/brokers/{id}/metrics")
+    public ResponseEntity<GenericResponse<EntityMetricsDto>> getBrokerMetrics(@PathVariable @NotBlank String id) throws KafkaAdminApiException {
+        return new GenericResponse.Builder<EntityMetricsDto>()
+                .data(confluentMetricsService.getMetrics(ConfluentMetricsService.Scope.BROKER, id))
+                .success(HttpStatus.OK);
     }
 
     // Not under /topics/{name}: "overview" is a valid topic name.
@@ -304,6 +312,13 @@ public class ApiController {
         ConnectionDto connection = connectionService.getActiveConnection();
         return new GenericResponse.Builder<List<TopicConsumerGroupDto>>()
                 .data(consumersService.getTopicConsumerGroups(connection.getClusterId(), name))
+                .success(HttpStatus.OK);
+    }
+
+    @GetMapping("/topics/{name}/metrics")
+    public ResponseEntity<GenericResponse<EntityMetricsDto>> getTopicMetrics(@PathVariable @NotBlank String name) throws KafkaAdminApiException {
+        return new GenericResponse.Builder<EntityMetricsDto>()
+                .data(confluentMetricsService.getMetrics(ConfluentMetricsService.Scope.TOPIC, name))
                 .success(HttpStatus.OK);
     }
 

@@ -1,0 +1,170 @@
+<div class="d-flex align-items-start">
+  <div>
+    <h5>Metrics</h5>
+    <p class="text-s">
+      Recent values the brokers published to the Confluent metrics topics
+      <ng-container *ngIf="scope === 'broker'">about broker {{ target }}</ng-container>
+      <ng-container *ngIf="scope === 'topic'">about this topic, from every broker</ng-container>
+    </p>
+  </div>
+  <div class="d-flex align-items-center gap-2 ms-auto">
+    <input *ngIf="available" type="search" class="form-control form-control-sm search-input-compact search-input-compact-width"
+           placeholder="Search metrics" aria-label="Search metrics" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()">
+    <button type="button" class="btn btn-sm outline-button" aria-label="Refresh" title="Refresh"
+            (click)="load()" [disabled]="loading">
+      <span *ngIf="loading" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+      <i *ngIf="!loading" class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+    </button>
+  </div>
+</div>
+
+<div *ngIf="errors.get('metrics')" class="alert alert-danger text-s p-2" role="alert">
+  {{ errors.get('metrics')?.message }}
+</div>
+
+<p class="placeholder-glow" *ngIf="loading && !loaded">
+  <span class="placeholder col-12"></span>
+  <span class="placeholder col-10"></span>
+</p>
+
+<ng-container *ngIf="loaded && metrics">
+  <div class="d-flex flex-wrap gap-2 mb-3 text-s" aria-label="Metrics topics">
+    <span *ngFor="let source of sources" class="badge source-badge"
+          [ngClass]="source.error ? 'text-bg-danger' : (source.exists ? 'text-bg-success' : 'text-bg-secondary')"
+          [attr.title]="source.error ?? null">
+      <i class="bi" aria-hidden="true"
+         [ngClass]="source.error ? 'bi-exclamation-triangle' : (source.exists ? 'bi-check-circle' : 'bi-dash-circle')"></i>
+      {{ source.topic }}: {{ source.error ? 'unreadable' : (source.exists ? 'found' : 'not found') }}
+    </span>
+  </div>
+
+  <div *ngFor="let source of sources">
+    <div *ngIf="source.error" class="alert alert-warning text-s p-2" role="alert">
+      Couldn't read <code>{{ source.topic }}</code>: {{ source.error }}.
+      Kafkador's principal needs READ and DESCRIBE on the topic.
+    </div>
+  </div>
+
+  <!-- Neither topic exists: explain how to turn them on. -->
+  <div *ngIf="!available" class="border rounded p-3">
+    <h6><i class="bi bi-info-circle" aria-hidden="true"></i> Broker metrics aren't published to this cluster</h6>
+    <ng-container *ngTemplateOutlet="guide"></ng-container>
+  </div>
+
+  <ng-container *ngIf="available">
+    <p class="text-s text-color-subtle mb-2" *ngIf="readableSources.length">
+      Read the newest {{ scannedRecords.toLocaleString() }} records of
+      <ng-container *ngFor="let source of readableSources; let last = last">
+        <code>{{ source.topic }}</code>
+        <ng-container *ngIf="source.fromTimestamp"> ({{ formatTime(source.fromTimestamp) }} – {{ formatTime(source.toTimestamp) }})</ng-container>{{ last ? '' : ', ' }}
+      </ng-container>.
+      <ng-container *ngIf="metrics.seriesLimitReached"> Showing the first {{ rows.length }} series.</ng-container>
+    </p>
+
+    <div class="table-responsive mt-2">
+      <table class="table align-middle">
+        <thead>
+        <tr>
+          <th scope="col">Metric</th>
+          <th scope="col" *ngIf="scope === 'topic'">Broker</th>
+          <th scope="col" class="text-end">Latest</th>
+          <th scope="col" title="Values in the records read, oldest to newest">Trend</th>
+          <th scope="col">Updated</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let row of pagedRows; trackBy: trackRow">
+          <th scope="row" class="metric-name">
+            <div [attr.title]="row.series.name">
+              {{ shortName(row.series.name) }}
+              <span class="badge text-bg-light border kind-badge">{{ row.series.kind }}</span>
+            </div>
+            <div class="text-s text-color-subtle fw-normal">{{ namespace(row.series.name) }}</div>
+            <div *ngIf="row.labels" class="text-s text-color-subtle fw-normal">{{ row.labels }}</div>
+          </th>
+          <td *ngIf="scope === 'topic'">{{ row.series.broker ?? 'N/A' }}</td>
+          <td class="text-end font-monospace">{{ formatValue(row.series.latest) }}</td>
+          <td class="spark-cell">
+            <div class="spark-wrap">
+              <svg class="sparkline" [attr.viewBox]="'0 0 ' + sparkWidth + ' ' + sparkHeight"
+                   [attr.width]="sparkWidth" [attr.height]="sparkHeight" role="img"
+                   [attr.aria-label]="row.series.points.length + ' values from ' + formatValue(row.series.points[0]?.v ?? 0) + ' to ' + formatValue(row.series.latest)"
+                   (mousemove)="hoverSpark($event, row)" (mouseleave)="hover = undefined">
+                <path *ngIf="row.xs.length > 1" class="spark-line" [attr.d]="row.path"></path>
+                <circle *ngIf="row.xs.length === 1" class="spark-dot" [attr.cx]="row.xs[0]" [attr.cy]="row.ys[0]" r="2.5"></circle>
+                <ng-container *ngIf="isHovered(row) && hover as h">
+                  <line class="spark-crosshair" [attr.x1]="row.xs[h.index]" [attr.x2]="row.xs[h.index]" y1="0" [attr.y2]="sparkHeight"></line>
+                  <circle class="spark-dot spark-dot-ring" [attr.cx]="row.xs[h.index]" [attr.cy]="row.ys[h.index]" r="3"></circle>
+                </ng-container>
+                <!-- A full-size hit area so the pointer needn't sit on the line. -->
+                <rect class="spark-hit" x="0" y="0" [attr.width]="sparkWidth" [attr.height]="sparkHeight"></rect>
+              </svg>
+              <div *ngIf="isHovered(row) && hover as h" class="spark-tooltip text-s" role="tooltip">
+                <strong>{{ formatValue(row.series.points[h.index].v) }}</strong>
+                <span class="text-color-subtle">{{ formatTime(row.series.points[h.index].t) }}</span>
+              </div>
+            </div>
+          </td>
+          <td class="text-s text-nowrap">{{ formatTime(row.series.latestTimestamp) }}</td>
+        </tr>
+        <tr *ngIf="!filteredRows.length">
+          <td [attr.colspan]="scope === 'topic' ? 5 : 4" class="text-center text-s text-color-subtle py-3">
+            <ng-container *ngIf="searchTerm">No metrics match "{{ searchTerm }}".</ng-container>
+            <ng-container *ngIf="!searchTerm && scope === 'broker'">
+              The newest records hold no metrics reported by broker {{ target }}. Check that the reporter is enabled on
+              this broker too, then refresh in a minute.
+            </ng-container>
+            <ng-container *ngIf="!searchTerm && scope === 'topic'">
+              The newest records hold no metrics about this topic. Brokers report per-topic metrics only for topics
+              that see traffic; produce or consume some records, then refresh in a minute.
+            </ng-container>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <app-pagination [totalItems]="filteredRows.length" [pageSize]="pageSize" [page]="page" (pageChange)="page = $event"></app-pagination>
+
+    <details *ngIf="!allAvailable" class="mt-3 text-s">
+      <summary>How to enable the other metrics topic</summary>
+      <div class="pt-2"><ng-container *ngTemplateOutlet="guide"></ng-container></div>
+    </details>
+  </ng-container>
+</ng-container>
+
+<ng-template #guide>
+  <p class="text-s">
+    Kafkador shows broker and topic metrics by reading the topics that Confluent Server brokers publish their metrics to:
+    <code>{{ telemetryTopic }}</code> and <code>{{ metricsTopic }}</code>.
+    They need Confluent Server (Confluent Platform, the <code>cp-server</code> image); Apache Kafka brokers don't ship these reporters.
+    Enable either one (or both) on <strong>every</strong> broker:
+  </p>
+
+  <h6 class="text-s">Option 1 – Confluent Telemetry Reporter → <code>{{ telemetryTopic }}</code></h6>
+  <p class="text-s mb-1">Add to each broker's <code>server.properties</code>:</p>
+  <pre class="p-2 bg-body-tertiary text-s"><code>metric.reporters=io.confluent.telemetry.reporter.TelemetryReporter
+confluent.telemetry.exporter._local.enabled=true
+# Only on a cluster with fewer than 3 brokers:
+confluent.telemetry.exporter._local.topic.replicas=1</code></pre>
+
+  <h6 class="text-s">Option 2 – Confluent Metrics Reporter → <code>{{ metricsTopic }}</code></h6>
+  <p class="text-s mb-1">Add to each broker's <code>server.properties</code>:</p>
+  <pre class="p-2 bg-body-tertiary text-s"><code>metric.reporters=io.confluent.metrics.reporter.ConfluentMetricsReporter
+confluent.metrics.reporter.bootstrap.servers=localhost:9092
+# Only on a cluster with fewer than 3 brokers:
+confluent.metrics.reporter.topic.replicas=1</code></pre>
+  <p class="text-s mb-1">Or, for the <code>confluentinc/cp-server</code> Docker image, as environment variables:</p>
+  <pre class="p-2 bg-body-tertiary text-s"><code>KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+CONFLUENT_METRICS_ENABLE: 'true'
+CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker:29092
+CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1</code></pre>
+
+  <h6 class="text-s">Then</h6>
+  <ul class="text-s">
+    <li>To enable both, list the reporters comma-separated in a single <code>metric.reporters</code> line.</li>
+    <li>Restart the brokers one at a time. Each reporter creates its topic the first time it publishes, usually within a minute.</li>
+    <li>If the cluster uses ACLs, allow Kafkador's principal READ and DESCRIBE on both topics.</li>
+    <li>Refresh this tab. Property names can differ between Confluent Platform releases; if a topic still doesn't appear,
+      check the reporter's documentation for your version.</li>
+  </ul>
+</ng-template>

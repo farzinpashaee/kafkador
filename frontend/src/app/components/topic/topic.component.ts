@@ -11,10 +11,11 @@ import { ApiService, DocumentationService, CommonService} from '../../services';
 import { GenericResponse, Config, Topic, Error } from '../../models';
 import { TopicRecordsComponent } from '../topic-records/topic-records.component';
 import { TopicConsumersComponent } from '../topic-consumers/topic-consumers.component';
+import { EntityMetricsComponent } from '../entity-metrics/entity-metrics.component';
 
 @Component({
   selector: 'app-topic',
-  imports: [CommonModule,FormsModule,RouterModule,ReactiveFormsModule,TopicRecordsComponent,TopicConsumersComponent],
+  imports: [CommonModule,FormsModule,RouterModule,ReactiveFormsModule,TopicRecordsComponent,TopicConsumersComponent,EntityMetricsComponent],
   templateUrl: './topic.component.html',
   styleUrl: './topic.component.scss'
 })
@@ -25,9 +26,10 @@ export class TopicComponent {
   topicConfig!: Config[];
   readonly exportFormats = EXPORT_FORMATS;
   isLoading: boolean = true;
-  // The Records and Consumers tabs are created on first open, so viewing a topic doesn't query them until asked.
+  // The Records, Consumers and Metrics tabs are created on first open, so viewing a topic doesn't query them until asked.
   recordsOpened = false;
   consumersOpened = false;
+  metricsOpened = false;
   documentation!: string;
   selectedEditConfig?: Config;
   errors: Map<string, Error> = new Map();

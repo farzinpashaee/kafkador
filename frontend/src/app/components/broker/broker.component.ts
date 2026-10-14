@@ -9,10 +9,11 @@ import { CONFIG_EXPORT_FIELDS } from '../../services/config-export';
 import { EXPORT_FORMATS, ExportFormat, buildExport, downloadExport } from '../../services/table-export';
 import { ApiService, DocumentationService, CommonService } from '../../services';
 import { Broker, Config, GenericResponse, Error } from '../../models';
+import { EntityMetricsComponent } from '../entity-metrics/entity-metrics.component';
 
 @Component({
   selector: 'app-broker',
-  imports: [CommonModule,FormsModule,RouterModule,ReactiveFormsModule],
+  imports: [CommonModule,FormsModule,RouterModule,ReactiveFormsModule,EntityMetricsComponent],
   templateUrl: './broker.component.html',
   styleUrl: './broker.component.scss'
 })
@@ -23,6 +24,8 @@ export class BrokerComponent {
   brokerConfig!: Config[];
   readonly exportFormats = EXPORT_FORMATS;
   isLoading: boolean = true;
+  // The Metrics tab is created on first open, so viewing a broker doesn't read the metrics topics until asked.
+  metricsOpened = false;
   documentation!: string;
   selectedEditConfig?: Config;
   errors: Map<string, Error> = new Map();

@@ -5,7 +5,7 @@ import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Al
   SchemaRegistry, SchemaRegistryConfig, Chart, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery,
   AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest,
   SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, SchemaLookupResult,
-  AiConfig, AiChatResponse, AiChatSession, SessionConfig, DatabaseSetupStatus, DatabaseCredentials } from '../models';
+  AiConfig, AiChatResponse, AiChatSession, SessionConfig, DatabaseSetupStatus, DatabaseCredentials, EntityMetrics } from '../models';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -110,6 +110,16 @@ export class ApiService {
   public getTopicConsumerGroups(topic:string): Observable<GenericResponse<TopicConsumerGroup[]>> {
     return this.http.get<GenericResponse<TopicConsumerGroup[]>>(
       `${ApiService.ApiBaseUrl}/topics/${encodeURIComponent(topic)}/consumer-groups`, { withCredentials: true });
+  }
+
+  public getBrokerMetrics(id:string): Observable<GenericResponse<EntityMetrics>> {
+    return this.http.get<GenericResponse<EntityMetrics>>(
+      `${ApiService.ApiBaseUrl}/brokers/${encodeURIComponent(id)}/metrics`, { withCredentials: true });
+  }
+
+  public getTopicMetrics(topic:string): Observable<GenericResponse<EntityMetrics>> {
+    return this.http.get<GenericResponse<EntityMetrics>>(
+      `${ApiService.ApiBaseUrl}/topics/${encodeURIComponent(topic)}/metrics`, { withCredentials: true });
   }
 
   public getConsumerGroupDetails(id:string): Observable<GenericResponse<ConsumerGroupDetails>> {
