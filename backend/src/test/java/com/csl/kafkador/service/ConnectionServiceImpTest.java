@@ -4,6 +4,8 @@ import com.csl.kafkador.component.ClusterCredentialStore;
 import com.csl.kafkador.component.KafkadorContext;
 import com.csl.kafkador.component.SessionHolder;
 import com.csl.kafkador.domain.dto.ClusterCredentialsDto;
+import com.csl.kafkador.domain.dto.ClusterSecurityConfigDto;
+import com.csl.kafkador.exception.InvalidClusterSecurityException;
 import com.csl.kafkador.domain.dto.ConnectionDto;
 import com.csl.kafkador.exception.ClusterCredentialsRequiredException;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
@@ -43,6 +45,7 @@ class ConnectionServiceImpTest {
     private final SessionHolder sessionHolder = mock(SessionHolder.class);
     private final HttpSession session = mock(HttpSession.class);
     private final ClusterCredentialStore credentialStore = new ClusterCredentialStore();
+    private final ClusterSecurityService securityService = mock(ClusterSecurityService.class);
     private MockedStatic<Admin> adminFactory;
     private ConnectionServiceImp service;
 
@@ -56,9 +59,10 @@ class ConnectionServiceImpTest {
         when(sessionHolder.getSession()).thenReturn(session);
         adminFactory = mockStatic(Admin.class);
         when(session.getId()).thenReturn("session-1");
+        when(securityService.load(any())).thenReturn(ClusterSecurityService.Settings.NONE);
         when(clusterRepository.findById("7")).thenReturn(Optional.of(cluster));
         service = new ConnectionServiceImp(clusterRepository, mock(AgentService.class), sessionHolder,
-                mock(SessionSettingsService.class), null, credentialStore);
+                mock(SessionSettingsService.class), null, credentialStore, securityService);
     }
 
     @AfterEach
@@ -189,6 +193,50 @@ class ConnectionServiceImpTest {
         verify(anonymous).close(any(Duration.class));
         verify(alice).close(any(Duration.class));
         assertThat(credentialStore.get("session-1", CLUSTER_ID)).isNull();
+    }
+
+    @Test
+    void securitySettingsTheClusterRejectsAreNotSaved() {
+        ClusterSecurityService.Settings candidate = new ClusterSecurityService.Settings(true,
+                ClusterSecurityConfigDto.AuthenticationMethod.SASL_PLAIN, "farzin", "wrong", null, "", "");
+        when(securityService.candidate(any(), any())).thenReturn(candidate);
+        when(session.getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString()))
+                .thenReturn(new ConnectionDto().setClusterId(CLUSTER_ID).setHost("localhost").setPort("9092"));
+        Admin probe = adminWithClusterId(failedWith(new SaslAuthenticationException("Invalid username or password")));
+        adminFactory.when(() -> Admin.create(any(Properties.class))).thenReturn(probe);
+
+        assertThatThrownBy(() -> service.saveSecurityConfig(new ClusterSecurityConfigDto()))
+                .isInstanceOf(InvalidClusterSecurityException.class)
+                .hasMessageContaining("weren't saved")
+                .hasMessageContaining("Invalid username or password");
+        verify(securityService, never()).save(any(), any());
+    }
+
+    @Test
+    void savedCredentialsReplaceTheOnesEnteredForTheSession() throws Exception {
+        ClusterSecurityService.Settings candidate = new ClusterSecurityService.Settings(false,
+                ClusterSecurityConfigDto.AuthenticationMethod.SASL_PLAIN, "farzin", "pw", null, "", "");
+        when(securityService.candidate(any(), any())).thenReturn(candidate);
+        ConnectionDto active = new ConnectionDto().setClusterId(CLUSTER_ID).setHost("localhost").setPort("9092").setAuthenticated(true);
+        when(session.getAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString())).thenReturn(active);
+        credentialStore.put("session-1", CLUSTER_ID, credentials("alice", "old"));
+        Admin probe = adminWithClusterId(completed(CLUSTER_ID));
+        adminFactory.when(() -> Admin.create(any(Properties.class))).thenReturn(probe);
+
+        service.saveSecurityConfig(new ClusterSecurityConfigDto());
+
+        verify(securityService).save(CLUSTER_ID, candidate);
+        assertThat(credentialStore.get("session-1", CLUSTER_ID)).isNull();
+        // The session no longer expects in-memory credentials, so it survives a restart.
+        assertThat(active.getAuthenticated()).isFalse();
+    }
+
+    @Test
+    void aFailedTlsHandshakePointsAtTheTruststoreInsteadOfAskingForCredentials() {
+        Exception failure = ConnectionServiceImp.probeFailure(
+                new org.apache.kafka.common.errors.SslAuthenticationException("PKIX path building failed"), false);
+
+        assertThat(failure).isInstanceOf(InvalidClusterSecurityException.class).hasMessageContaining("truststore");
     }
 
     private static ClusterCredentialsDto credentials(String username, String password) {

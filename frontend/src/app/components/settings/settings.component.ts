@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { AiAssistantService, ApiService, CommonService } from '../../services';
+import { SecuritySettingsComponent } from '../security-settings/security-settings.component';
 import { GenericResponse, KsqlDbConfig, SchemaRegistryConfig, KafkaConnectConfig, CompatibilityConfig, ConnectorPlugin, AiConfig, SessionConfig, Error } from '../../models';
 
 @Component({
   selector: 'app-settings',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SecuritySettingsComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss'
 })

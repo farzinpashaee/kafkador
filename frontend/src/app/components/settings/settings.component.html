@@ -8,6 +8,13 @@
       </button>
     </li>
     <li class="nav-item" role="presentation">
+      <button class="nav-link" id="security-tab" data-bs-toggle="tab"
+              data-bs-target="#security" type="button" role="tab"
+              aria-controls="security" aria-selected="false">
+        Security
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
       <button class="nav-link" id="schema-Registry-tab" data-bs-toggle="tab"
               data-bs-target="#schema-Registry" type="button" role="tab"
               aria-controls="schema-Registry" aria-selected="false">
@@ -81,6 +88,10 @@
           </div> Saving...&nbsp;
         </div>
       </div>
+    </div>
+
+    <div class="tab-pane fade" id="security" role="tabpanel" aria-labelledby="security-tab" tabindex="0">
+      <app-security-settings></app-security-settings>
     </div>
 
     <div class="tab-pane fade" id="schema-Registry" role="tabpanel" aria-labelledby="schema-Registry-tab" tabindex="0">

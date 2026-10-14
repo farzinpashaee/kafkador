@@ -100,7 +100,8 @@ public class RestExceptionController {
                 .failed(HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler({InvalidTopicConfigException.class, InvalidRecordRequestException.class, InvalidAclBindingException.class})
+    @ExceptionHandler({InvalidTopicConfigException.class, InvalidRecordRequestException.class, InvalidAclBindingException.class,
+            InvalidClusterSecurityException.class})
     public ResponseEntity<GenericResponse<Void>> handleInvalidRequest(Exception ex) {
         return new GenericResponse.Builder<Void>()
                 .code(String.valueOf(HttpStatus.BAD_REQUEST.value()))

@@ -1,7 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse,HttpResponse   } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Alert, Topic, TopicCreateRequest, SearchResult, ConsumerGroup, ConsumerGroupDetails, TopicConsumerGroup, TopicRecordSearchRequest, TopicRecordSearchResult, TopicRecordProduceRequest, TopicRecordProduceResult, TopicRecord, RecordSerde, RecordFilter, Bookmark, BookmarkEntityType, ClusterCredentials, GenericResponse,
+import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Alert, Topic, TopicCreateRequest, SearchResult, ConsumerGroup, ConsumerGroupDetails, TopicConsumerGroup, TopicRecordSearchRequest, TopicRecordSearchResult, TopicRecordProduceRequest, TopicRecordProduceResult, TopicRecord, RecordSerde, RecordFilter, Bookmark, BookmarkEntityType, ClusterCredentials, ClusterSecurityConfig, GenericResponse,
   SchemaRegistry, SchemaRegistryConfig, Chart, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery,
   AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest,
   SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, SchemaLookupResult,
@@ -266,6 +266,26 @@ export class ApiService {
   public connect(id:string, credentials?: ClusterCredentials): Observable<GenericResponse<Connection>> {
     return this.http.post<GenericResponse<Connection>>(`${ApiService.ApiBaseUrl}/connections/${id}/connect`,
       credentials ? { credentials } : {}, { withCredentials: true });
+  }
+
+  public getSecurityConfig(): Observable<GenericResponse<ClusterSecurityConfig>> {
+    return this.http.get<GenericResponse<ClusterSecurityConfig>>(`${ApiService.ApiBaseUrl}/security`, { withCredentials: true });
+  }
+
+  public saveSecurityConfig(config: ClusterSecurityConfig): Observable<GenericResponse<ClusterSecurityConfig>> {
+    return this.http.put<GenericResponse<ClusterSecurityConfig>>(`${ApiService.ApiBaseUrl}/security`, config, { withCredentials: true });
+  }
+
+  public uploadTruststore(file: File, type: string, password: string): Observable<GenericResponse<ClusterSecurityConfig>> {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('type', type);
+    form.append('password', password);
+    return this.http.put<GenericResponse<ClusterSecurityConfig>>(`${ApiService.ApiBaseUrl}/security/truststore`, form, { withCredentials: true });
+  }
+
+  public removeTruststore(): Observable<GenericResponse<ClusterSecurityConfig>> {
+    return this.http.delete<GenericResponse<ClusterSecurityConfig>>(`${ApiService.ApiBaseUrl}/security/truststore`, { withCredentials: true });
   }
 
   public disconnect(): Observable<HttpResponse<GenericResponse<Connection>>> {

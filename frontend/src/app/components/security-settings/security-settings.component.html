@@ -1,0 +1,115 @@
+<h5>Security Settings</h5>
+<p class="text-s text-color-subtle">
+  How Kafkador connects to the current cluster. Applies to every session using this cluster.
+</p>
+
+<div *ngIf="flags.get('securityLoading')" class="text-center">
+  <div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div>
+</div>
+<div *ngIf="errors.get('getSecurity')" class="alert alert-danger" role="alert">{{ errors.get('getSecurity')?.message }}</div>
+
+<ng-container *ngIf="!flags.get('securityLoading') && !errors.get('getSecurity')">
+  <!-- Truststore -->
+  <section class="security-section" aria-labelledby="truststoreHeading">
+    <div class="d-flex align-items-center mb-2">
+      <h6 id="truststoreHeading" class="mb-0">Truststore</h6>
+      <button *ngIf="config.truststoreFileName" type="button" class="btn btn-sm outline-button ms-auto"
+              (click)="removeTruststore()" [disabled]="flags.get('truststoreSaving')">Remove from config</button>
+    </div>
+    <p class="text-s text-color-subtle">
+      Only needed when the brokers' TLS certificates are signed by a private or self-signed CA. Without one, Java's
+      default trusted CAs are used.
+    </p>
+
+    <div class="security-panel">
+      <p class="text-s mb-3" *ngIf="config.truststoreFileName">
+        <i class="bi bi-file-earmark-lock" aria-hidden="true"></i>
+        Current truststore: <strong>{{ config.truststoreFileName }}</strong> <span class="text-color-subtle">({{ config.truststoreType }})</span>
+      </p>
+      <div class="row g-3">
+        <div class="col-12 col-lg-6">
+          <label for="truststoreFile" class="form-label">Truststore location</label>
+          <input #truststoreInput id="truststoreFile" type="file" class="form-control" accept=".jks,.p12,.pfx,.pkcs12"
+                 (change)="onTruststoreFileChange(truststoreInput)">
+        </div>
+        <div class="col-6 col-lg-2">
+          <label for="truststoreType" class="form-label">Type</label>
+          <select id="truststoreType" class="form-select" [(ngModel)]="truststoreType">
+            <option *ngFor="let type of truststoreTypes" [ngValue]="type">{{ type }}</option>
+          </select>
+        </div>
+        <div class="col-6 col-lg-4">
+          <label for="truststorePassword" class="form-label">Truststore password</label>
+          <input id="truststorePassword" type="password" class="form-control" autocomplete="new-password"
+                 [(ngModel)]="truststorePassword">
+        </div>
+      </div>
+      <div *ngIf="errors.get('truststore')" class="alert alert-danger text-s p-2 mt-3 mb-0" role="alert">{{ errors.get('truststore')?.message }}</div>
+      <div *ngIf="savedAt.get('truststore')" class="alert alert-success text-s p-2 mt-3 mb-0" role="status">
+        Truststore saved at {{ savedAt.get('truststore') | date:'medium' }}. Turn on TLS below if it isn't already.
+      </div>
+      <div class="mt-3">
+        <button type="button" class="btn btn-primary" (click)="uploadTruststore(truststoreInput)"
+                [disabled]="!truststoreFile || flags.get('truststoreSaving')">
+          <span *ngIf="flags.get('truststoreSaving')" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+          Upload truststore
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <hr class="my-4">
+
+  <!-- Authentication -->
+  <section class="security-section" aria-labelledby="authenticationHeading">
+    <h6 id="authenticationHeading">Authentication</h6>
+
+    <div class="form-check form-switch mb-3">
+      <input class="form-check-input" type="checkbox" role="switch" id="securityTls" [(ngModel)]="config.tls"
+             (ngModelChange)="savedAt.delete('security')">
+      <label class="form-check-label" for="securityTls">Connect over TLS (SSL)</label>
+    </div>
+
+    <div class="mb-3 security-field">
+      <label for="authenticationMethod" class="form-label">Authentication method</label>
+      <select id="authenticationMethod" class="form-select" [(ngModel)]="config.authenticationMethod" (ngModelChange)="savedAt.delete('security')">
+        <option *ngFor="let method of authenticationMethods" [ngValue]="method.value">{{ method.label }}</option>
+      </select>
+    </div>
+
+    <ng-container *ngIf="usesSasl">
+      <div class="mb-3 security-field">
+        <label for="securityUsername" class="form-label">Username</label>
+        <input id="securityUsername" type="text" class="form-control" autocomplete="username" spellcheck="false"
+               [(ngModel)]="config.username" (ngModelChange)="savedAt.delete('security')">
+      </div>
+      <div class="mb-3 security-field">
+        <label for="securityPassword" class="form-label">Password</label>
+        <input id="securityPassword" type="password" class="form-control" autocomplete="new-password"
+               [placeholder]="config.passwordSaved ? '•••••••••••• (saved)' : 'Leave empty to be asked when connecting'"
+               [(ngModel)]="password" (ngModelChange)="savedAt.delete('security')" [disabled]="forgetPassword">
+        <div class="form-text">
+          Optional. A saved password is stored in Kafkador's database and used automatically when connecting; without
+          one you're asked for it each time you connect.
+        </div>
+        <div class="form-check mt-2" *ngIf="config.passwordSaved">
+          <input class="form-check-input" type="checkbox" id="forgetPassword" [(ngModel)]="forgetPassword">
+          <label class="form-check-label text-s" for="forgetPassword">Forget the saved password</label>
+        </div>
+      </div>
+    </ng-container>
+
+    <p class="text-s text-color-subtle">Saving first checks that the cluster accepts a connection with these settings.</p>
+
+    <div *ngIf="errors.get('saveSecurity')" class="alert alert-danger text-s" role="alert">{{ errors.get('saveSecurity')?.message }}</div>
+    <div *ngIf="savedAt.get('security')" class="alert alert-success text-s" role="status">
+      Successfully updated at {{ savedAt.get('security') | date:'medium' }}.
+    </div>
+
+    <button *ngIf="!flags.get('securitySaving')" type="button" class="btn btn-primary" (click)="saveSecurity()">Save</button>
+    <div *ngIf="flags.get('securitySaving')">
+      <span class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></span>
+      Checking the connection and saving...&nbsp;
+    </div>
+  </section>
+</ng-container>

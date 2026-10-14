@@ -30,3 +30,4 @@ export * from './topic-record';
 export * from './topic-consumer-group';
 export * from './cluster-credentials';
 export * from './entity-metrics';
+export * from './cluster-security';

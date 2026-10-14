@@ -1,0 +1,11 @@
+// The truststore fields sit in a tinted panel, like the grouped settings in the screenshot this tab follows.
+.security-panel {
+  padding: 1rem;
+  border: var(--bs-border-width) solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  background-color: var(--bs-tertiary-bg);
+}
+
+.security-field {
+  max-width: 28rem;
+}

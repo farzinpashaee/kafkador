@@ -81,7 +81,9 @@ public class ApiController {
     }
 
     @GetMapping("/cluster")
-    public ResponseEntity<GenericResponse<ClusterDto>> getCluster() throws KafkaAdminApiException, ClusterNotFoundException {
+    public Respo
+
+    nseEntity<GenericResponse<ClusterDto>> getCluster() throws KafkaAdminApiException, ClusterNotFoundException {
         ClusterService clusterService = (ClusterService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CLUSTER));
         ConnectionDto connection = connectionService.getActiveConnection();
@@ -237,7 +239,7 @@ public class ApiController {
 
     @PostMapping("/connections")
     public ResponseEntity<GenericResponse<ConnectionDto>> createConnection(@Valid @RequestBody ConnectionDto connection)
-            throws KafkaAdminApiException, DuplicatedClusterException, ClusterCredentialsRequiredException {
+            throws KafkaAdminApiException, DuplicatedClusterException, ClusterCredentialsRequiredException, InvalidClusterSecurityException {
         ConnectionDto created = connectionService.create(connection);
         URI location = ServletUriComponentsBuilder.fromCurrentRequestUri()
                 .path("/{id}")
@@ -252,7 +254,7 @@ public class ApiController {
 
     @PutMapping("/connections/{id}")
     public ResponseEntity<GenericResponse<ConnectionDto>> updateConnection(@PathVariable @NotBlank String id, @Valid @RequestBody ConnectionDto connection)
-            throws ClusterNotFoundException, KafkaAdminApiException, DuplicatedClusterException, ClusterCredentialsRequiredException {
+            throws ClusterNotFoundException, KafkaAdminApiException, DuplicatedClusterException, ClusterCredentialsRequiredException, InvalidClusterSecurityException {
         ConnectionDto updated = connectionService.update(id, connection);
         return new GenericResponse.Builder<ConnectionDto>()
                 .data(updated)
@@ -276,7 +278,7 @@ public class ApiController {
     @PostMapping("/connections/{id}/connect")
     public ResponseEntity<GenericResponse<ConnectionDto>> connect(@PathVariable @NotBlank String id,
                                                                  @Valid @RequestBody(required = false) ConnectRequestDto request)
-            throws ClusterNotFoundException, KafkaAdminApiException, ClusterCredentialsRequiredException {
+            throws ClusterNotFoundException, KafkaAdminApiException, ClusterCredentialsRequiredException, InvalidClusterSecurityException {
         ConnectionDto connection = connectionService.connect(id, request == null ? null : request.getCredentials());
         return new GenericResponse.Builder<ConnectionDto>()
                 .data(connection)

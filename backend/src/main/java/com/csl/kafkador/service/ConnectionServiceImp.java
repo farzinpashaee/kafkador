@@ -8,6 +8,8 @@ import com.csl.kafkador.domain.dto.ObserverConfigDto;
 import com.csl.kafkador.exception.ClusterNotFoundException;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.domain.dto.ClusterCredentialsDto;
+import com.csl.kafkador.domain.dto.ClusterSecurityConfigDto;
+import com.csl.kafkador.exception.InvalidClusterSecurityException;
 import com.csl.kafkador.domain.dto.ConnectionDto;
 import com.csl.kafkador.exception.ClusterCredentialsRequiredException;
 import com.csl.kafkador.exception.DuplicatedClusterException;
@@ -25,6 +27,7 @@ import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.errors.AuthenticationException;
+import org.apache.kafka.common.errors.SslAuthenticationException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -50,6 +53,7 @@ public class ConnectionServiceImp implements ConnectionService {
     @Qualifier("ObserverConfigService")
     private final KafkadorConfigService<ObserverConfigDto,ObserverConfigDto> kafkadorConfigService;
     private final ClusterCredentialStore credentialStore;
+    private final ClusterSecurityService securityService;
 
     // How long a cached Admin may take to prove it can still reach its cluster before it is replaced.
     private static final long HEALTH_CHECK_TIMEOUT_SECONDS = 5;
@@ -71,7 +75,8 @@ public class ConnectionServiceImp implements ConnectionService {
     public AdminClusterWrapper getAdminClient(String clusterId) throws ClusterNotFoundException {
         AdminClusterWrapper adminClusterWrapper = new AdminClusterWrapper();
         ClusterCredentialsDto credentials = sessionCredentials(clusterId);
-        String cacheKey = adminCacheKey(clusterId, credentials);
+        ClusterSecurityService.Settings security = securityService.load(clusterId);
+        String cacheKey = adminCacheKey(clusterId, credentials, security);
         AdminClusterWrapper cached = adminClientMap.get(cacheKey);
         if(cached != null) {
             try {
@@ -88,7 +93,7 @@ public class ConnectionServiceImp implements ConnectionService {
         if(!clusterOptional.isPresent())
             throw new ClusterNotFoundException("Cluster ID not found!");
         Cluster cluster = clusterOptional.get();
-        Admin admin = Admin.create(clientProperties(cluster.getHost(), cluster.getPort(), credentials));
+        Admin admin = Admin.create(clientProperties(cluster.getHost(), cluster.getPort(), security, credentials));
         adminClusterWrapper.setAdmin(admin);
         adminClusterWrapper.setCluster(DtoMapper.clusterMapper(cluster));
         adminClientMap.put(cacheKey, adminClusterWrapper);
@@ -108,12 +113,12 @@ public class ConnectionServiceImp implements ConnectionService {
 
 
     @Override
-    public ConnectionDto create(ConnectionDto connection) throws KafkaAdminApiException, DuplicatedClusterException, ClusterCredentialsRequiredException {
+    public ConnectionDto create(ConnectionDto connection) throws KafkaAdminApiException, DuplicatedClusterException, ClusterCredentialsRequiredException, InvalidClusterSecurityException {
         Optional<Cluster> clusterOptional = clusterRepository.findByHostAndPort(connection.getHost(), connection.getPort());
         if(clusterOptional.isPresent()) throw new DuplicatedClusterException("There is a cluster created with this ip and port number!");
 
         ClusterCredentialsDto credentials = connection.getCredentials();
-        String clusterId = probeClusterId(connection.getHost(), connection.getPort(), credentials);
+        String clusterId = probeClusterId(connection.getHost(), connection.getPort(), ClusterSecurityService.Settings.NONE, credentials);
         Cluster cluster = new Cluster();
         cluster.setHost(connection.getHost());
         cluster.setPort(connection.getPort());
@@ -129,7 +134,7 @@ public class ConnectionServiceImp implements ConnectionService {
     }
 
     @Override
-    public ConnectionDto update(String id, ConnectionDto connection) throws ClusterNotFoundException, KafkaAdminApiException, DuplicatedClusterException, ClusterCredentialsRequiredException {
+    public ConnectionDto update(String id, ConnectionDto connection) throws ClusterNotFoundException, KafkaAdminApiException, DuplicatedClusterException, ClusterCredentialsRequiredException, InvalidClusterSecurityException {
         Optional<Cluster> clusterOptional = clusterRepository.findById(id);
         if(clusterOptional.isEmpty()) throw new ClusterNotFoundException("Connection with given cluster ID not found!");
         Cluster cluster = clusterOptional.get();
@@ -142,7 +147,7 @@ public class ConnectionServiceImp implements ConnectionService {
 
             ClusterCredentialsDto credentials = connection.getCredentials() != null
                     ? connection.getCredentials() : sessionCredentials(cluster.getClusterId());
-            String clusterId = probeClusterId(connection.getHost(), connection.getPort(), credentials);
+            String clusterId = probeClusterId(connection.getHost(), connection.getPort(), securityService.load(cluster.getClusterId()), credentials);
             closeAdminClient(cluster.getClusterId());
             credentialStore.put(sessionId(), clusterId, credentials);
             cluster.setClusterId(clusterId);
@@ -157,12 +162,13 @@ public class ConnectionServiceImp implements ConnectionService {
 
     @Override
     public ConnectionDto connect(String id, ClusterCredentialsDto credentials)
-            throws ClusterNotFoundException, KafkaAdminApiException, ClusterCredentialsRequiredException {
+            throws ClusterNotFoundException, KafkaAdminApiException, ClusterCredentialsRequiredException, InvalidClusterSecurityException {
         Optional<Cluster> clusterOptional = clusterRepository.findById(id);
         if(clusterOptional.isEmpty()) throw new ClusterNotFoundException("Connection with given cluster ID not found!");
         Cluster cluster = clusterOptional.get();
         ClusterCredentialsDto effective = credentials != null ? credentials : sessionCredentials(cluster.getClusterId());
-        probeClusterId(cluster.getHost(), cluster.getPort(), effective);
+        // Saved Settings > Security credentials apply on their own; "effective" is only what this session entered.
+        probeClusterId(cluster.getHost(), cluster.getPort(), securityService.load(cluster.getClusterId()), effective);
         credentialStore.put(sessionId(), cluster.getClusterId(), effective);
 
         ConnectionDto connection = DtoMapper.connectionMapper(cluster);
@@ -177,9 +183,10 @@ public class ConnectionServiceImp implements ConnectionService {
      * Asks the cluster for its id with the given credentials (or none), as a check that it accepts this client.
      * A rejected login or a cluster that doesn't answer at all asks the user for (other) credentials.
      */
-    String probeClusterId(String host, String port, ClusterCredentialsDto credentials)
-            throws KafkaAdminApiException, ClusterCredentialsRequiredException {
-        Properties properties = clientProperties(host, port, credentials);
+    String probeClusterId(String host, String port, ClusterSecurityService.Settings security, ClusterCredentialsDto credentials)
+            throws KafkaAdminApiException, ClusterCredentialsRequiredException, InvalidClusterSecurityException {
+        Properties properties = clientProperties(host, port, security, credentials);
+        boolean authenticating = credentials != null || security.savedCredentials() != null;
         properties.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, String.valueOf(PROBE_TIMEOUT_MS));
         properties.put(AdminClientConfig.DEFAULT_API_TIMEOUT_MS_CONFIG, String.valueOf(PROBE_TIMEOUT_MS));
         Admin admin = null;
@@ -187,32 +194,38 @@ public class ConnectionServiceImp implements ConnectionService {
             admin = Admin.create(properties);
             return admin.describeCluster().clusterId().get(PROBE_TIMEOUT_MS + 2_000L, TimeUnit.MILLISECONDS);
         } catch (ExecutionException e) {
-            throw rethrow(probeFailure(e.getCause() == null ? e : e.getCause(), credentials));
+            throw rethrow(probeFailure(e.getCause() == null ? e : e.getCause(), authenticating));
         } catch (java.util.concurrent.TimeoutException e) {
-            throw rethrow(probeFailure(new org.apache.kafka.common.errors.TimeoutException(e.getMessage()), credentials));
+            throw rethrow(probeFailure(new org.apache.kafka.common.errors.TimeoutException(e.getMessage()), authenticating));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new KafkaAdminApiException("Interrupted while connecting to the cluster");
         } catch (Exception e) {
-            throw rethrow(probeFailure(e, credentials));
+            throw rethrow(probeFailure(e, authenticating));
         } finally {
             if (admin != null) closeAdmin(admin);
         }
     }
 
-    private static KafkaAdminApiException rethrow(Exception failure) throws ClusterCredentialsRequiredException {
+    private static KafkaAdminApiException rethrow(Exception failure) throws ClusterCredentialsRequiredException, InvalidClusterSecurityException {
         if (failure instanceof ClusterCredentialsRequiredException credentialsRequired) throw credentialsRequired;
+        if (failure instanceof InvalidClusterSecurityException invalidSecurity) throw invalidSecurity;
         return (KafkaAdminApiException) failure;
     }
 
-    static Exception probeFailure(Throwable cause, ClusterCredentialsDto credentials) {
+    static Exception probeFailure(Throwable cause, boolean authenticating) {
+        // Credentials can't fix a failed TLS handshake; it's the truststore (or TLS being on for a plaintext listener).
+        if (cause instanceof SslAuthenticationException) {
+            return new InvalidClusterSecurityException("The TLS handshake with the cluster failed: " + cause.getMessage()
+                    + ". Check the truststore in Settings > Security.");
+        }
         if (cause instanceof AuthenticationException) {
-            return new ClusterCredentialsRequiredException(credentials == null
+            return new ClusterCredentialsRequiredException(!authenticating
                     ? "The cluster requires credentials: " + cause.getMessage()
                     : "The cluster rejected these credentials: " + cause.getMessage());
         }
         if (cause instanceof org.apache.kafka.common.errors.TimeoutException) {
-            return new ClusterCredentialsRequiredException(credentials == null ? NO_RESPONSE_MESSAGE
+            return new ClusterCredentialsRequiredException(!authenticating ? NO_RESPONSE_MESSAGE
                     : "The cluster didn't answer with these settings. Check the security protocol and SASL mechanism "
                     + "match the listener, and that the cluster is reachable.");
         }
@@ -255,13 +268,15 @@ public class ConnectionServiceImp implements ConnectionService {
         }
     }
 
-    private static String adminCacheKey(String clusterId, ClusterCredentialsDto credentials) {
-        return credentials == null ? clusterId : clusterId + "#" + credentials.fingerprint();
+    private static String adminCacheKey(String clusterId, ClusterCredentialsDto credentials, ClusterSecurityService.Settings security) {
+        if (credentials == null && security.isDefault()) return clusterId;
+        return clusterId + "#" + (credentials == null ? "-" : credentials.fingerprint()) + "#" + security.fingerprint();
     }
 
-    private static Properties clientProperties(String host, String port, ClusterCredentialsDto credentials) {
+    private static Properties clientProperties(String host, String port, ClusterSecurityService.Settings security,
+                                               ClusterCredentialsDto credentials) {
         Properties properties = KafkaHelper.getConnectionProperties(host, port);
-        if (credentials != null) credentials.applyTo(properties);
+        ClusterSecurityService.apply(security, credentials, properties);
         return properties;
     }
 
@@ -303,7 +318,8 @@ public class ConnectionServiceImp implements ConnectionService {
     @Override
     public Properties getActiveConnectionProperties() throws ConnectionSessionExpiredException {
         ConnectionDto connection = getActiveConnection();
-        return clientProperties(connection.getHost(), connection.getPort(), sessionCredentials(connection.getClusterId()));
+        return clientProperties(connection.getHost(), connection.getPort(), securityService.load(connection.getClusterId()),
+                sessionCredentials(connection.getClusterId()));
     }
 
     @Override
@@ -312,6 +328,61 @@ public class ConnectionServiceImp implements ConnectionService {
         Properties properties = new Properties();
         properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         return properties;
+    }
+
+    @Override
+    public ClusterSecurityConfigDto getSecurityConfig() throws ConnectionSessionExpiredException {
+        return securityService.getConfig(getActiveConnection().getClusterId());
+    }
+
+    /**
+     * Checks the active cluster accepts a connection with the new settings before saving them, so a mistake can't
+     * lock this session out. Saved credentials replace any this session entered, so the saved ones are what's used.
+     */
+    @Override
+    public ClusterSecurityConfigDto saveSecurityConfig(ClusterSecurityConfigDto config) throws InvalidClusterSecurityException {
+        ConnectionDto connection = getActiveConnection();
+        String clusterId = connection.getClusterId();
+        ClusterSecurityService.Settings candidate = securityService.candidate(clusterId, config);
+        if (candidate.method() != ClusterSecurityConfigDto.AuthenticationMethod.NONE && candidate.username().isBlank()) {
+            throw new InvalidClusterSecurityException("A username is required for SASL authentication");
+        }
+        ClusterCredentialsDto session = candidate.savedCredentials() != null ? null : sessionCredentials(clusterId);
+        try {
+            probeClusterId(connection.getHost(), connection.getPort(), candidate, session);
+        } catch (ClusterCredentialsRequiredException | KafkaAdminApiException e) {
+            throw new InvalidClusterSecurityException("The cluster didn't accept a connection with these settings, so they weren't saved. "
+                    + e.getMessage());
+        }
+        securityService.save(clusterId, candidate);
+        if (candidate.savedCredentials() != null) forgetSessionCredentials(connection);
+        closeAdminClient(clusterId);
+        return securityService.getConfig(clusterId);
+    }
+
+    @Override
+    public ClusterSecurityConfigDto saveTruststore(byte[] content, String fileName, String type, String password) throws InvalidClusterSecurityException {
+        String clusterId = getActiveConnection().getClusterId();
+        ClusterSecurityConfigDto saved = securityService.saveTruststore(clusterId, content, fileName, type, password);
+        closeAdminClient(clusterId);
+        return saved;
+    }
+
+    @Override
+    public ClusterSecurityConfigDto removeTruststore() throws ConnectionSessionExpiredException {
+        String clusterId = getActiveConnection().getClusterId();
+        ClusterSecurityConfigDto saved = securityService.removeTruststore(clusterId);
+        closeAdminClient(clusterId);
+        return saved;
+    }
+
+    /** Drops this session's entered credentials in favour of saved ones, and stops expecting them in the session. */
+    private void forgetSessionCredentials(ConnectionDto connection) {
+        credentialStore.remove(sessionId(), connection.getClusterId());
+        if (Boolean.TRUE.equals(connection.getAuthenticated())) {
+            connection.setAuthenticated(false);
+            sessionHolder.getSession().setAttribute(KafkadorContext.SessionAttribute.ACTIVE_CONNECTION.toString(), connection);
+        }
     }
 
 }
