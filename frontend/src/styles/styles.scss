@@ -147,6 +147,13 @@ span.placeholder{
   height: 1rem;
 }
 
+// Dialog titles use a larger font, so a 1rem box is narrower than the icon and it overruns the space after it.
+.modal-title > .bi {
+  width: auto;
+  height: auto;
+  margin-right: 0.25em;
+}
+
 .text-truncate {
   overflow: hidden;
   white-space: nowrap;
