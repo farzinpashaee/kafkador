@@ -66,9 +66,7 @@ export class AccessControlComponent {
     this.loadBindings();
   }
 
-  /** Loads the bindings; the first load shows the page placeholder, a refresh only the Refresh button's spinner. */
   loadBindings(){
-    this.flags.set('refreshingAclBindings', true);
     this.apiService.getAclBindings().subscribe({ next: (res: HttpResponse<GenericResponse<AclBinding[]>>) => {
         this.bindings = res.body?.data ?? [];
         this.filteredBindings = this.search(this.filter.value);
@@ -76,13 +74,11 @@ export class AccessControlComponent {
         this.errors.delete('getAclBindings');
         this.flags.set('authorizerNotConfigured', false);
         this.flags.set('getAclBindingsLoading',false);
-        this.flags.set('refreshingAclBindings',false);
       },
       error: (res:HttpErrorResponse) => {
         this.flags.set('authorizerNotConfigured', res.status === 428);
         this.errors.set("getAclBindings",this.commonService.prepareError(res.error?.error,'500','Failed to get ACL bindings!'));
         this.flags.set('getAclBindingsLoading',false);
-        this.flags.set('refreshingAclBindings',false);
       }
     });
   }
