@@ -1,0 +1,8 @@
+@use '../abstracts/variables' as vars;
+
+// The small labels beside a name, such as Internal on Kafka's own topics and Controller on the active controller.
+.badge.tag-badge {
+  background-color: vars.$secondary;
+  color: #fff;
+  font-weight: normal;
+}

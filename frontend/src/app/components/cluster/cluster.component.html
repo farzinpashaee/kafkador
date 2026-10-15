@@ -123,7 +123,7 @@
             <tr *ngFor="let broker of pagedBrokers" routerLink="/broker/{{broker.id}}" class="cursor-pointer">
               <th scope="row">
                 {{broker.id}}
-                <span *ngIf="broker.activeController" class="badge text-bg-success ms-1" title="Active controller">controller</span>
+                <span *ngIf="broker.activeController" class="badge tag-badge ms-1" title="Active controller">Controller</span>
               </th>
               <td class="text-nowrap">{{ formatDiskUsage(broker) }}</td>
               <td>{{ broker.inSyncReplicaCount }}</td>

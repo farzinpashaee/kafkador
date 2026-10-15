@@ -89,7 +89,7 @@
         @for (topic of pagedTopics; track topic.name) {
           <tr>
             <th scope="row" class="cursor-pointer text-nowrap" routerLink="/topic/{{topic.name}}">
-              {{topic.name}}<span *ngIf="topic.internal" class="badge text-bg-secondary fw-normal ms-2">Internal</span>
+              {{topic.name}}<span *ngIf="topic.internal" class="badge tag-badge ms-2">Internal</span>
             </th>
             <td routerLink="/topic/{{topic.name}}" class="cursor-pointer">{{topic.partitionCount}}</td>
             <td routerLink="/topic/{{topic.name}}" class="cursor-pointer">{{topic.outOfSyncReplicaCount}}</td>

@@ -1,0 +1,9 @@
+@use '../abstracts/variables' as vars;
+
+// Dark green text on the light green primary buttons, in every state.
+.btn-primary {
+  --bs-btn-color: #{vars.$primary-button-text};
+  --bs-btn-hover-color: #{vars.$primary-button-text};
+  --bs-btn-active-color: #{vars.$primary-button-text};
+  --bs-btn-disabled-color: #{vars.$primary-button-text};
+}
