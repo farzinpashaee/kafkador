@@ -64,6 +64,16 @@ public class KsqlDbServiceImp implements KsqlDbService {
         return config;
     }
 
+    @Override
+    public boolean isConfigured(String clusterId) {
+        try {
+            kafkadorConfigService.get(CONFIG_KEY, clusterId);
+            return true;
+        } catch (ConfigNotFoundException e) {
+            return false;
+        }
+    }
+
     /**
      * Returns the configured URL, or — if none is saved yet — probes the cluster's own
      * host on the default ksqlDB port and, if a server answers there, persists that as

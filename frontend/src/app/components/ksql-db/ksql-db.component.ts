@@ -1,7 +1,8 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, ParamMap, RouterLink } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { ApiService, BookmarkService, CommonService, LocalStorageService } from '../../services';
 import { BookmarkEntityType, GenericResponse, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery, Error,
@@ -108,6 +109,10 @@ export class KsqlDBComponent implements OnInit {
 
   private bookmarkService = inject(BookmarkService);
   private localStorageService = inject(LocalStorageService);
+  private route = inject(ActivatedRoute);
+  private destroyRef = inject(DestroyRef);
+  /** The tab shown when the tabs first render. */
+  initialTab: KsqlTab = 'streams';
   /** Bookmarked stream and table names and query IDs, by tab. */
   readonly bookmarks = {
     streams: this.bookmarkService.bookmarks('KSQL_STREAM'),
@@ -254,7 +259,20 @@ export class KsqlDBComponent implements OnInit {
     for (const tab of Object.keys(BOOKMARK_TYPES) as KsqlTab[]) {
       this.bookmarkedOnly[tab] = this.localStorageService.getItem<boolean>(bookmarkedOnlyStorageKey(tab)) ?? false;
     }
+    // A main-search result links here with ?tab=streams|tables&q=NAME, also while this page is already open.
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => this.applyQueryParams(params));
     this.getConfig();
+  }
+
+  /** Opens the tab named in ?tab= and searches it for ?q=. */
+  applyQueryParams(params: ParamMap): void {
+    const tab = params.get('tab') as KsqlTab | null;
+    if (!tab || !(tab in BOOKMARK_TYPES)) return;
+    const term = params.get('q');
+    if (term !== null) this.setSearchTerm(tab, term);
+    // Before the tabs render, the bindings pick the first one shown; once Bootstrap is managing them, switch like a click would.
+    const button = document.getElementById(`${tab}-tab`);
+    if (button) button.click(); else this.initialTab = tab;
   }
 
   getConfig() {

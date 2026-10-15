@@ -18,6 +18,8 @@ import java.util.List;
 public interface KsqlDbService {
 
     KsqlDbConfigDto getConfig(String clusterId);
+    /** Whether a ksqlDB URL is saved for the cluster; unlike getConfig, never probes for a server. */
+    boolean isConfigured(String clusterId);
     KsqlDbConfigDto saveConfig(String url, String clusterId);
     KsqlServerInfoDto getServerInfo(String clusterId) throws ConfigNotFoundException, KsqlDbApiException;
     List<KsqlStreamDto> getStreams(String clusterId) throws ConfigNotFoundException, KsqlDbApiException;

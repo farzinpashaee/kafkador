@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpResponse } from '@angular/common/http';
-import { provideRouter } from '@angular/router';
+import { convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
 import { KsqlDBComponent } from './ksql-db.component';
@@ -258,6 +258,37 @@ describe('KsqlDBComponent', () => {
     expect(apiServiceSpy.dropKsqlDbSource).toHaveBeenCalledWith('streams', 'PAYMENTS', true);
     expect(apiServiceSpy.removeBookmark).toHaveBeenCalledWith({ entityType: 'KSQL_STREAM', entityId: 'PAYMENTS' });
     expect(component.successMessage).toContain('was dropped');
+  });
+
+  it('opens on the tab a search result links to, searching for it', () => {
+    // As on arrival from the main search: the tabs haven't rendered yet.
+    component.flags.set('dataLoading', true);
+    fixture.detectChanges();
+    component.applyQueryParams(convertToParamMap({ tab: 'tables', q: 'ORDER_TOTALS' }));
+    component.flags.set('dataLoading', false);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('#tables')!.classList).toContain('active');
+    expect(element.querySelector('#streams')!.classList).not.toContain('active');
+    expect(component.searchTerms.tables).toBe('ORDER_TOTALS');
+    expect(component.filteredTables.map(t => t.name)).toEqual(['ORDER_TOTALS']);
+  });
+
+  it('switches tab when a search result is followed while the page is open', () => {
+    const queriesTab = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('#queries-tab')!;
+    spyOn(queriesTab, 'click');
+
+    component.applyQueryParams(convertToParamMap({ tab: 'queries', q: 'CTAS' }));
+
+    expect(queriesTab.click).toHaveBeenCalled();
+    expect(component.searchTerms.queries).toBe('CTAS');
+  });
+
+  it('ignores links without a known tab', () => {
+    component.applyQueryParams(convertToParamMap({ tab: 'connectors', q: 'x' }));
+    expect(component.initialTab).toBe('streams');
+    expect(component.searchTerms.streams).toBe('');
   });
 
   it('goes back to the first page when the search changes', () => {

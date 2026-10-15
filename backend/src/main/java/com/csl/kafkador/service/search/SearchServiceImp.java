@@ -4,11 +4,14 @@ import com.csl.kafkador.domain.dto.SearchResult;
 import com.csl.kafkador.service.ConnectionService;
 import com.csl.kafkador.service.ConsumerService;
 import com.csl.kafkador.service.TopicService;
+import com.csl.kafkador.service.ksqldb.KsqlDbService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,6 +26,7 @@ public class SearchServiceImp implements SearchService {
     private final ConnectionService connectionService;
     private final TopicService topicService;
     private final ConsumerService consumerService;
+    private final KsqlDbService ksqlDbService;
 
     private List<SearchResult> basePages;
 
@@ -52,8 +56,47 @@ public class SearchServiceImp implements SearchService {
 
         result.addAll(searchTopics(query));
         result.addAll(searchConsumerGroups(query));
+        result.addAll(searchKsqlSources(query));
 
         return result;
+    }
+
+    /**
+     * ksqlDB streams and tables whose name or topic matches, linking to their tab on the ksqlDB page. Only asks ksqlDB
+     * when a URL is saved, so a cluster without one isn't probed on every keystroke; if streams can't be listed,
+     * tables aren't tried, so an unreachable server costs one timeout rather than two.
+     */
+    List<SearchResult> searchKsqlSources(String query) {
+        try {
+            String clusterId = connectionService.getActiveConnection().getClusterId();
+            if (!ksqlDbService.isConfigured(clusterId)) return List.of();
+            String term = query.toLowerCase();
+            List<SearchResult> results = new ArrayList<>();
+            ksqlDbService.getStreams(clusterId).stream()
+                    .filter(s -> matches(term, s.getName(), s.getTopic()))
+                    .limit(MAX_DYNAMIC_RESULTS)
+                    .map(s -> ksqlResult(s.getName(), s.getTopic(), "streams", "ksqlDB stream", "bi bi-water"))
+                    .forEach(results::add);
+            ksqlDbService.getTables(clusterId).stream()
+                    .filter(t -> matches(term, t.getName(), t.getTopic()))
+                    .limit(MAX_DYNAMIC_RESULTS)
+                    .map(t -> ksqlResult(t.getName(), t.getTopic(), "tables", "ksqlDB table", "bi bi-table"))
+                    .forEach(results::add);
+            return results;
+        } catch (Exception e) {
+            log.debug("Skipping ksqlDB search results: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    private static boolean matches(String term, String name, String topic) {
+        return (name != null && name.toLowerCase().contains(term)) || (topic != null && topic.toLowerCase().contains(term));
+    }
+
+    private static SearchResult ksqlResult(String name, String topic, String tab, String kind, String icon) {
+        String route = "/ksqldb?tab=" + tab + "&q=" + URLEncoder.encode(name, StandardCharsets.UTF_8);
+        String description = topic == null ? kind : kind + " · topic " + topic;
+        return new SearchResult(name, name, route, description, icon);
     }
 
     /**

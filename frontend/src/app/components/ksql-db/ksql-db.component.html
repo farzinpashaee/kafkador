@@ -164,30 +164,30 @@
   <div *ngIf="!flags.get('dataLoading')">
     <ul class="nav nav-tabs" id="ksqlDbTabs" role="tablist">
       <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="streams-tab" data-bs-toggle="tab"
+        <button class="nav-link" [class.active]="initialTab === 'streams'" id="streams-tab" data-bs-toggle="tab"
                 data-bs-target="#streams" type="button" role="tab"
-                aria-controls="streams" aria-selected="true">
+                aria-controls="streams" [attr.aria-selected]="initialTab === 'streams'">
           Streams
         </button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tables-tab" data-bs-toggle="tab"
+        <button class="nav-link" [class.active]="initialTab === 'tables'" id="tables-tab" data-bs-toggle="tab"
                 data-bs-target="#tables" type="button" role="tab"
-                aria-controls="tables" aria-selected="false">
+                aria-controls="tables" [attr.aria-selected]="initialTab === 'tables'">
           Tables
         </button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="queries-tab" data-bs-toggle="tab"
+        <button class="nav-link" [class.active]="initialTab === 'queries'" id="queries-tab" data-bs-toggle="tab"
                 data-bs-target="#queries" type="button" role="tab"
-                aria-controls="queries" aria-selected="false">
+                aria-controls="queries" [attr.aria-selected]="initialTab === 'queries'">
           Persistent Queries
         </button>
       </li>
     </ul>
 
     <div class="tab-content border border-top-0 p-3" id="ksqlDbTabsContent">
-      <div class="tab-pane fade show active" id="streams" role="tabpanel" aria-labelledby="streams-tab" tabindex="0">
+      <div class="tab-pane fade" [class.show]="initialTab === 'streams'" [class.active]="initialTab === 'streams'" id="streams" role="tabpanel" aria-labelledby="streams-tab" tabindex="0">
         <ng-container *ngTemplateOutlet="toolbar; context: { tab: 'streams', facets: sourceFacets, noun: 'streams', rows: filteredStreams.length }"></ng-container>
         <div class="table-responsive mt-2">
           <table class="table">
@@ -227,7 +227,7 @@
         </div>
       </div>
 
-      <div class="tab-pane fade" id="tables" role="tabpanel" aria-labelledby="tables-tab" tabindex="0">
+      <div class="tab-pane fade" [class.show]="initialTab === 'tables'" [class.active]="initialTab === 'tables'" id="tables" role="tabpanel" aria-labelledby="tables-tab" tabindex="0">
         <ng-container *ngTemplateOutlet="toolbar; context: { tab: 'tables', facets: sourceFacets, noun: 'tables', rows: filteredTables.length }"></ng-container>
         <div class="table-responsive mt-2">
           <table class="table">
@@ -267,7 +267,7 @@
         </div>
       </div>
 
-      <div class="tab-pane fade" id="queries" role="tabpanel" aria-labelledby="queries-tab" tabindex="0">
+      <div class="tab-pane fade" [class.show]="initialTab === 'queries'" [class.active]="initialTab === 'queries'" id="queries" role="tabpanel" aria-labelledby="queries-tab" tabindex="0">
         <ng-container *ngTemplateOutlet="toolbar; context: { tab: 'queries', facets: queryFacets, noun: 'queries', rows: filteredQueries.length }"></ng-container>
         <div class="table-responsive mt-2">
           <table class="table">
