@@ -62,6 +62,21 @@ describe('AccessControlComponent', () => {
     expect(component.errors.get('createAclBinding')?.message).toContain('Could not parse principal');
   });
 
+  it('chooses the pattern and permission type with switch buttons on one row', async () => {
+    const element = fixture.nativeElement as HTMLElement;
+    const prefixed = element.querySelector<HTMLInputElement>('#aclPatternTypePrefixed')!;
+    const deny = element.querySelector<HTMLInputElement>('#aclPermissionTypeDeny')!;
+    expect(prefixed.closest('.row')).toBe(deny.closest('.row'));
+
+    prefixed.click();
+    deny.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.newBinding.patternType).toBe('PREFIXED');
+    expect(component.newBinding.permissionType).toBe('DENY');
+  });
+
   it('exports the listed bindings', () => {
     const binding = { resourceType: 'TOPIC', resourceName: 'Events', patternType: 'LITERAL', principal: 'User:*',
       host: '*', operation: 'ALL', permissionType: 'DENY' };

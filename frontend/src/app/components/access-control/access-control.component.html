@@ -123,12 +123,29 @@
           <label for="aclResourceName" class="form-label">Resource Name:</label>
           <input required type="text" class="form-control" id="aclResourceName" placeholder="e.g. MyTopicName" [(ngModel)]="newBinding.resourceName">
         </div>
-        <div class="mb-3">
-          <label for="aclPatternType" class="form-label">Pattern Type:</label>
-          <select required class="form-select" id="aclPatternType" [(ngModel)]="newBinding.patternType">
-            <option value="LITERAL">LITERAL</option>
-            <option value="PREFIXED">PREFIXED</option>
-          </select>
+        <div class="row g-3 mb-3">
+          <div class="col-12 col-sm-6">
+            <span class="form-label d-block" id="aclPatternTypeLabel">Pattern Type:</span>
+            <div class="btn-group w-100" role="group" aria-labelledby="aclPatternTypeLabel">
+              <input type="radio" class="btn-check" name="aclPatternType" id="aclPatternTypeLiteral" value="LITERAL"
+                     [(ngModel)]="newBinding.patternType">
+              <label class="btn btn-outline-secondary" for="aclPatternTypeLiteral">LITERAL</label>
+              <input type="radio" class="btn-check" name="aclPatternType" id="aclPatternTypePrefixed" value="PREFIXED"
+                     [(ngModel)]="newBinding.patternType">
+              <label class="btn btn-outline-secondary" for="aclPatternTypePrefixed">PREFIXED</label>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6">
+            <span class="form-label d-block" id="aclPermissionTypeLabel">Permission Type:</span>
+            <div class="btn-group w-100" role="group" aria-labelledby="aclPermissionTypeLabel">
+              <input type="radio" class="btn-check" name="aclPermissionType" id="aclPermissionTypeAllow" value="ALLOW"
+                     [(ngModel)]="newBinding.permissionType">
+              <label class="btn btn-outline-secondary" for="aclPermissionTypeAllow">ALLOW</label>
+              <input type="radio" class="btn-check" name="aclPermissionType" id="aclPermissionTypeDeny" value="DENY"
+                     [(ngModel)]="newBinding.permissionType">
+              <label class="btn btn-outline-secondary" for="aclPermissionTypeDeny">DENY</label>
+            </div>
+          </div>
         </div>
         <div class="mb-3">
           <label for="aclPrincipal" class="form-label">Principal:</label>
@@ -154,13 +171,6 @@
             <option value="DESCRIBE_CONFIGS">DESCRIBE_CONFIGS</option>
             <option value="ALTER_CONFIGS">ALTER_CONFIGS</option>
             <option value="IDEMPOTENT_WRITE">IDEMPOTENT_WRITE</option>
-          </select>
-        </div>
-        <div class="mb-3">
-          <label for="aclPermissionType" class="form-label">Permission Type:</label>
-          <select required class="form-select" id="aclPermissionType" [(ngModel)]="newBinding.permissionType">
-            <option value="ALLOW">ALLOW</option>
-            <option value="DENY">DENY</option>
           </select>
         </div>
 
