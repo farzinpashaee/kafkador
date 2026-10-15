@@ -101,7 +101,7 @@ public class RestExceptionController {
     }
 
     @ExceptionHandler({InvalidTopicConfigException.class, InvalidRecordRequestException.class, InvalidAclBindingException.class,
-            InvalidClusterSecurityException.class})
+            InvalidClusterSecurityException.class, KsqlStatementException.class})
     public ResponseEntity<GenericResponse<Void>> handleInvalidRequest(Exception ex) {
         return new GenericResponse.Builder<Void>()
                 .code(String.valueOf(HttpStatus.BAD_REQUEST.value()))

@@ -3,6 +3,7 @@ import { HttpClient, HttpParams, HttpErrorResponse,HttpResponse   } from '@angul
 import { Observable } from 'rxjs';
 import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Alert, Topic, TopicCreateRequest, SearchResult, ConsumerGroup, ConsumerGroupDetails, TopicConsumerGroup, TopicRecordSearchRequest, TopicRecordSearchResult, TopicRecordProduceRequest, TopicRecordProduceResult, TopicRecord, RecordSerde, RecordFilter, Bookmark, BookmarkEntityType, ClusterCredentials, ClusterSecurityConfig, GenericResponse,
   SchemaRegistry, SchemaRegistryConfig, Chart, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery,
+  KsqlSourceKind, KsqlStatementRequest, KsqlStatementResult, KsqlSourceDefinition,
   AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest,
   SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, SchemaLookupResult,
   AiConfig, AiChatResponse, AiChatSession, SessionConfig, DatabaseSetupStatus, DatabaseCredentials, EntityMetrics } from '../models';
@@ -250,6 +251,27 @@ export class ApiService {
   public terminateKsqlDbQuery(id:string): Observable<HttpResponse<void>> {
     return this.http.post<void>(`${ApiService.ApiBaseUrl}/ksqldb/queries/${id}/terminate`,null,
       { withCredentials: true, observe: 'response' });
+  }
+
+  public getKsqlDbSource(kind: KsqlSourceKind, name: string): Observable<GenericResponse<KsqlSourceDefinition>> {
+    return this.http.get<GenericResponse<KsqlSourceDefinition>>(
+      `${ApiService.ApiBaseUrl}/ksqldb/${kind}/${encodeURIComponent(name)}`, { withCredentials: true });
+  }
+
+  public createKsqlDbSource(kind: KsqlSourceKind, request: KsqlStatementRequest): Observable<GenericResponse<KsqlStatementResult>> {
+    return this.http.post<GenericResponse<KsqlStatementResult>>(
+      `${ApiService.ApiBaseUrl}/ksqldb/${kind}`, request, { withCredentials: true });
+  }
+
+  public updateKsqlDbSource(kind: KsqlSourceKind, name: string, request: KsqlStatementRequest): Observable<GenericResponse<KsqlStatementResult>> {
+    return this.http.put<GenericResponse<KsqlStatementResult>>(
+      `${ApiService.ApiBaseUrl}/ksqldb/${kind}/${encodeURIComponent(name)}`, request, { withCredentials: true });
+  }
+
+  public dropKsqlDbSource(kind: KsqlSourceKind, name: string, deleteTopic: boolean): Observable<GenericResponse<KsqlStatementResult>> {
+    return this.http.delete<GenericResponse<KsqlStatementResult>>(
+      `${ApiService.ApiBaseUrl}/ksqldb/${kind}/${encodeURIComponent(name)}`,
+      { withCredentials: true, params: { deleteTopic } });
   }
 
   public search(query:string): Observable<GenericResponse<SearchResult[]>> {

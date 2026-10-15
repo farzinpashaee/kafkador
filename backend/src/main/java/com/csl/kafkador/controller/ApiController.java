@@ -14,6 +14,7 @@ import com.csl.kafkador.service.connect.KafkaConnectService;
 import com.csl.kafkador.service.ksqldb.KsqlDbService;
 import com.csl.kafkador.service.registry.SchemaRegistryService;
 import com.csl.kafkador.service.search.SearchService;
+import com.csl.kafkador.util.KsqlStatements;
 import com.csl.kafkador.util.MetricEnum;
 import com.csl.kafkador.util.TimeUnitEnum;
 import jakarta.servlet.http.HttpSession;
@@ -81,9 +82,7 @@ public class ApiController {
     }
 
     @GetMapping("/cluster")
-    public Respo
-
-    nseEntity<GenericResponse<ClusterDto>> getCluster() throws KafkaAdminApiException, ClusterNotFoundException {
+    public ResponseEntity<GenericResponse<ClusterDto>> getCluster() throws KafkaAdminApiException, ClusterNotFoundException {
         ClusterService clusterService = (ClusterService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CLUSTER));
         ConnectionDto connection = connectionService.getActiveConnection();
@@ -595,6 +594,56 @@ public class ApiController {
         return new GenericResponse.Builder<List<KsqlQueryDto>>()
                 .data(ksqlDbService.getQueries(connection.getClusterId()))
                 .success(HttpStatus.OK);
+    }
+
+    @GetMapping("/ksqldb/{kind:streams|tables}/{name}")
+    public ResponseEntity<GenericResponse<KsqlSourceDefinitionDto>> getKsqlDbSource(@PathVariable String kind, @PathVariable @NotBlank String name)
+            throws ConfigNotFoundException, KsqlDbApiException, KsqlStatementException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<KsqlSourceDefinitionDto>()
+                .data(ksqlDbService().getSourceDefinition(sourceType(kind), name, connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @PostMapping("/ksqldb/{kind:streams|tables}")
+    public ResponseEntity<GenericResponse<KsqlStatementResultDto>> createKsqlDbSource(@PathVariable String kind,
+                                                                                      @Valid @RequestBody KsqlStatementRequestDto request)
+            throws ConfigNotFoundException, KsqlDbApiException, KsqlStatementException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<KsqlStatementResultDto>()
+                .data(ksqlDbService().createSource(sourceType(kind), request, connection.getClusterId()))
+                .success(HttpStatus.CREATED);
+    }
+
+    @PutMapping("/ksqldb/{kind:streams|tables}/{name}")
+    public ResponseEntity<GenericResponse<KsqlStatementResultDto>> updateKsqlDbSource(@PathVariable String kind,
+                                                                                      @PathVariable @NotBlank String name,
+                                                                                      @Valid @RequestBody KsqlStatementRequestDto request)
+            throws ConfigNotFoundException, KsqlDbApiException, KsqlStatementException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<KsqlStatementResultDto>()
+                .data(ksqlDbService().updateSource(sourceType(kind), name, request, connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    @DeleteMapping("/ksqldb/{kind:streams|tables}/{name}")
+    public ResponseEntity<GenericResponse<KsqlStatementResultDto>> dropKsqlDbSource(@PathVariable String kind,
+                                                                                    @PathVariable @NotBlank String name,
+                                                                                    @RequestParam(defaultValue = "false") boolean deleteTopic)
+            throws ConfigNotFoundException, KsqlDbApiException, KsqlStatementException {
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<KsqlStatementResultDto>()
+                .data(ksqlDbService().dropSource(sourceType(kind), name, deleteTopic, connection.getClusterId()))
+                .success(HttpStatus.OK);
+    }
+
+    private KsqlDbService ksqlDbService() {
+        return (KsqlDbService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KSQL_DB));
+    }
+
+    private static KsqlStatements.SourceType sourceType(String kind) {
+        return "tables".equals(kind) ? KsqlStatements.SourceType.TABLE : KsqlStatements.SourceType.STREAM;
     }
 
     @PostMapping("/ksqldb/queries/{id}/terminate")

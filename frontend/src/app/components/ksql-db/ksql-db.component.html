@@ -24,6 +24,11 @@
     {{ errors.get('bookmarks')?.message }}
   </div>
 
+  <div *ngIf="successMessage" class="alert alert-success alert-dismissible text-s" role="status">
+    <i class="bi bi-check-circle" aria-hidden="true"></i> {{ successMessage }}
+    <button type="button" class="btn-close" aria-label="Close" (click)="successMessage = undefined"></button>
+  </div>
+
   <div class="row g-4 mb-4" *ngIf="serverInfo">
     <section class="col-12 col-xl-6" aria-labelledby="ksqlServerHeading">
       <h6 id="ksqlServerHeading" class="mb-2">ksqlDB server</h6>
@@ -115,7 +120,24 @@
           </li>
         </ul>
       </div>
+      <button *ngIf="tab !== 'queries'" type="button" class="btn btn-primary" data-bs-toggle="modal"
+              data-bs-target="#sourceEditorModal" (click)="openCreateDialog(tab)">
+        <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>
+        {{ tab === 'streams' ? 'New Stream' : 'New Table' }}
+      </button>
     </div>
+  </ng-template>
+
+  <!-- Edit and delete, for stream and table rows. -->
+  <ng-template #sourceActions let-kind="kind" let-source="source" let-label="label">
+    <button type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Edit {{ label }} {{ source.name }}" title="Edit"
+            data-bs-toggle="modal" data-bs-target="#sourceEditorModal" (click)="openEditDialog(kind, source.name)">
+      <i class="bi bi-pencil-square" aria-hidden="true"></i>
+    </button>
+    <button type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Delete {{ label }} {{ source.name }}" title="Delete"
+            data-bs-toggle="modal" data-bs-target="#dropSourceModal" (click)="openDropDialog(kind, source)">
+      <i class="bi bi-trash3" aria-hidden="true"></i>
+    </button>
   </ng-template>
 
   <ng-template #bookmarkButton let-tab="tab" let-id="id" let-label="label">
@@ -186,7 +208,10 @@
                 <td>{{ stream.keyFormat }}</td>
                 <td>{{ stream.valueFormat }}</td>
                 <td class="text-end">
-                  <ng-container *ngTemplateOutlet="bookmarkButton; context: { tab: 'streams', id: stream.name, label: 'stream' }"></ng-container>
+                  <div class="d-flex justify-content-end gap-2">
+                    <ng-container *ngTemplateOutlet="sourceActions; context: { kind: 'streams', source: stream, label: 'stream' }"></ng-container>
+                    <ng-container *ngTemplateOutlet="bookmarkButton; context: { tab: 'streams', id: stream.name, label: 'stream' }"></ng-container>
+                  </div>
                 </td>
               </tr>
             } @empty {
@@ -223,7 +248,10 @@
                 <td>{{ table.keyFormat }}</td>
                 <td>{{ table.valueFormat }}</td>
                 <td class="text-end">
-                  <ng-container *ngTemplateOutlet="bookmarkButton; context: { tab: 'tables', id: table.name, label: 'table' }"></ng-container>
+                  <div class="d-flex justify-content-end gap-2">
+                    <ng-container *ngTemplateOutlet="sourceActions; context: { kind: 'tables', source: table, label: 'table' }"></ng-container>
+                    <ng-container *ngTemplateOutlet="bookmarkButton; context: { tab: 'tables', id: table.name, label: 'table' }"></ng-container>
+                  </div>
                 </td>
               </tr>
             } @empty {
@@ -306,6 +334,161 @@
             <span class="visually-hidden">Loading...</span>
           </div> Terminating...&nbsp;
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create or change a stream or table -->
+<div class="modal fade" id="sourceEditorModal" tabindex="-1" aria-labelledby="sourceEditorModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content" *ngIf="sourceEditor as editor">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="sourceEditorModalLabel">
+          <ng-container *ngIf="editor.mode === 'create'">{{ editor.kind === 'streams' ? 'New Stream' : 'New Table' }}</ng-container>
+          <ng-container *ngIf="editor.mode === 'edit'">Edit {{ editor.kind === 'streams' ? 'stream' : 'table' }} {{ editor.name }}</ng-container>
+        </h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Fields that write a starting statement; the statement below is what runs. -->
+        <ng-container *ngIf="editor.mode === 'create'">
+          <div class="row g-3 mb-3">
+            <div class="col-12 col-md-6">
+              <label class="form-label text-s" for="ksqlSourceName">Name</label>
+              <input id="ksqlSourceName" class="form-control form-control-sm" [(ngModel)]="createForm.name"
+                     (ngModelChange)="onCreateFormChange()" [placeholder]="editor.kind === 'streams' ? 'MY_STREAM' : 'MY_TABLE'">
+            </div>
+            <div class="col-12 col-md-6">
+              <span class="form-label text-s d-block">Rows come from</span>
+              <div class="btn-group btn-group-sm" role="group" aria-label="Rows come from">
+                <input type="radio" class="btn-check" name="ksqlCreateMode" id="ksqlCreateModeTopic" value="topic"
+                       [(ngModel)]="createForm.mode" (ngModelChange)="onCreateFormChange()">
+                <label class="btn btn-outline-secondary" for="ksqlCreateModeTopic">A topic</label>
+                <input type="radio" class="btn-check" name="ksqlCreateMode" id="ksqlCreateModeQuery" value="query"
+                       [(ngModel)]="createForm.mode" (ngModelChange)="onCreateFormChange()">
+                <label class="btn btn-outline-secondary" for="ksqlCreateModeQuery">A query (AS SELECT)</label>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label text-s" for="ksqlSourceTopic">Topic</label>
+              <input id="ksqlSourceTopic" class="form-control form-control-sm" [(ngModel)]="createForm.topic"
+                     (ngModelChange)="onCreateFormChange()"
+                     [placeholder]="createForm.mode === 'query' ? 'Defaults to the name' : 'Defaults to the name in lower case'">
+            </div>
+            <div class="col-12 col-md-6" *ngIf="createForm.mode === 'query'">
+              <label class="form-label text-s" for="ksqlSourceFrom">Read from</label>
+              <select id="ksqlSourceFrom" class="form-select form-select-sm" [(ngModel)]="createForm.source" (ngModelChange)="onCreateFormChange()">
+                <optgroup label="Streams">
+                  <option *ngFor="let s of streams" [value]="s.name">{{ s.name }}</option>
+                </optgroup>
+                <optgroup label="Tables" *ngIf="tables.length">
+                  <option *ngFor="let t of tables" [value]="t.name">{{ t.name }}</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="col-6 col-md-3" *ngIf="createForm.mode === 'topic'">
+              <label class="form-label text-s" for="ksqlSourceKeyFormat">Key format</label>
+              <select id="ksqlSourceKeyFormat" class="form-select form-select-sm" [(ngModel)]="createForm.keyFormat" (ngModelChange)="onCreateFormChange()">
+                <option *ngFor="let f of keyFormats" [value]="f">{{ f }}</option>
+              </select>
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label text-s" for="ksqlSourceValueFormat">Value format</label>
+              <select id="ksqlSourceValueFormat" class="form-select form-select-sm" [(ngModel)]="createForm.valueFormat" (ngModelChange)="onCreateFormChange()">
+                <option *ngFor="let f of valueFormats" [value]="f">{{ f }}</option>
+              </select>
+            </div>
+            <div class="col-6 col-md-3" *ngIf="createForm.mode === 'topic'">
+              <label class="form-label text-s" for="ksqlSourcePartitions">Partitions</label>
+              <input id="ksqlSourcePartitions" type="number" min="1" class="form-control form-control-sm" [(ngModel)]="createForm.partitions"
+                     (ngModelChange)="onCreateFormChange()" placeholder="Existing topic" title="Set only to have ksqlDB create the topic">
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="editor.mode === 'edit'">
+          <p class="placeholder-glow" *ngIf="flags.get('sourceDefinitionLoading')">
+            <span class="placeholder col-12"></span>
+            <span class="placeholder col-8"></span>
+          </p>
+          <p class="text-s" *ngIf="!flags.get('sourceDefinitionLoading')">
+            ksqlDB replaces a stream or table only with compatible changes, such as adding columns at the end or changing the
+            query's projection or filter. To add a column without restating the definition, use
+            <code>ALTER {{ editor.kind === 'streams' ? 'STREAM' : 'TABLE' }} {{ editor.name }} ADD COLUMN name TYPE;</code>
+          </p>
+          <div *ngIf="editedDefinition?.writeQueries?.length" class="text-s text-color-subtle mb-2">
+            Written by {{ editedDefinition!.writeQueries.join(', ') }}
+          </div>
+        </ng-container>
+
+        <div class="d-flex align-items-end mb-1">
+          <label class="form-label text-s mb-0" for="ksqlStatement">Statement</label>
+          <button *ngIf="editor.mode === 'create' && statementEdited" type="button" class="btn btn-link btn-sm p-0 ms-auto"
+                  (click)="resetStatement()">Rebuild from the fields</button>
+        </div>
+        <app-code-editor inputId="ksqlStatement" [rows]="12" [value]="statement" (valueChange)="onStatementEdited($event)"
+                         placeholder="CREATE STREAM ..."></app-code-editor>
+        <div class="form-text" *ngIf="editor.mode === 'create'">
+          The example columns are placeholders: list your topic's fields and their types. Editing here stops the fields above
+          from rewriting the statement.
+        </div>
+
+        <div class="form-check mt-2" *ngIf="statementStartsQuery">
+          <input class="form-check-input" type="checkbox" id="ksqlFromEarliest" [(ngModel)]="fromEarliest">
+          <label class="form-check-label text-s" for="ksqlFromEarliest">
+            Process the source's existing records too, not only new ones
+          </label>
+        </div>
+
+        <div *ngIf="errors.get('sourceEditor')" class="alert alert-danger text-s mt-3 mb-0 ksql-error" role="alert">
+          {{ errors.get('sourceEditor')?.message }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal" [disabled]="flags.get('saveSourceLoading')">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="saveSource()"
+                [disabled]="flags.get('saveSourceLoading') || flags.get('sourceDefinitionLoading') || !statement.trim()">
+          <span *ngIf="flags.get('saveSourceLoading')" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+          {{ editor.mode === 'create' ? 'Create' : 'Save' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Drop a stream or table -->
+<div class="modal fade" id="dropSourceModal" tabindex="-1" aria-labelledby="dropSourceModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" *ngIf="droppedSource as dropped">
+      <div class="modal-body">
+        <h6 class="text-danger" id="dropSourceModalLabel">
+          <i class="bi bi-trash3" aria-hidden="true"></i> &nbsp;Delete {{ dropped.kind === 'streams' ? 'stream' : 'table' }}
+        </h6>
+        <p class="mb-2">Are you sure you want to delete '{{ dropped.name }}'? This cannot be undone.</p>
+        <div *ngIf="droppedDefinition?.readQueries?.length" class="alert alert-warning text-s p-2" role="note">
+          Read by {{ droppedDefinition!.readQueries.join(', ') }}. ksqlDB won't delete it until those queries are
+          terminated on the Persistent Queries tab.
+        </div>
+        <div *ngIf="droppedDefinition?.writeQueries?.length" class="text-s text-color-subtle mb-2">
+          Written by {{ droppedDefinition!.writeQueries.join(', ') }}, which may need terminating first.
+        </div>
+        <div class="form-check" *ngIf="dropped.topic">
+          <input class="form-check-input" type="checkbox" id="dropDeleteTopic" [(ngModel)]="dropDeleteTopic">
+          <label class="form-check-label text-s" for="dropDeleteTopic">
+            Also delete the Kafka topic <code>{{ dropped.topic }}</code> and its records
+          </label>
+        </div>
+        <div *ngIf="errors.get('dropSource')" class="alert alert-danger text-s mt-3 mb-0 ksql-error" role="alert">
+          {{ errors.get('dropSource')?.message }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal" [disabled]="flags.get('dropSourceLoading')">Cancel</button>
+        <button type="button" class="btn btn-danger" (click)="dropSource()" [disabled]="flags.get('dropSourceLoading')">
+          <span *ngIf="flags.get('dropSourceLoading')" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+          Delete
+        </button>
       </div>
     </div>
   </div>

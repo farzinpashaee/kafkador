@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpResponse } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 import { KsqlDBComponent } from './ksql-db.component';
 import { ApiService, CommonService, LocalStorageService } from '../../services';
@@ -34,7 +34,8 @@ describe('KsqlDBComponent', () => {
     storage = new Map();
     apiServiceSpy = jasmine.createSpyObj('ApiService',
       ['getKsqlDbConfig', 'getKsqlDbInfo', 'getKsqlDbStreams', 'getKsqlDbTables', 'getKsqlDbQueries', 'terminateKsqlDbQuery',
-        'getBookmarks', 'addBookmark', 'removeBookmark']);
+        'getBookmarks', 'addBookmark', 'removeBookmark',
+        'getKsqlDbSource', 'createKsqlDbSource', 'updateKsqlDbSource', 'dropKsqlDbSource']);
     apiServiceSpy.getBookmarks.and.callFake((type: string) => of({
       data: type === 'KSQL_STREAM' ? [{ entityType: 'KSQL_STREAM', entityId: 'PAYMENTS' }]
         : type === 'KSQL_QUERY' ? [{ entityType: 'KSQL_QUERY', entityId: 'CTAS_TOTALS_3' }] : []
@@ -52,7 +53,7 @@ describe('KsqlDBComponent', () => {
       providers: [
         provideRouter([]),
         { provide: ApiService, useValue: apiServiceSpy },
-        { provide: CommonService, useValue: new CommonService() },
+        { provide: CommonService, useValue: Object.assign(new CommonService(), { hideModal: () => {} }) },
         {
           provide: LocalStorageService,
           useValue: { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: unknown) => storage.set(key, value) }
@@ -168,6 +169,95 @@ describe('KsqlDBComponent', () => {
     component.clearFilters('streams');
     expect(component.filteredStreams.length).toBe(3);
     expect(storage.get('ksqldb.streams.bookmarkedOnly')).toBeFalse();
+  });
+
+  it('offers New Stream and New Table but nothing to create on the queries tab', () => {
+    const element = fixture.nativeElement as HTMLElement;
+    const buttonsIn = (tab: string) => Array.from(element.querySelectorAll(`#${tab} button`)).map(b => b.textContent?.trim());
+    expect(buttonsIn('streams')).toContain('New Stream');
+    expect(buttonsIn('tables')).toContain('New Table');
+    expect(buttonsIn('queries').some(text => text?.startsWith('New'))).toBeFalse();
+    expect(element.querySelectorAll('#streams [aria-label^="Edit stream"]').length).toBe(3);
+    expect(element.querySelectorAll('#tables [aria-label^="Delete table"]').length).toBe(1);
+  });
+
+  it('creates a stream from the generated statement and refreshes the lists', () => {
+    apiServiceSpy.createKsqlDbSource.and.returnValue(of({ data: { status: 'SUCCESS', message: 'Stream created' } } as any));
+    component.openCreateDialog('streams');
+    component.createForm.name = 'NEW_ORDERS';
+    component.onCreateFormChange();
+    expect(component.statement).toContain('CREATE STREAM NEW_ORDERS');
+
+    component.saveSource();
+
+    expect(apiServiceSpy.createKsqlDbSource).toHaveBeenCalledWith('streams',
+      { statement: jasmine.stringContaining('CREATE STREAM NEW_ORDERS') as any, fromEarliest: false });
+    expect(component.successMessage).toBe('Stream created');
+    expect(apiServiceSpy.getKsqlDbStreams).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps a hand-edited statement when a field changes, until rebuilt', () => {
+    component.openCreateDialog('tables');
+    component.onStatementEdited('CREATE TABLE MINE (id INT PRIMARY KEY) WITH (KAFKA_TOPIC=\'m\', VALUE_FORMAT=\'JSON\');');
+    component.createForm.name = 'OTHER';
+    component.onCreateFormChange();
+    expect(component.statement).toContain('MINE');
+
+    component.resetStatement();
+    expect(component.statement).toContain('CREATE TABLE OTHER');
+  });
+
+  it('only sends "from earliest" for statements that start a query', () => {
+    apiServiceSpy.createKsqlDbSource.and.returnValue(of({ data: {} } as any));
+    component.openCreateDialog('streams');
+    component.fromEarliest = true;
+    component.saveSource();
+    expect(apiServiceSpy.createKsqlDbSource.calls.mostRecent().args[1].fromEarliest).toBeFalse();
+
+    component.createForm.mode = 'query';
+    component.onCreateFormChange();
+    component.saveSource();
+    expect(apiServiceSpy.createKsqlDbSource.calls.mostRecent().args[1].fromEarliest).toBeTrue();
+  });
+
+  it('shows ksqlDB\'s reason when it rejects the statement and keeps the dialog open', () => {
+    apiServiceSpy.createKsqlDbSource.and.returnValue(throwError(() => ({ error: { error: { code: '400', message: 'line 1:8: Syntax error' } } })));
+    component.openCreateDialog('streams');
+    component.saveSource();
+    expect(component.errors.get('sourceEditor')?.message).toBe('line 1:8: Syntax error');
+    expect(component.sourceEditor).toBeDefined();
+    expect(component.successMessage).toBeUndefined();
+  });
+
+  it('edits a source starting from its statement as CREATE OR REPLACE', () => {
+    apiServiceSpy.getKsqlDbSource.and.returnValue(of({ data: {
+      name: 'PAYMENTS', statement: "CREATE STREAM PAYMENTS (ID INT KEY) WITH (KAFKA_TOPIC='payments');", readQueries: [], writeQueries: []
+    } } as any));
+    apiServiceSpy.updateKsqlDbSource.and.returnValue(of({ data: { message: 'Stream updated' } } as any));
+
+    component.openEditDialog('streams', 'PAYMENTS');
+    expect(component.statement).toBe("CREATE OR REPLACE STREAM PAYMENTS (ID INT KEY) WITH (KAFKA_TOPIC='payments');");
+
+    component.saveSource();
+    expect(apiServiceSpy.updateKsqlDbSource).toHaveBeenCalledWith('streams', 'PAYMENTS', jasmine.objectContaining({
+      statement: "CREATE OR REPLACE STREAM PAYMENTS (ID INT KEY) WITH (KAFKA_TOPIC='payments');"
+    }));
+    expect(component.successMessage).toBe('Stream updated');
+  });
+
+  it('drops a source, optionally with its topic, and removes its bookmark', () => {
+    apiServiceSpy.getKsqlDbSource.and.returnValue(of({ data: { name: 'PAYMENTS', readQueries: ['CTAS_X_1'], writeQueries: [] } } as any));
+    apiServiceSpy.dropKsqlDbSource.and.returnValue(of({ data: { message: 'Source `PAYMENTS` (topic: payments) was dropped.' } } as any));
+    expect(component.isBookmarked('streams', 'PAYMENTS')).toBeTrue();
+
+    component.openDropDialog('streams', streams[2]);
+    expect(component.droppedDefinition?.readQueries).toEqual(['CTAS_X_1']);
+    component.dropDeleteTopic = true;
+    component.dropSource();
+
+    expect(apiServiceSpy.dropKsqlDbSource).toHaveBeenCalledWith('streams', 'PAYMENTS', true);
+    expect(apiServiceSpy.removeBookmark).toHaveBeenCalledWith({ entityType: 'KSQL_STREAM', entityId: 'PAYMENTS' });
+    expect(component.successMessage).toContain('was dropped');
   });
 
   it('goes back to the first page when the search changes', () => {

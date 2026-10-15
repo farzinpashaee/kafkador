@@ -1,0 +1,4 @@
+// ksqlDB error messages often span lines (a statement and the reason it failed).
+.ksql-error {
+  white-space: pre-wrap;
+}

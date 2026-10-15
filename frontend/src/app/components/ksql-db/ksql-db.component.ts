@@ -4,8 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { ApiService, BookmarkService, CommonService, LocalStorageService } from '../../services';
-import { BookmarkEntityType, GenericResponse, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery, Error } from '../../models';
+import { BookmarkEntityType, GenericResponse, KsqlDbConfig, KsqlServerInfo, KsqlStream, KsqlTable, KsqlQuery, Error,
+  KsqlSourceDefinition, KsqlSourceKind, KsqlStatementRequest } from '../../models';
 import { PaginationComponent } from '../pagination/pagination.component';
+import { CodeEditorComponent } from '../code-editor/code-editor.component';
+import { KSQL_KEY_FORMATS, KSQL_VALUE_FORMATS, KsqlCreateForm, buildCreateStatement, isAsSelect, toReplaceStatement } from './ksql-statement-template';
 import { EXPORT_FORMATS, ExportField, ExportFormat, buildExport, downloadExport } from '../../services/table-export';
 
 export type KsqlTab = 'streams' | 'tables' | 'queries';
@@ -58,7 +61,7 @@ const QUERY_EXPORT_FIELDS: ExportField<KsqlQuery>[] = [
 
 @Component({
   selector: 'app-ksql-db',
-  imports: [CommonModule, FormsModule, RouterLink, PaginationComponent],
+  imports: [CommonModule, FormsModule, RouterLink, PaginationComponent, CodeEditorComponent],
   templateUrl: './ksql-db.component.html',
   styleUrl: './ksql-db.component.scss'
 })
@@ -70,6 +73,22 @@ export class KsqlDBComponent implements OnInit {
   tables: KsqlTable[] = [];
   queries: KsqlQuery[] = [];
   terminatedQuery: KsqlQuery = { id: '', queryType: '' };
+
+  readonly keyFormats = KSQL_KEY_FORMATS;
+  readonly valueFormats = KSQL_VALUE_FORMATS;
+  /** The stream or table dialog: creating one, or changing the one named. */
+  sourceEditor?: { mode: 'create' | 'edit'; kind: KsqlSourceKind; name?: string };
+  createForm: KsqlCreateForm = { name: '', mode: 'topic', topic: '', keyFormat: 'KAFKA', valueFormat: 'JSON', partitions: null, source: '' };
+  statement = '';
+  /** Set once the statement is typed in, so changing a field no longer overwrites it. */
+  statementEdited = false;
+  fromEarliest = false;
+  editedDefinition?: KsqlSourceDefinition;
+  droppedSource?: { kind: KsqlSourceKind; name: string; topic?: string };
+  droppedDefinition?: KsqlSourceDefinition;
+  dropDeleteTopic = false;
+  /** What ksqlDB said about the last statement it accepted. */
+  successMessage?: string;
 
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
@@ -315,6 +334,144 @@ export class KsqlDBComponent implements OnInit {
         this.errors.set('terminateQuery', this.commonService.prepareError(res.error.error,'500','Failed to terminate query!'));
         this.flags.set('terminateQueryLoading', false);
       }
+    });
+  }
+
+  // Creating, changing and dropping streams and tables
+
+  /** Opens the dialog for a new stream or table, with a statement built from default fields. */
+  openCreateDialog(kind: KsqlSourceKind): void {
+    this.sourceEditor = { mode: 'create', kind };
+    this.createForm = {
+      name: '', mode: 'topic', topic: '', keyFormat: 'KAFKA', valueFormat: 'JSON', partitions: null,
+      source: this.streams[0]?.name ?? ''
+    };
+    this.statementEdited = false;
+    this.fromEarliest = false;
+    this.errors.delete('sourceEditor');
+    this.statement = buildCreateStatement(kind, this.createForm);
+  }
+
+  /** Opens the dialog to change a stream or table, starting from the statement that created it. */
+  openEditDialog(kind: KsqlSourceKind, name: string): void {
+    this.sourceEditor = { mode: 'edit', kind, name };
+    this.statement = '';
+    this.statementEdited = true;
+    this.fromEarliest = false;
+    this.editedDefinition = undefined;
+    this.errors.delete('sourceEditor');
+    this.flags.set('sourceDefinitionLoading', true);
+    this.apiService.getKsqlDbSource(kind, name).subscribe({
+      next: res => {
+        this.editedDefinition = res.data;
+        this.statement = toReplaceStatement(res.data?.statement ?? '');
+        this.flags.set('sourceDefinitionLoading', false);
+      },
+      error: (res: HttpErrorResponse) => {
+        this.errors.set('sourceEditor', this.commonService.prepareError(res.error?.error, '500', `Failed to load ${name}!`));
+        this.flags.set('sourceDefinitionLoading', false);
+      }
+    });
+  }
+
+  /** A field changed: rebuild the statement, unless it has been edited by hand since. */
+  onCreateFormChange(): void {
+    if (this.sourceEditor?.mode === 'create' && !this.statementEdited) {
+      this.statement = buildCreateStatement(this.sourceEditor.kind, this.createForm);
+    }
+  }
+
+  onStatementEdited(statement: string): void {
+    this.statement = statement;
+    this.statementEdited = true;
+  }
+
+  /** Throws away hand edits and rebuilds the statement from the fields. */
+  resetStatement(): void {
+    if (!this.sourceEditor) return;
+    this.statementEdited = false;
+    this.statement = buildCreateStatement(this.sourceEditor.kind, this.createForm);
+  }
+
+  get statementStartsQuery(): boolean {
+    return isAsSelect(this.statement);
+  }
+
+  saveSource(): void {
+    const editor = this.sourceEditor;
+    if (!editor || !this.statement.trim()) return;
+    const request: KsqlStatementRequest = { statement: this.statement, fromEarliest: this.statementStartsQuery && this.fromEarliest };
+    const call = editor.mode === 'create'
+      ? this.apiService.createKsqlDbSource(editor.kind, request)
+      : this.apiService.updateKsqlDbSource(editor.kind, editor.name!, request);
+    this.errors.delete('sourceEditor');
+    this.flags.set('saveSourceLoading', true);
+    call.subscribe({
+      next: res => {
+        this.flags.set('saveSourceLoading', false);
+        this.commonService.hideModal('sourceEditorModal');
+        this.successMessage = res.data?.message || (editor.mode === 'create' ? 'Created.' : 'Updated.');
+        this.refreshSources();
+      },
+      error: (res: HttpErrorResponse) => {
+        this.errors.set('sourceEditor', this.commonService.prepareError(res.error?.error, '500',
+          editor.mode === 'create' ? 'Failed to create it!' : 'Failed to update it!'));
+        this.flags.set('saveSourceLoading', false);
+      }
+    });
+  }
+
+  /** Opens the delete confirmation and looks up which queries use the source, so the dialog can warn. */
+  openDropDialog(kind: KsqlSourceKind, source: KsqlStream | KsqlTable): void {
+    this.droppedSource = { kind, name: source.name, topic: source.topic };
+    this.dropDeleteTopic = false;
+    this.droppedDefinition = undefined;
+    this.errors.delete('dropSource');
+    this.apiService.getKsqlDbSource(kind, source.name).subscribe({
+      next: res => { if (this.droppedSource?.name === source.name) this.droppedDefinition = res.data; },
+      error: () => {}
+    });
+  }
+
+  dropSource(): void {
+    const dropped = this.droppedSource;
+    if (!dropped) return;
+    this.errors.delete('dropSource');
+    this.flags.set('dropSourceLoading', true);
+    this.apiService.dropKsqlDbSource(dropped.kind, dropped.name, this.dropDeleteTopic).subscribe({
+      next: res => {
+        this.flags.set('dropSourceLoading', false);
+        this.commonService.hideModal('dropSourceModal');
+        if (this.isBookmarked(dropped.kind, dropped.name)) this.toggleBookmark(dropped.kind, dropped.name);
+        this.successMessage = res.data?.message || `Dropped ${dropped.name}.`;
+        this.refreshSources();
+      },
+      error: (res: HttpErrorResponse) => {
+        this.errors.set('dropSource', this.commonService.prepareError(res.error?.error, '500', `Failed to drop ${dropped.name}!`));
+        this.flags.set('dropSourceLoading', false);
+      }
+    });
+  }
+
+  /** Reloads streams, tables and queries in place, keeping the open tab, its page and filters. */
+  refreshSources(): void {
+    this.apiService.getKsqlDbStreams().subscribe({
+      next: res => {
+        this.streams = res.body?.data ?? [];
+        this.streamsPage = Math.min(this.streamsPage, Math.max(1, Math.ceil(this.filteredStreams.length / this.pageSize)));
+      },
+      error: () => {}
+    });
+    this.apiService.getKsqlDbTables().subscribe({
+      next: res => {
+        this.tables = res.body?.data ?? [];
+        this.tablesPage = Math.min(this.tablesPage, Math.max(1, Math.ceil(this.filteredTables.length / this.pageSize)));
+      },
+      error: () => {}
+    });
+    this.apiService.getKsqlDbQueries().subscribe({
+      next: res => { this.queries = res.body?.data ?? []; },
+      error: () => {}
     });
   }
 
