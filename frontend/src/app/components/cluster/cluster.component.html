@@ -137,7 +137,6 @@
               </td>
               <td>
                 <div class="d-flex justify-content-end align-items-center gap-2">
-                  <i class="bi bi-three-dots" aria-hidden="true"></i>
                   <button type="button" class="btn btn-link btn-icon p-0" [attr.aria-pressed]="isBookmarked(broker)"
                           attr.aria-label="Bookmark broker {{broker.id}}" [attr.title]="isBookmarked(broker) ? 'Remove bookmark' : 'Bookmark'"
                           (click)="toggleBookmark(broker); $event.stopPropagation()">
