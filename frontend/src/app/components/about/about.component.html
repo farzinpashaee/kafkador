@@ -1,0 +1,42 @@
+<div class="row">
+  <div class="col-12">
+    <h5>About Kafkador</h5>
+    <p class="text-s">
+      Kafkador is a web console for Apache Kafka and Confluent Platform clusters. It puts a cluster's brokers, topics,
+      consumers, access control and the services around them in one place, so you can see what's going on and change it
+      without the command-line tools.
+    </p>
+  </div>
+</div>
+
+<div class="stat-grid stat-grid-3 mt-2" aria-label="Kafkador details">
+  <div class="stat-tile">
+    <div class="stat-label">Version</div>
+    <div class="stat-value" data-testid="about-version">{{ version }}</div>
+  </div>
+  <div class="stat-tile">
+    <div class="stat-label">Made by</div>
+    <div class="stat-value">Codestreamlab</div>
+  </div>
+  <div class="stat-tile">
+    <div class="stat-label">Website</div>
+    <div class="stat-value">
+      <a class="about-link" [href]="website" target="_blank" rel="noopener">codestreamlab.com <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
+    </div>
+  </div>
+</div>
+
+<h6 class="mt-4 mb-3">What you can do with it</h6>
+<div class="row g-3">
+  <div *ngFor="let feature of features" class="col-12 col-md-6 col-xl-3">
+    <div class="border rounded p-3 h-100">
+      <div class="fw-semibold mb-1"><i class="bi me-1" [ngClass]="feature.icon" aria-hidden="true"></i> {{ feature.title }}</div>
+      <div class="text-s text-color-subtle">{{ feature.text }}</div>
+    </div>
+  </div>
+</div>
+
+<p class="text-s text-color-subtle mt-4">
+  © {{ year }} <a [href]="website" target="_blank" rel="noopener">Codestreamlab</a>.
+  Apache Kafka is a trademark of the Apache Software Foundation; Confluent is a trademark of Confluent, Inc.
+</p>

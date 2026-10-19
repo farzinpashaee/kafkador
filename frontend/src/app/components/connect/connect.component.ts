@@ -8,6 +8,7 @@ import { ApiService, ValidationService, LocalStorageService, CommonService } fro
 import { GenericResponse, Connection, Error, ClusterCredentials, CREDENTIALS_REQUIRED, blankCredentials } from '../../models';
 import { ClusterCredentialsFormComponent } from '../cluster-credentials-form/cluster-credentials-form.component';
 import { environment } from '../../environments/environment';
+import { APP_VERSION, CODESTREAMLAB_URL } from '../../app-info';
 
 @Component({
   selector: 'app-connect',
@@ -23,6 +24,8 @@ export class ConnectComponent  {
   editConnection!: Connection;
   deletedConnection!: Connection;
   baseUrl = environment.baseUrl;
+  readonly version = APP_VERSION;
+  readonly website = CODESTREAMLAB_URL;
   router = inject(Router);
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();

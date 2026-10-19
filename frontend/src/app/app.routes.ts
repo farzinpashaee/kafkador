@@ -21,7 +21,8 @@ export const routes: Routes = [
       { path: 'schema-registry', loadComponent: () => import('./components/schema-registry/schema-registry.component').then(m => m.SchemaRegistryComponent), title: 'Schema Registry', data: { breadcrumb: { label: 'Schema Registry', url: '/schema-registry' } } },
       { path: 'subject/:name', loadComponent: () => import('./components/subject/subject.component').then(m => m.SubjectComponent), title: 'Subject', data: { breadcrumb: { param: 'name' } } },
       { path: 'connection', loadComponent: () => import('./components/connections/connections.component').then(m => m.ConnectionsComponent), title: 'Connections', data: { breadcrumb: { label: 'Connections' } } },
-      { path: 'settings', loadComponent: () => import('./components/settings/settings.component').then(m => m.SettingsComponent), title: 'Settings', data: { breadcrumb: { label: 'Settings' } } }
+      { path: 'settings', loadComponent: () => import('./components/settings/settings.component').then(m => m.SettingsComponent), title: 'Settings', data: { breadcrumb: { label: 'Settings' } } },
+      { path: 'about', loadComponent: () => import('./components/about/about.component').then(m => m.AboutComponent), title: 'About', data: { breadcrumb: { label: 'About' } } }
     ]
   },
   {
