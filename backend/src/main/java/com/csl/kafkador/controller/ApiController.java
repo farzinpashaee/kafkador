@@ -393,6 +393,17 @@ public class ApiController {
                 .success(HttpStatus.CREATED);
     }
 
+    @PutMapping("/acl")
+    public ResponseEntity<GenericResponse<AclBindingDto>> updateAclBinding(@Valid @RequestBody AclBindingUpdateDto update)
+            throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException, InvalidAclBindingException {
+        AclService aclService = (AclService) applicationContext.getBean("AclService");
+        ConnectionDto connection = connectionService.getActiveConnection();
+        AclBindingDto updated = aclService.updateAclBinding(connection.getClusterId(), update.getCurrent(), update.getUpdated());
+        return new GenericResponse.Builder<AclBindingDto>()
+                .data(updated)
+                .success(HttpStatus.OK);
+    }
+
     @DeleteMapping("/acl")
     public ResponseEntity<Void> deleteAclBinding(@Valid @RequestBody AclBindingDto binding)
             throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException, InvalidAclBindingException {

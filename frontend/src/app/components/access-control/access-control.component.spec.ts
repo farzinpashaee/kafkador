@@ -10,7 +10,7 @@ describe('AccessControlComponent', () => {
   let api: jasmine.SpyObj<ApiService>;
 
   beforeEach(async () => {
-    api = jasmine.createSpyObj<ApiService>('ApiService', ['getAclBindings', 'createAclBinding']);
+    api = jasmine.createSpyObj<ApiService>('ApiService', ['getAclBindings', 'createAclBinding', 'updateAclBinding']);
     api.getAclBindings.and.returnValue(of({ body: { data: [] } } as any));
     api.createAclBinding.and.returnValue(of({ body: { data: null } } as any));
 
@@ -100,5 +100,47 @@ describe('AccessControlComponent', () => {
     expect(position(search)).toBeLessThan(position(exportButton));
     expect(position(exportButton)).toBeLessThan(position(create));
     expect(exportButton.parentElement!.classList).toContain('ms-auto');
+  });
+
+  it('edits a binding in place of the original', () => {
+    const original = { resourceType: 'TOPIC', resourceName: 'Events', patternType: 'LITERAL', principal: 'User:*',
+      host: '*', operation: 'ALL', permissionType: 'DENY' };
+    const other = { ...original, resourceName: 'orders' };
+    component.bindings = [original, other];
+    api.updateAclBinding.and.returnValue(of({ body: { data: null } } as any));
+
+    component.openEditDialog(original);
+    expect(component.newBinding).toEqual(original);
+    expect(component.newBinding).not.toBe(original);
+    component.newBinding.permissionType = 'ALLOW';
+    component.saveAclBinding();
+
+    expect(api.updateAclBinding).toHaveBeenCalledWith(original, jasmine.objectContaining({ permissionType: 'ALLOW' }));
+    expect(api.createAclBinding).not.toHaveBeenCalled();
+    expect(component.bindings.map(b => b.permissionType + ' ' + b.resourceName)).toEqual(['ALLOW Events', 'DENY orders']);
+    expect(component.editedBinding).toBeUndefined();
+  });
+
+  it('keeps the original listed when the edit fails', () => {
+    const original = { resourceType: 'TOPIC', resourceName: 'Events', patternType: 'LITERAL', principal: 'User:*',
+      host: '*', operation: 'ALL', permissionType: 'DENY' };
+    component.bindings = [original];
+    api.updateAclBinding.and.returnValue(throwError(() => ({ status: 400,
+      error: { error: { code: '400', message: 'Invalid binding', datetime: '' } } })));
+
+    component.openEditDialog(original);
+    component.saveAclBinding();
+
+    expect(component.bindings).toEqual([original]);
+    expect(component.errors.get('createAclBinding')?.message).toContain('Invalid binding');
+  });
+
+  it('starts a new binding blank after editing one', () => {
+    component.openEditDialog({ resourceType: 'GROUP', resourceName: 'g', patternType: 'LITERAL', principal: 'User:a',
+      host: '*', operation: 'READ', permissionType: 'ALLOW' });
+    component.openCreateDialog();
+
+    expect(component.editedBinding).toBeUndefined();
+    expect(component.newBinding.resourceName).toBe('');
   });
 });

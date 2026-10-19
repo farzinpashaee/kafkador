@@ -43,7 +43,8 @@
           type="button"
           class="btn btn-primary"
           data-bs-toggle="modal"
-          data-bs-target="#createAclBindingModal">
+          data-bs-target="#createAclBindingModal"
+          (click)="openCreateDialog()">
           <i class="bi bi-plus-circle me-1"></i>
           New ACL Binding
         </button>
@@ -79,8 +80,12 @@
                 {{binding.permissionType}}
               </span>
             </td>
-            <td>
-              <button type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Delete ACL binding for {{binding.principal}}"
+            <td class="text-nowrap text-end">
+              <button type="button" class="btn btn-link btn-icon p-0 me-3" attr.aria-label="Edit ACL binding for {{binding.principal}}"
+                      title="Edit" (click)="openEditDialog(binding)" data-bs-toggle="modal" data-bs-target="#createAclBindingModal">
+                <i class="bi bi-pencil-square" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="btn btn-link btn-icon p-0" title="Delete" attr.aria-label="Delete ACL binding for {{binding.principal}}"
                       (click)="openDeleteDialog(binding)" data-bs-toggle="modal" data-bs-target="#deleteAclBindingModal">
                 <i class="bi bi-trash3" aria-hidden="true"></i>
               </button>
@@ -105,10 +110,13 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="createAclBindingModalLabel">New ACL Binding</h1>
+        <h1 class="modal-title fs-5" id="createAclBindingModalLabel">{{ editedBinding ? 'Edit ACL Binding' : 'New ACL Binding' }}</h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
+        <p *ngIf="editedBinding" class="text-s text-color-subtle">
+          Kafka can't change an ACL in place, so saving adds the edited binding and then removes the original.
+        </p>
         <div class="mb-3">
           <label for="aclResourceType" class="form-label">Resource Type:</label>
           <select required class="form-select" id="aclResourceType" [(ngModel)]="newBinding.resourceType">
@@ -181,11 +189,11 @@
       </div>
       <div class="modal-footer">
         <button *ngIf="!flags.get('createAclBindingLoading')" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-        <button *ngIf="!flags.get('createAclBindingLoading')" type="button" class="btn btn-primary" (click)="createAclBinding()">Create Binding</button>
+        <button *ngIf="!flags.get('createAclBindingLoading')" type="button" class="btn btn-primary" (click)="saveAclBinding()">{{ editedBinding ? 'Save Changes' : 'Create Binding' }}</button>
         <div *ngIf="flags.get('createAclBindingLoading')">
           <div class="spinner-border spinner-border-sm" role="status">
             <span class="visually-hidden">Loading...</span>
-          </div> Creating Binding...&nbsp;
+          </div> {{ editedBinding ? 'Saving...' : 'Creating Binding...' }}&nbsp;
         </div>
       </div>
     </div>

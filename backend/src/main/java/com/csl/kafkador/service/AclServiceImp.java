@@ -59,20 +59,7 @@ public class AclServiceImp implements AclService {
     public AclBindingDto createAclBinding(String clusterId, AclBindingDto binding) throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException, InvalidAclBindingException {
         try {
             Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
-            AclBinding aclBinding = new AclBinding(
-                    new ResourcePattern(
-                            ResourceType.valueOf(binding.getResourceType()),
-                            binding.getResourceName(),
-                            PatternType.valueOf(binding.getPatternType())
-                    ),
-                    new AccessControlEntry(
-                            binding.getPrincipal(),
-                            binding.getHost(),
-                            AclOperation.valueOf(binding.getOperation()),
-                            AclPermissionType.valueOf(binding.getPermissionType())
-                    )
-            );
-            admin.createAcls(List.of(aclBinding)).all().get();
+            admin.createAcls(List.of(toAclBinding(binding))).all().get();
             return binding;
         } catch (ConnectionSessionExpiredException e) {
             throw e;
@@ -85,25 +72,63 @@ public class AclServiceImp implements AclService {
     public void deleteAclBinding(String clusterId, AclBindingDto binding) throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException, InvalidAclBindingException {
         try {
             Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
-            AclBindingFilter filter = new AclBindingFilter(
-                    new ResourcePatternFilter(
-                            ResourceType.valueOf(binding.getResourceType()),
-                            binding.getResourceName(),
-                            PatternType.valueOf(binding.getPatternType())
-                    ),
-                    new AccessControlEntryFilter(
-                            binding.getPrincipal(),
-                            binding.getHost(),
-                            AclOperation.valueOf(binding.getOperation()),
-                            AclPermissionType.valueOf(binding.getPermissionType())
-                    )
-            );
-            admin.deleteAcls(List.of(filter)).all().get();
+            admin.deleteAcls(List.of(toAclBinding(binding).toFilter())).all().get();
         } catch (ConnectionSessionExpiredException e) {
             throw e;
         } catch (Exception e) {
             throw translateWriteFailure(e);
         }
+    }
+
+    /**
+     * Kafka can't change an ACL in place, so this adds the edited binding and then removes the old one. Adding first
+     * means the principal is never left without the rule; if the removal fails, the added binding is taken back out so
+     * the cluster stays as it was.
+     */
+    @Override
+    public AclBindingDto updateAclBinding(String clusterId, AclBindingDto current, AclBindingDto updated) throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException, InvalidAclBindingException {
+        try {
+            Admin admin = connectionService.getAdminClient(clusterId).getAdmin();
+            AclBinding before = toAclBinding(current);
+            AclBinding after = toAclBinding(updated);
+            if (before.equals(after)) return updated;
+            boolean existed = admin.describeAcls(after.toFilter()).values().get().contains(after);
+            admin.createAcls(List.of(after)).all().get();
+            try {
+                admin.deleteAcls(List.of(before.toFilter())).all().get();
+            } catch (Exception e) {
+                // Don't take out a binding that was already there before the edit.
+                if (!existed) {
+                    try {
+                        admin.deleteAcls(List.of(after.toFilter())).all().get();
+                    } catch (Exception rollback) {
+                        log.warn("Couldn't remove the edited ACL binding {} after failing to remove {}", after, before, rollback);
+                    }
+                }
+                throw e;
+            }
+            return updated;
+        } catch (ConnectionSessionExpiredException e) {
+            throw e;
+        } catch (Exception e) {
+            throw translateWriteFailure(e);
+        }
+    }
+
+    static AclBinding toAclBinding(AclBindingDto binding) {
+        return new AclBinding(
+                new ResourcePattern(
+                        ResourceType.valueOf(binding.getResourceType()),
+                        binding.getResourceName(),
+                        PatternType.valueOf(binding.getPatternType())
+                ),
+                new AccessControlEntry(
+                        binding.getPrincipal(),
+                        binding.getHost(),
+                        AclOperation.valueOf(binding.getOperation()),
+                        AclPermissionType.valueOf(binding.getPermissionType())
+                )
+        );
     }
 
     /**

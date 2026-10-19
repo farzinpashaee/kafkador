@@ -12,6 +12,7 @@ public interface AclService {
 
     List<AclBindingDto> getAclBindings(String clusterId) throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException;
     AclBindingDto createAclBinding(String clusterId, AclBindingDto binding) throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException, InvalidAclBindingException;
+    AclBindingDto updateAclBinding(String clusterId, AclBindingDto current, AclBindingDto updated) throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException, InvalidAclBindingException;
     void deleteAclBinding(String clusterId, AclBindingDto binding) throws ClusterNotFoundException, KafkaAdminApiException, AuthorizerNotConfiguredException, InvalidAclBindingException;
 
 }

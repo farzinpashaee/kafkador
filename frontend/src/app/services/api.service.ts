@@ -64,6 +64,12 @@ export class ApiService {
       { withCredentials: true ,observe: 'response' });
   }
 
+  /** Replaces {@code current} with {@code updated}; Kafka can't change an ACL in place. */
+  public updateAclBinding(current:AclBinding, updated:AclBinding): Observable<HttpResponse<GenericResponse<AclBinding>>> {
+    return this.http.put<GenericResponse<AclBinding>>(`${ApiService.ApiBaseUrl}/acl`, { current, updated },
+      { withCredentials: true ,observe: 'response' });
+  }
+
   public deleteAclBinding(binding:AclBinding): Observable<HttpResponse<void>> {
     return this.http.delete<void>(`${ApiService.ApiBaseUrl}/acl`,
       { withCredentials: true, observe: 'response', body: binding });

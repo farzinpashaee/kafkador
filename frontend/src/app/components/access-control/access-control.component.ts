@@ -34,6 +34,8 @@ export class AccessControlComponent {
   filteredBindings: AclBinding[] = [];
   newBinding!: AclBinding;
   deletedBinding!: AclBinding;
+  /** The binding the dialog is editing, as it is on the cluster; unset when the dialog creates one. */
+  editedBinding?: AclBinding;
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
   filter = new FormControl('', { nonNullable: true });
@@ -92,20 +94,29 @@ export class AccessControlComponent {
     return buildExport(format, EXPORT_FIELDS, bindings, 'aclBindings', 'aclBinding');
   }
 
+  /** Opens the dialog for a new binding, clearing it if it was last used to edit one. */
+  openCreateDialog() {
+    if (this.editedBinding) {
+      this.editedBinding = undefined;
+      this.newBinding = this.blankBinding();
+    }
+    this.errors.delete('createAclBinding');
+  }
+
+  openEditDialog(binding: AclBinding) {
+    this.editedBinding = binding;
+    this.newBinding = { ...binding };
+    this.errors.delete('createAclBinding');
+  }
+
+  /** Creates the binding in the dialog, or saves it over the one being edited. */
+  saveAclBinding(){
+    if (this.editedBinding) this.updateAclBinding(this.editedBinding);
+    else this.createAclBinding();
+  }
+
   createAclBinding(){
-    const errors = this.validationService.validateRequiredFields(
-      this.newBinding, ['resourceType', 'resourceName', 'patternType', 'principal', 'host', 'operation', 'permissionType']);
-    const principal = this.newBinding.principal?.trim() ?? '';
-    // Kafka principals are "Type:name"; a bare name is the most common mistake, so suggest the User: form.
-    if (!errors.length && !PRINCIPAL_PATTERN.test(principal)) {
-      errors.push(`Principal must be in the form Type:name, e.g. "User:${principal.replace(/:/g, '') || 'alice'}" or "User:*"`);
-    }
-    if (errors.length > 0) {
-      this.errors.set("createAclBinding",{code:'400',message:errors[0],datetime:''});
-      return;
-    } else {
-      this.errors.delete('createAclBinding');
-    }
+    if (!this.validateNewBinding()) return;
     this.flags.set('createAclBindingLoading',true);
     const bindingToCreate = this.newBinding;
     this.apiService.createAclBinding(bindingToCreate).subscribe({
@@ -121,6 +132,48 @@ export class AccessControlComponent {
         this.flags.set('createAclBindingLoading',false);
       }
     });
+  }
+
+  updateAclBinding(current: AclBinding){
+    if (!this.validateNewBinding()) return;
+    this.flags.set('createAclBindingLoading',true);
+    const updated = this.newBinding;
+    this.apiService.updateAclBinding(current, updated).subscribe({
+      next: (res: HttpResponse<GenericResponse<AclBinding>>) => {
+        const saved = res.body?.data ?? updated;
+        // In the old one's place; an identical binding already listed is the same ACL, so it isn't listed twice.
+        this.bindings = this.bindings
+          .filter(b => b === current || !this.isSameBinding(b, saved))
+          .map(b => b === current ? saved : b);
+        this.filteredBindings = this.search(this.filter.value);
+        this.page = Math.min(this.page, Math.max(1, Math.ceil(this.filteredBindings.length / this.pageSize)));
+        this.editedBinding = undefined;
+        this.newBinding = this.blankBinding();
+        this.flags.set('createAclBindingLoading',false);
+        this.commonService.hideModal('createAclBindingModal');
+      },
+      error: (res:HttpErrorResponse) => {
+        this.errors.set("createAclBinding",this.commonService.prepareError(res.error?.error,'500','Failed to update ACL binding!'));
+        this.flags.set('createAclBindingLoading',false);
+      }
+    });
+  }
+
+  /** Checks the dialog's binding, showing the first problem in the dialog. */
+  private validateNewBinding(): boolean {
+    const errors = this.validationService.validateRequiredFields(
+      this.newBinding, ['resourceType', 'resourceName', 'patternType', 'principal', 'host', 'operation', 'permissionType']);
+    const principal = this.newBinding.principal?.trim() ?? '';
+    // Kafka principals are "Type:name"; a bare name is the most common mistake, so suggest the User: form.
+    if (!errors.length && !PRINCIPAL_PATTERN.test(principal)) {
+      errors.push(`Principal must be in the form Type:name, e.g. "User:${principal.replace(/:/g, '') || 'alice'}" or "User:*"`);
+    }
+    if (errors.length > 0) {
+      this.errors.set("createAclBinding",{code:'400',message:errors[0],datetime:''});
+      return false;
+    }
+    this.errors.delete('createAclBinding');
+    return true;
   }
 
   openDeleteDialog(binding: AclBinding) {
