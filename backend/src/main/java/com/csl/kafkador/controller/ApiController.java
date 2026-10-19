@@ -123,9 +123,10 @@ public class ApiController {
     }
 
     @GetMapping("/brokers/{id}/metrics")
-    public ResponseEntity<GenericResponse<EntityMetricsDto>> getBrokerMetrics(@PathVariable @NotBlank String id) throws KafkaAdminApiException {
+    public ResponseEntity<GenericResponse<EntityMetricsDto>> getBrokerMetrics(@PathVariable @NotBlank String id,
+            @RequestParam(defaultValue = "false") boolean refresh) throws KafkaAdminApiException {
         return new GenericResponse.Builder<EntityMetricsDto>()
-                .data(confluentMetricsService.getMetrics(ConfluentMetricsService.Scope.BROKER, id))
+                .data(confluentMetricsService.getMetrics(ConfluentMetricsService.Scope.BROKER, id, refresh))
                 .success(HttpStatus.OK);
     }
 
@@ -317,9 +318,10 @@ public class ApiController {
     }
 
     @GetMapping("/topics/{name}/metrics")
-    public ResponseEntity<GenericResponse<EntityMetricsDto>> getTopicMetrics(@PathVariable @NotBlank String name) throws KafkaAdminApiException {
+    public ResponseEntity<GenericResponse<EntityMetricsDto>> getTopicMetrics(@PathVariable @NotBlank String name,
+            @RequestParam(defaultValue = "false") boolean refresh) throws KafkaAdminApiException {
         return new GenericResponse.Builder<EntityMetricsDto>()
-                .data(confluentMetricsService.getMetrics(ConfluentMetricsService.Scope.TOPIC, name))
+                .data(confluentMetricsService.getMetrics(ConfluentMetricsService.Scope.TOPIC, name, refresh))
                 .success(HttpStatus.OK);
     }
 

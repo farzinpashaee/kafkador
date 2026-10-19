@@ -17,6 +17,8 @@ public class EntityMetricsDto {
     private List<Series> series = new ArrayList<>();
     /** More series matched than are returned. */
     private boolean seriesLimitReached;
+    /** When the metrics topics were read, epoch milliseconds; a read is reused for a short while. */
+    private long readAt;
 
     @Data
     @Accessors(chain = true)

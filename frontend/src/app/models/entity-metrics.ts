@@ -33,4 +33,6 @@ export interface EntityMetrics {
     sources: MetricSource[];
     series: MetricSeries[];
     seriesLimitReached: boolean;
+    /** When the metrics topics were read, epoch milliseconds; a read is reused for a short while. */
+    readAt?: number;
 }

@@ -60,7 +60,7 @@ describe('TopicComponent', () => {
     expect(apiServiceSpy.getTopicMetrics).not.toHaveBeenCalled();
     (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('#metrics-tab')!.click();
     fixture.detectChanges();
-    expect(apiServiceSpy.getTopicMetrics).toHaveBeenCalledWith(topic.name);
+    expect(apiServiceSpy.getTopicMetrics).toHaveBeenCalledWith(topic.name, false);
   });
 
   it('only loads the consumer groups once the Consumers tab is opened', () => {

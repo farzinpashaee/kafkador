@@ -8,6 +8,7 @@ import com.csl.kafkador.service.ConfluentMetricsService.Tagged;
 import com.csl.kafkador.util.metrics.MetricSample;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.MockConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.internals.RecordHeaders;
@@ -16,26 +17,27 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
-import static org.mockito.Mockito.mock;
 
 class ConfluentMetricsServiceTest {
 
     private static final String METRICS = ConfluentMetricsService.METRICS_TOPIC;
     private static final TopicPartition P0 = new TopicPartition(METRICS, 0);
 
-    private final ConfluentMetricsService service = new ConfluentMetricsService(mock(ConnectionService.class));
 
     @Test
     void reportsMissingTopicsWithoutReadingAnything() {
-        MockConsumer<byte[], byte[]> consumer = new MockConsumer<>("earliest");
+        TestConsumer consumer = new TestConsumer();
 
-        EntityMetricsDto result = service.read(consumer, Scope.BROKER, "1");
+        EntityMetricsDto result = read(consumer, Scope.BROKER, "1");
 
         assertThat(result.getSources()).extracting(EntityMetricsDto.Source::getTopic, EntityMetricsDto.Source::isExists)
                 .containsExactly(tuple(ConfluentMetricsService.TELEMETRY_TOPIC, false), tuple(METRICS, false));
@@ -44,7 +46,7 @@ class ConfluentMetricsServiceTest {
 
     @Test
     void readsTheMetricsTopicAndKeepsTheBrokersOwnMetrics() {
-        MockConsumer<byte[], byte[]> consumer = new MockConsumer<>("earliest");
+        TestConsumer consumer = new TestConsumer();
         consumer.updatePartitions(METRICS, List.of(new PartitionInfo(METRICS, 0, null, null, null)));
         consumer.updateBeginningOffsets(Map.of(P0, 0L));
         consumer.updateEndOffsets(Map.of(P0, 3L));
@@ -54,7 +56,7 @@ class ConfluentMetricsServiceTest {
             consumer.addRecord(record(2, 3000, new byte[]{(byte) 0xFF}));
         });
 
-        EntityMetricsDto result = service.read(consumer, Scope.BROKER, "1");
+        EntityMetricsDto result = read(consumer, Scope.BROKER, "1");
 
         EntityMetricsDto.Source source = result.getSources().get(1);
         assertThat(source.isExists()).isTrue();
@@ -68,6 +70,73 @@ class ConfluentMetricsServiceTest {
             assertThat(s.getLatest()).isEqualTo(5.0);
             assertThat(s.getSource()).isEqualTo(METRICS);
         });
+    }
+
+    @Test
+    void startsAtTheFirstRecordOfTheWindow() {
+        TestConsumer consumer = new TestConsumer();
+        consumer.updatePartitions(METRICS, List.of(new PartitionInfo(METRICS, 0, null, null, null)));
+        consumer.updateBeginningOffsets(Map.of(P0, 0L));
+        consumer.updateEndOffsets(Map.of(P0, 3L));
+        consumer.recentOffsets.put(P0, 2L);
+        consumer.schedulePollTask(() -> consumer.addRecord(record(2, 3000, gauge(1, null, 7))));
+
+        EntityMetricsDto result = read(consumer, Scope.BROKER, "1");
+
+        assertThat(result.getSources().get(1).getScannedRecords()).isEqualTo(1);
+        assertThat(result.getSeries()).singleElement().satisfies(s -> assertThat(s.getLatest()).isEqualTo(7.0));
+    }
+
+    @Test
+    void skipsAPartitionWithNothingInTheWindow() {
+        TestConsumer consumer = new TestConsumer();
+        consumer.updatePartitions(METRICS, List.of(new PartitionInfo(METRICS, 0, null, null, null)));
+        consumer.updateBeginningOffsets(Map.of(P0, 0L));
+        consumer.updateEndOffsets(Map.of(P0, 3L));
+        consumer.recentOffsets.put(P0, null);
+
+        EntityMetricsDto result = read(consumer, Scope.BROKER, "1");
+
+        assertThat(result.getSources().get(1).getScannedRecords()).isZero();
+        assertThat(result.getSeries()).isEmpty();
+    }
+
+    @Test
+    void oneReadAnswersEveryBrokerAndTopic() {
+        TestConsumer consumer = new TestConsumer();
+        consumer.updatePartitions(METRICS, List.of(new PartitionInfo(METRICS, 0, null, null, null)));
+        consumer.updateBeginningOffsets(Map.of(P0, 0L));
+        consumer.updateEndOffsets(Map.of(P0, 3L));
+        consumer.schedulePollTask(() -> {
+            consumer.addRecord(record(0, 1000, gauge(1, null, 5)));
+            consumer.addRecord(record(1, 2000, gauge(2, null, 6)));
+            consumer.addRecord(record(2, 3000, gauge(1, "orders", 9)));
+        });
+        ConfluentMetricsService.Scan scan = ConfluentMetricsService.scanAll(() -> consumer, Runnable::run);
+
+        assertThat(ConfluentMetricsService.select(scan, Scope.BROKER, "1").getSeries())
+                .extracting(Series::getLatest).containsExactly(5.0);
+        assertThat(ConfluentMetricsService.select(scan, Scope.BROKER, "2").getSeries())
+                .extracting(Series::getLatest).containsExactly(6.0);
+        EntityMetricsDto orders = ConfluentMetricsService.select(scan, Scope.TOPIC, "orders");
+        assertThat(orders.getSeries()).extracting(Series::getLatest).containsExactly(9.0);
+        assertThat(orders.getSources().get(1).getMatchedSamples()).isEqualTo(1);
+        assertThat(orders.getReadAt()).isEqualTo(scan.readAt());
+    }
+
+    @Test
+    void cacheKeyTellsCredentialsApart() {
+        Properties alice = new Properties();
+        alice.put("bootstrap.servers", "localhost:9092");
+        alice.put("sasl.jaas.config", "user=alice");
+        Properties bob = new Properties();
+        bob.putAll(alice);
+        bob.put("sasl.jaas.config", "user=bob");
+        Properties aliceAgain = new Properties();
+        aliceAgain.putAll(alice);
+
+        assertThat(ConfluentMetricsService.cacheKey(alice)).isEqualTo(ConfluentMetricsService.cacheKey(aliceAgain))
+                .isNotEqualTo(ConfluentMetricsService.cacheKey(bob)).doesNotContain("alice");
     }
 
     @Test
@@ -109,6 +178,38 @@ class ConfluentMetricsServiceTest {
 
         assertThat(series.getPoints()).hasSize(ConfluentMetricsService.MAX_POINTS);
         assertThat(series.getPoints().get(0).t()).isEqualTo(10L);
+    }
+
+    private static EntityMetricsDto read(TestConsumer consumer, Scope scope, String target) {
+        return ConfluentMetricsService.select(ConfluentMetricsService.scanAll(() -> consumer, Runnable::run), scope, target);
+    }
+
+    /** A MockConsumer that answers offsetsForTimes and stays open, so one instance can serve every read. */
+    private static class TestConsumer extends MockConsumer<byte[], byte[]> {
+        /** Each partition's first offset in the window, or null for none; the beginning when not given. */
+        final Map<TopicPartition, Long> recentOffsets = new HashMap<>();
+
+        TestConsumer() {
+            super("earliest");
+        }
+
+        @Override
+        public synchronized Map<TopicPartition, OffsetAndTimestamp> offsetsForTimes(Map<TopicPartition, Long> timestamps, Duration timeout) {
+            Map<TopicPartition, OffsetAndTimestamp> result = new HashMap<>();
+            timestamps.forEach((tp, t) -> {
+                Long offset = recentOffsets.containsKey(tp) ? recentOffsets.get(tp) : Long.valueOf(0L);
+                result.put(tp, offset == null ? null : new OffsetAndTimestamp(offset, t));
+            });
+            return result;
+        }
+
+        @Override
+        public synchronized void close() {
+        }
+
+        @Override
+        public synchronized void close(Duration timeout) {
+        }
     }
 
     private static MetricSample sample(String broker, String topic, long timestamp, double value) {

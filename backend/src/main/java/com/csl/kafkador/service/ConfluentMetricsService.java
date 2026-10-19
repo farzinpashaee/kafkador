@@ -9,20 +9,27 @@ import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.util.metrics.ConfluentMetricsDecoder;
 import com.csl.kafkador.util.metrics.MetricSample;
 import com.csl.kafkador.util.metrics.TelemetryMetricsDecoder;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HexFormat;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,13 +37,23 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 /**
  * Metrics tabs of the broker and topic pages. Confluent Platform can publish broker metrics to Kafka itself
  * ({@code _confluent-telemetry-metrics} by the Telemetry Reporter, {@code _confluent-metrics} by the Metrics
- * Reporter); this reads the newest records of whichever exist and keeps the samples about one broker or topic.
- * Like the Records tab it uses an assigned consumer with no group, within a record and time budget.
+ * Reporter); this reads the last {@link #WINDOW} of whichever exist, each topic on its own consumer in parallel, and
+ * keeps the decoded series of every broker and topic for {@link #CACHE_TTL}, so the other broker and topic pages
+ * are answered from the same read. Like the Records tab it uses assigned consumers with no group, within a record
+ * and time budget.
  */
 @Slf4j
 @Service("ConfluentMetricsService")
@@ -46,7 +63,11 @@ public class ConfluentMetricsService {
     public static final String TELEMETRY_TOPIC = "_confluent-telemetry-metrics";
     public static final String METRICS_TOPIC = "_confluent-metrics";
 
-    /** Most records read from the end of each metrics topic. */
+    /** How far back the metrics topics are read. */
+    static final Duration WINDOW = Duration.ofMinutes(15);
+    /** How long one read answers later requests on the same connection. */
+    static final Duration CACHE_TTL = Duration.ofSeconds(30);
+    /** Most records read from the end of each metrics topic, however much the window holds. */
     static final int MAX_SCAN = 20_000;
     static final Duration MAX_DURATION = Duration.ofSeconds(8);
     static final Duration POLL_TIMEOUT = Duration.ofMillis(500);
@@ -62,10 +83,33 @@ public class ConfluentMetricsService {
     }
 
     private final ConnectionService connectionService;
+    private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+    /** Reads by connection; a read still running is shared by the requests that arrive meanwhile. */
+    private final Map<String, CachedScan> cache = new ConcurrentHashMap<>();
+    /** Consumers read in parallel, so each gets its own client id. */
+    private final AtomicInteger consumerCount = new AtomicInteger();
 
-    public EntityMetricsDto getMetrics(Scope scope, String target) throws KafkaAdminApiException {
-        try (Consumer<byte[], byte[]> consumer = createConsumer()) {
-            return read(consumer, scope, target);
+    @PreDestroy
+    void shutdown() {
+        executor.shutdownNow();
+    }
+
+    /** @param refresh read the topics again unless a read is already running, instead of answering from the cache */
+    public EntityMetricsDto getMetrics(Scope scope, String target, boolean refresh) throws KafkaAdminApiException {
+        Properties properties = connectionService.getActiveConnectionProperties();
+        String key = cacheKey(properties);
+        long now = System.nanoTime();
+        cache.values().removeIf(c -> c.expired(now));
+        CachedScan cached = cache.compute(key, (k, old) -> old != null && (!old.scan().isDone() || !refresh && !old.expired(now))
+                ? old
+                : new CachedScan(now, CompletableFuture.supplyAsync(() -> scanAll(() -> createConsumer(properties), executor), executor)));
+        try {
+            return select(cached.scan().join(), scope, target);
+        } catch (CompletionException e) {
+            cache.remove(key, cached);
+            Throwable cause = e.getCause() == null ? e : e.getCause();
+            log.error("Failed to read metrics of {} {}", scope, target, cause);
+            throw new KafkaAdminApiException("Error reading metrics: " + cause.getMessage());
         } catch (ConnectionSessionExpiredException e) {
             throw e;
         } catch (Exception e) {
@@ -74,43 +118,64 @@ public class ConfluentMetricsService {
         }
     }
 
-    EntityMetricsDto read(Consumer<byte[], byte[]> consumer, Scope scope, String target) {
-        Map<String, List<PartitionInfo>> topics = consumer.listTopics(MAX_DURATION);
-        EntityMetricsDto result = new EntityMetricsDto();
-        List<Tagged> matches = new ArrayList<>();
+    /** Reads every metrics topic that exists, each on its own consumer, and decodes all their series. */
+    static Scan scanAll(Supplier<Consumer<byte[], byte[]>> consumers, Executor executor) {
+        Map<String, List<PartitionInfo>> topics;
+        try (Consumer<byte[], byte[]> consumer = consumers.get()) {
+            topics = consumer.listTopics(MAX_DURATION);
+        }
+        long since = System.currentTimeMillis() - WINDOW.toMillis();
+        List<CompletableFuture<TopicScan>> reads = new ArrayList<>();
         for (Map.Entry<String, BiFunction<byte[], Long, List<MetricSample>>> decoder : DECODERS.entrySet()) {
             String topic = decoder.getKey();
             Source source = new Source().setTopic(topic).setExists(topics.containsKey(topic));
-            result.getSources().add(source);
-            if (!source.isExists()) continue;
-            try {
-                scan(consumer, topic, topics.get(topic), decoder.getValue(), source, scope, target, matches);
-            } catch (Exception e) {
-                log.warn("Failed to read metrics topic {}", topic, e);
-                source.setError(e.getMessage());
+            if (!source.isExists()) {
+                reads.add(CompletableFuture.completedFuture(new TopicScan(source, Map.of())));
+                continue;
             }
+            reads.add(CompletableFuture.supplyAsync(() -> {
+                Map<String, Accumulator> series = new LinkedHashMap<>();
+                try (Consumer<byte[], byte[]> consumer = consumers.get()) {
+                    scan(consumer, topic, topics.get(topic), decoder.getValue(), source, since, series);
+                } catch (Exception e) {
+                    log.warn("Failed to read metrics topic {}", topic, e);
+                    source.setError(e.getMessage());
+                }
+                return new TopicScan(source, series);
+            }, executor));
         }
-        List<Series> series = aggregate(matches);
-        result.setSeriesLimitReached(series.size() > MAX_SERIES);
-        result.setSeries(series.size() > MAX_SERIES ? new ArrayList<>(series.subList(0, MAX_SERIES)) : series);
+        Scan result = new Scan(System.currentTimeMillis(), new ArrayList<>(), new LinkedHashMap<>());
+        for (CompletableFuture<TopicScan> read : reads) {
+            TopicScan topicScan = read.join();
+            result.sources().add(topicScan.source());
+            result.series().putAll(topicScan.series());
+        }
         return result;
     }
 
-    /** Reads up to {@link #MAX_SCAN} of the newest records of one metrics topic, spread over its partitions. */
+    /**
+     * Reads the records of one metrics topic written since {@code since}, at most {@link #MAX_SCAN} spread over its
+     * partitions, and adds every sample to {@code series}.
+     */
     static void scan(Consumer<byte[], byte[]> consumer, String topic, List<PartitionInfo> infos,
-                     BiFunction<byte[], Long, List<MetricSample>> decoder, Source source,
-                     Scope scope, String target, List<Tagged> matches) {
+                     BiFunction<byte[], Long, List<MetricSample>> decoder, Source source, long since,
+                     Map<String, Accumulator> series) {
         List<TopicPartition> partitions = infos.stream().map(p -> new TopicPartition(topic, p.partition())).toList();
         if (partitions.isEmpty()) return;
         Map<TopicPartition, Long> begin = consumer.beginningOffsets(partitions, MAX_DURATION);
         Map<TopicPartition, Long> end = consumer.endOffsets(partitions, MAX_DURATION);
+        Map<TopicPartition, Long> query = new HashMap<>();
+        partitions.forEach(tp -> query.put(tp, since));
+        // No offset for a partition: nothing was written to it since then.
+        Map<TopicPartition, OffsetAndTimestamp> recent = consumer.offsetsForTimes(query, MAX_DURATION);
         int window = Math.max(1, MAX_SCAN / partitions.size());
 
         consumer.assign(partitions);
         Set<TopicPartition> active = new HashSet<>();
         for (TopicPartition tp : partitions) {
             long last = end.getOrDefault(tp, 0L);
-            long start = Math.max(begin.getOrDefault(tp, 0L), last - window);
+            OffsetAndTimestamp first = recent.get(tp);
+            long start = Math.max(Math.max(begin.getOrDefault(tp, 0L), last - window), first == null ? last : first.offset());
             if (start < last) {
                 consumer.seek(tp, start);
                 active.add(tp);
@@ -121,7 +186,6 @@ public class ConfluentMetricsService {
         long deadline = System.nanoTime() + MAX_DURATION.toNanos();
         int scanned = 0;
         int undecoded = 0;
-        int matched = 0;
         Long from = null;
         Long to = null;
         while (!active.isEmpty() && scanned < MAX_SCAN && System.nanoTime() < deadline) {
@@ -133,53 +197,78 @@ public class ConfluentMetricsService {
                 to = to == null ? record.timestamp() : Math.max(to, record.timestamp());
                 List<MetricSample> samples = record.value() == null ? List.of() : decoder.apply(record.value(), record.timestamp());
                 if (samples.isEmpty()) undecoded++;
-                for (MetricSample sample : samples) {
-                    if (matches(scope, target, sample)) {
-                        matches.add(new Tagged(topic, sample));
-                        matched++;
-                    }
-                }
+                samples.forEach(sample -> add(series, topic, sample));
             }
             List<TopicPartition> done = active.stream().filter(tp -> consumer.position(tp) >= end.get(tp)).toList();
             consumer.pause(done);
             done.forEach(active::remove);
         }
-        source.setScannedRecords(scanned).setUndecodedRecords(undecoded).setMatchedSamples(matched)
-                .setFromTimestamp(from).setToTimestamp(to);
+        source.setScannedRecords(scanned).setUndecodedRecords(undecoded).setFromTimestamp(from).setToTimestamp(to);
+    }
+
+    /** The series and source counts about one broker or topic. */
+    static EntityMetricsDto select(Scan scan, Scope scope, String target) {
+        EntityMetricsDto result = new EntityMetricsDto().setReadAt(scan.readAt());
+        Map<String, Integer> matched = new HashMap<>();
+        List<Accumulator> matches = new ArrayList<>();
+        for (Accumulator accumulator : scan.series().values()) {
+            if (!matches(scope, target, accumulator.broker, accumulator.topic)) continue;
+            matches.add(accumulator);
+            matched.merge(accumulator.series.getSource(), accumulator.samples, Integer::sum);
+        }
+        for (Source source : scan.sources()) {
+            result.getSources().add(new Source().setTopic(source.getTopic()).setExists(source.isExists())
+                    .setScannedRecords(source.getScannedRecords()).setUndecodedRecords(source.getUndecodedRecords())
+                    .setMatchedSamples(matched.getOrDefault(source.getTopic(), 0))
+                    .setFromTimestamp(source.getFromTimestamp()).setToTimestamp(source.getToTimestamp())
+                    .setError(source.getError()));
+        }
+        List<Series> series = toSeries(matches);
+        result.setSeriesLimitReached(series.size() > MAX_SERIES);
+        result.setSeries(series.size() > MAX_SERIES ? new ArrayList<>(series.subList(0, MAX_SERIES)) : series);
+        return result;
     }
 
     /** A broker's own metrics, not the per-topic ones it also reports; or a topic's, from every broker. */
-    static boolean matches(Scope scope, String target, MetricSample sample) {
+    static boolean matches(Scope scope, String target, String broker, String topic) {
         return switch (scope) {
-            case BROKER -> target.equals(sample.broker()) && sample.topic() == null;
-            case TOPIC -> target.equals(sample.topic());
+            case BROKER -> target.equals(broker) && topic == null;
+            case TOPIC -> target.equals(topic);
         };
     }
 
-    /** Groups samples into one series per source, metric, broker and labels, keeping the newest points. */
+    static boolean matches(Scope scope, String target, MetricSample sample) {
+        return matches(scope, target, sample.broker(), sample.topic());
+    }
+
+    /** Groups samples into one series per source, metric, broker, topic and labels, keeping the newest points. */
     static List<Series> aggregate(List<Tagged> matches) {
-        Map<String, Series> byKey = new LinkedHashMap<>();
-        Map<String, TreeMap<Long, Double>> points = new LinkedHashMap<>();
-        for (Tagged tagged : matches) {
-            MetricSample sample = tagged.sample();
-            Map<String, String> labels = new TreeMap<>(sample.labels());
-            String key = String.join("\u0000", tagged.source(), sample.name(), sample.kind(),
-                    String.valueOf(sample.broker()), labels.toString());
-            byKey.computeIfAbsent(key, k -> new Series()
-                    .setName(sample.name())
-                    .setSource(tagged.source())
-                    .setKind(sample.kind())
-                    .setBroker(sample.broker())
-                    .setLabels(labels));
-            points.computeIfAbsent(key, k -> new TreeMap<>()).put(sample.timestamp(), sample.value());
-        }
+        Map<String, Accumulator> series = new LinkedHashMap<>();
+        matches.forEach(tagged -> add(series, tagged.source(), tagged.sample()));
+        return toSeries(series.values());
+    }
+
+    static void add(Map<String, Accumulator> series, String source, MetricSample sample) {
+        Map<String, String> labels = new TreeMap<>(sample.labels());
+        String key = String.join("\u0000", source, sample.name(), sample.kind(),
+                String.valueOf(sample.broker()), String.valueOf(sample.topic()), labels.toString());
+        series.computeIfAbsent(key, k -> new Accumulator(new Series()
+                .setName(sample.name())
+                .setSource(source)
+                .setKind(sample.kind())
+                .setBroker(sample.broker())
+                .setLabels(labels), sample.broker(), sample.topic()))
+                .add(sample.timestamp(), sample.value());
+    }
+
+    private static List<Series> toSeries(Iterable<Accumulator> accumulators) {
         List<Series> series = new ArrayList<>();
-        for (Map.Entry<String, Series> entry : byKey.entrySet()) {
-            List<Map.Entry<Long, Double>> all = new ArrayList<>(points.get(entry.getKey()).entrySet());
-            List<Point> recent = all.subList(Math.max(0, all.size() - MAX_POINTS), all.size()).stream()
-                    .map(p -> new Point(p.getKey(), p.getValue())).toList();
-            Point latest = recent.get(recent.size() - 1);
-            series.add(entry.getValue().setPoints(new ArrayList<>(recent)).setLatest(latest.v()).setLatestTimestamp(latest.t()));
+        for (Accumulator accumulator : accumulators) {
+            List<Point> points = accumulator.points.entrySet().stream().map(p -> new Point(p.getKey(), p.getValue())).toList();
+            Point latest = points.get(points.size() - 1);
+            Series s = accumulator.series;
+            series.add(new Series().setName(s.getName()).setSource(s.getSource()).setKind(s.getKind()).setBroker(s.getBroker())
+                    .setLabels(s.getLabels()).setPoints(new ArrayList<>(points)).setLatest(latest.v()).setLatestTimestamp(latest.t()));
         }
         series.sort(Comparator.comparing(Series::getName)
                 .thenComparing(s -> s.getLabels().toString())
@@ -188,14 +277,58 @@ public class ConfluentMetricsService {
         return series;
     }
 
+    /** Identifies the connection, credentials included, without keeping them in memory. */
+    static String cacheKey(Properties properties) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                    .digest(new TreeMap<>(properties).toString().getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     record Tagged(String source, MetricSample sample) {}
 
-    private Consumer<byte[], byte[]> createConsumer() {
-        Properties properties = connectionService.getActiveConnectionProperties();
+    /** One series being read: its newest {@link #MAX_POINTS} points and how many samples it got. */
+    static final class Accumulator {
+        final Series series;
+        final String broker;
+        final String topic;
+        final TreeMap<Long, Double> points = new TreeMap<>();
+        int samples;
+
+        Accumulator(Series series, String broker, String topic) {
+            this.series = series;
+            this.broker = broker;
+            this.topic = topic;
+        }
+
+        void add(long timestamp, double value) {
+            samples++;
+            points.put(timestamp, value);
+            if (points.size() > MAX_POINTS) points.pollFirstEntry();
+        }
+    }
+
+    record TopicScan(Source source, Map<String, Accumulator> series) {}
+
+    /** Every series decoded from the metrics topics, before picking one broker's or topic's. */
+    record Scan(long readAt, List<Source> sources, Map<String, Accumulator> series) {}
+
+    private record CachedScan(long createdNanos, CompletableFuture<Scan> scan) {
+        boolean expired(long now) {
+            return scan.isDone() && now - createdNanos > CACHE_TTL.toNanos();
+        }
+    }
+
+    private Consumer<byte[], byte[]> createConsumer(Properties connection) {
+        Properties properties = new Properties();
+        properties.putAll(connection);
         properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         properties.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "2000");
         properties.put(ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG, "false");
-        properties.put(ConsumerConfig.CLIENT_ID_CONFIG, "kafkador-metrics-reader");
+        properties.put(ConsumerConfig.CLIENT_ID_CONFIG, "kafkador-metrics-reader-" + consumerCount.incrementAndGet());
         return new KafkaConsumer<>(properties, new ByteArrayDeserializer(), new ByteArrayDeserializer());
     }
 

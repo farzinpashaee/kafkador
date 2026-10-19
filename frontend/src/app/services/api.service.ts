@@ -113,14 +113,14 @@ export class ApiService {
       `${ApiService.ApiBaseUrl}/topics/${encodeURIComponent(topic)}/consumer-groups`, { withCredentials: true });
   }
 
-  public getBrokerMetrics(id:string): Observable<GenericResponse<EntityMetrics>> {
+  public getBrokerMetrics(id:string, refresh = false): Observable<GenericResponse<EntityMetrics>> {
     return this.http.get<GenericResponse<EntityMetrics>>(
-      `${ApiService.ApiBaseUrl}/brokers/${encodeURIComponent(id)}/metrics`, { withCredentials: true });
+      `${ApiService.ApiBaseUrl}/brokers/${encodeURIComponent(id)}/metrics`, { withCredentials: true, params: { refresh } });
   }
 
-  public getTopicMetrics(topic:string): Observable<GenericResponse<EntityMetrics>> {
+  public getTopicMetrics(topic:string, refresh = false): Observable<GenericResponse<EntityMetrics>> {
     return this.http.get<GenericResponse<EntityMetrics>>(
-      `${ApiService.ApiBaseUrl}/topics/${encodeURIComponent(topic)}/metrics`, { withCredentials: true });
+      `${ApiService.ApiBaseUrl}/topics/${encodeURIComponent(topic)}/metrics`, { withCredentials: true, params: { refresh } });
   }
 
   public getConsumerGroupDetails(id:string): Observable<GenericResponse<ConsumerGroupDetails>> {

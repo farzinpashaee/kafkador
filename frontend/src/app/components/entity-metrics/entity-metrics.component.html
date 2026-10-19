@@ -11,7 +11,7 @@
     <input *ngIf="available" type="search" class="form-control form-control-sm search-input-compact search-input-compact-width"
            placeholder="Search metrics" aria-label="Search metrics" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()">
     <button type="button" class="btn btn-sm outline-button" aria-label="Refresh" title="Refresh"
-            (click)="load()" [disabled]="loading">
+            (click)="load(true)" [disabled]="loading">
       <span *ngIf="loading" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
       <i *ngIf="!loading" class="bi bi-arrow-clockwise" aria-hidden="true"></i>
     </button>
@@ -53,77 +53,142 @@
 
   <ng-container *ngIf="available">
     <p class="text-s text-color-subtle mb-2" *ngIf="readableSources.length">
-      Read the newest {{ scannedRecords.toLocaleString() }} records of
+      Read {{ scannedRecords.toLocaleString() }} records from the last 15 minutes of
       <ng-container *ngFor="let source of readableSources; let last = last">
         <code>{{ source.topic }}</code>
         <ng-container *ngIf="source.fromTimestamp"> ({{ formatTime(source.fromTimestamp) }} – {{ formatTime(source.toTimestamp) }})</ng-container>{{ last ? '' : ', ' }}
       </ng-container>.
       <ng-container *ngIf="metrics.seriesLimitReached"> Showing the first {{ rows.length }} series.</ng-container>
+      <ng-container *ngIf="readAge != null"> Read {{ readAge < 2 ? "just now" : readAge + " s ago" }}; refresh to read again.</ng-container>
     </p>
 
-    <div class="table-responsive mt-2">
-      <table class="table align-middle">
-        <thead>
-        <tr>
-          <th scope="col">Metric</th>
-          <th scope="col" *ngIf="scope === 'topic'">Broker</th>
-          <th scope="col" class="text-end">Latest</th>
-          <th scope="col" title="Values in the records read, oldest to newest">Trend</th>
-          <th scope="col">Updated</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr *ngFor="let row of pagedRows; trackBy: trackRow">
-          <th scope="row" class="metric-name">
-            <div [attr.title]="row.series.name">
-              {{ shortName(row.series.name) }}
-              <span class="badge text-bg-light border kind-badge">{{ row.series.kind }}</span>
+    <!-- Headline numbers, where the brokers report them; the same dark card as the Brokers page. -->
+    <div *ngIf="kpis.length" class="stat-grid kpi-grid mt-3 mb-4" [ngClass]="'stat-grid-' + (kpis.length < 6 ? kpis.length : 6)"
+         aria-label="Key metrics">
+      <div *ngFor="let kpi of kpis" class="stat-tile kpi-tile">
+        <div class="stat-label">
+          {{ kpi.label }}
+          <ng-container *ngIf="kpi.checked">
+            <i class="bi bi-circle-fill health-dot" aria-hidden="true"
+               [ngClass]="kpi.tone === 'danger' ? 'text-danger' : (kpi.tone === 'warning' ? 'text-warning' : 'text-success')"></i>
+            <span class="visually-hidden">{{ kpi.tone ? '(needs attention)' : '(healthy)' }}</span>
+          </ng-container>
+        </div>
+        <div class="stat-value">{{ kpi.value }}</div>
+        <div *ngIf="kpi.rows.length === 1 && kpi.rows[0].xs.length > 1" class="kpi-spark-wrap">
+          <svg class="sparkline kpi-spark" [attr.viewBox]="'0 0 ' + sparkWidth + ' ' + sparkHeight" preserveAspectRatio="none"
+               role="img" [attr.aria-label]="kpi.label + ' over the last ' + kpi.rows[0].xs.length + ' values'"
+               (mousemove)="hoverKpi($event, kpi)" (mouseleave)="kpiHover = undefined">
+            <path class="spark-line" [attr.d]="kpi.rows[0].path" vector-effect="non-scaling-stroke"></path>
+            <line *ngIf="kpiHover?.kpi === kpi && kpiHover as h" class="spark-crosshair" vector-effect="non-scaling-stroke"
+                  [attr.x1]="kpi.rows[0].xs[h.index]" [attr.x2]="kpi.rows[0].xs[h.index]" y1="0" [attr.y2]="sparkHeight"></line>
+            <rect class="spark-hit" x="0" y="0" [attr.width]="sparkWidth" [attr.height]="sparkHeight"></rect>
+          </svg>
+          <!-- Drawn outside the stretched SVG so the dot stays round. -->
+          <ng-container *ngIf="kpiHover?.kpi === kpi && kpiHover as h">
+            <span class="kpi-spark-dot" aria-hidden="true"
+                  [style.left.%]="kpi.rows[0].xs[h.index] / sparkWidth * 100" [style.top.%]="kpi.rows[0].ys[h.index] / sparkHeight * 100"></span>
+            <div class="spark-tooltip kpi-tooltip text-s" role="tooltip" [style.left.%]="kpi.rows[0].xs[h.index] / sparkWidth * 100">
+              <strong>{{ formatKpi(kpi.rows[0].series.points[h.index].v, kpi.format) }}</strong>
+              <span class="text-color-subtle">{{ formatTime(kpi.rows[0].series.points[h.index].t) }}</span>
             </div>
-            <div class="text-s text-color-subtle fw-normal">{{ namespace(row.series.name) }}</div>
-            <div *ngIf="row.labels" class="text-s text-color-subtle fw-normal">{{ row.labels }}</div>
-          </th>
-          <td *ngIf="scope === 'topic'">{{ row.series.broker ?? 'N/A' }}</td>
-          <td class="text-end font-monospace">{{ formatValue(row.series.latest) }}</td>
-          <td class="spark-cell">
-            <div class="spark-wrap">
-              <svg class="sparkline" [attr.viewBox]="'0 0 ' + sparkWidth + ' ' + sparkHeight"
-                   [attr.width]="sparkWidth" [attr.height]="sparkHeight" role="img"
-                   [attr.aria-label]="row.series.points.length + ' values from ' + formatValue(row.series.points[0]?.v ?? 0) + ' to ' + formatValue(row.series.latest)"
-                   (mousemove)="hoverSpark($event, row)" (mouseleave)="hover = undefined">
-                <path *ngIf="row.xs.length > 1" class="spark-line" [attr.d]="row.path"></path>
-                <circle *ngIf="row.xs.length === 1" class="spark-dot" [attr.cx]="row.xs[0]" [attr.cy]="row.ys[0]" r="2.5"></circle>
-                <ng-container *ngIf="isHovered(row) && hover as h">
-                  <line class="spark-crosshair" [attr.x1]="row.xs[h.index]" [attr.x2]="row.xs[h.index]" y1="0" [attr.y2]="sparkHeight"></line>
-                  <circle class="spark-dot spark-dot-ring" [attr.cx]="row.xs[h.index]" [attr.cy]="row.ys[h.index]" r="3"></circle>
-                </ng-container>
-                <!-- A full-size hit area so the pointer needn't sit on the line. -->
-                <rect class="spark-hit" x="0" y="0" [attr.width]="sparkWidth" [attr.height]="sparkHeight"></rect>
-              </svg>
-              <div *ngIf="isHovered(row) && hover as h" class="spark-tooltip text-s" role="tooltip">
-                <strong>{{ formatValue(row.series.points[h.index].v) }}</strong>
-                <span class="text-color-subtle">{{ formatTime(row.series.points[h.index].t) }}</span>
-              </div>
-            </div>
-          </td>
-          <td class="text-s text-nowrap">{{ formatTime(row.series.latestTimestamp) }}</td>
-        </tr>
-        <tr *ngIf="!filteredRows.length">
-          <td [attr.colspan]="scope === 'topic' ? 5 : 4" class="text-center text-s text-color-subtle py-3">
-            <ng-container *ngIf="searchTerm">No metrics match "{{ searchTerm }}".</ng-container>
-            <ng-container *ngIf="!searchTerm && scope === 'broker'">
-              The newest records hold no metrics reported by broker {{ target }}. Check that the reporter is enabled on
-              this broker too, then refresh in a minute.
-            </ng-container>
-            <ng-container *ngIf="!searchTerm && scope === 'topic'">
-              The newest records hold no metrics about this topic. Brokers report per-topic metrics only for topics
-              that see traffic; produce or consume some records, then refresh in a minute.
-            </ng-container>
-          </td>
-        </tr>
-        </tbody>
-      </table>
+          </ng-container>
+        </div>
+        <div *ngIf="kpi.rows.length > 1" class="stat-of">
+          {{ scope === 'topic' ? 'Total of ' + kpi.rows.length + ' series across brokers' : 'Total of ' + kpi.rows.length + ' series' }}
+        </div>
+      </div>
     </div>
-    <app-pagination [totalItems]="filteredRows.length" [pageSize]="pageSize" [page]="page" (pageChange)="page = $event"></app-pagination>
+
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-2 text-s">
+      <span class="text-color-subtle">{{ shownCount }} series in {{ groups.length }} {{ groups.length === 1 ? 'group' : 'groups' }}</span>
+      <button *ngIf="zeroCount" type="button" class="btn btn-sm btn-link p-0 text-s" (click)="toggleZero()" [attr.aria-pressed]="showZero">
+        {{ showZero ? 'Hide' : 'Show' }} {{ zeroCount }} all-zero series
+      </button>
+      <ng-container *ngIf="groups.length > 1 && !searchTerm.trim()">
+        <span class="ms-auto"></span>
+        <button type="button" class="btn btn-sm btn-link p-0 text-s" (click)="setAllExpanded(true)">Expand all</button>
+        <button type="button" class="btn btn-sm btn-link p-0 text-s" (click)="setAllExpanded(false)">Collapse all</button>
+      </ng-container>
+    </div>
+
+    <div *ngFor="let group of groups; trackBy: trackGroup" class="metric-group border rounded mb-2">
+      <button type="button" class="metric-group-header btn w-100 d-flex align-items-center justify-content-start gap-2 text-start"
+              (click)="toggleGroup(group)" [attr.aria-expanded]="isExpanded(group)">
+        <i class="bi" [ngClass]="isExpanded(group) ? 'bi-chevron-down' : 'bi-chevron-right'" aria-hidden="true"></i>
+        <span class="fw-semibold">{{ humanize(group.name) }}</span>
+        <span class="badge rounded-pill text-bg-light border">{{ group.rows.length }}</span>
+      </button>
+      <div *ngIf="isExpanded(group)" class="table-responsive">
+        <table class="table align-middle mb-0 metric-table">
+          <thead>
+          <tr>
+            <th scope="col">Metric</th>
+            <th scope="col" *ngIf="scope === 'topic'">Broker</th>
+            <th scope="col" class="text-end">Latest</th>
+            <th scope="col" title="Values in the records read, oldest to newest">Trend</th>
+            <th scope="col">Updated</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let row of group.rows; trackBy: trackRow">
+            <th scope="row" class="metric-name">
+              <div [attr.title]="row.series.name">
+                {{ humanize(row.title) }}
+                <span class="badge text-bg-light border kind-badge">{{ row.series.kind }}</span>
+              </div>
+              <div *ngIf="row.labels" class="text-s text-color-subtle fw-normal">{{ row.labels }}</div>
+            </th>
+            <td *ngIf="scope === 'topic'">{{ row.series.broker ?? 'N/A' }}</td>
+            <td class="text-end text-nowrap">
+              <div class="font-monospace">{{ formatMetric(row.series.latest, row.series) }}</div>
+              <div *ngIf="row.max > row.min" class="text-s text-color-subtle" title="Lowest and highest value read">
+                {{ formatMetric(row.min, row.series) }} – {{ formatMetric(row.max, row.series) }}
+              </div>
+            </td>
+            <td class="spark-cell">
+              <div class="spark-wrap">
+                <svg class="sparkline" [attr.viewBox]="'0 0 ' + sparkWidth + ' ' + sparkHeight"
+                     [attr.width]="sparkWidth" [attr.height]="sparkHeight" role="img"
+                     [attr.aria-label]="row.series.points.length + ' values from ' + formatValue(row.series.points[0]?.v ?? 0) + ' to ' + formatValue(row.series.latest)"
+                     (mousemove)="hoverSpark($event, row)" (mouseleave)="hover = undefined">
+                  <path *ngIf="row.xs.length > 1" class="spark-line" [attr.d]="row.path"></path>
+                  <circle *ngIf="row.xs.length === 1" class="spark-dot" [attr.cx]="row.xs[0]" [attr.cy]="row.ys[0]" r="2.5"></circle>
+                  <ng-container *ngIf="isHovered(row) && hover as h">
+                    <line class="spark-crosshair" [attr.x1]="row.xs[h.index]" [attr.x2]="row.xs[h.index]" y1="0" [attr.y2]="sparkHeight"></line>
+                    <circle class="spark-dot spark-dot-ring" [attr.cx]="row.xs[h.index]" [attr.cy]="row.ys[h.index]" r="3"></circle>
+                  </ng-container>
+                  <!-- A full-size hit area so the pointer needn't sit on the line. -->
+                  <rect class="spark-hit" x="0" y="0" [attr.width]="sparkWidth" [attr.height]="sparkHeight"></rect>
+                </svg>
+                <div *ngIf="isHovered(row) && hover as h" class="spark-tooltip text-s" role="tooltip">
+                  <strong>{{ formatMetric(row.series.points[h.index].v, row.series) }}</strong>
+                  <span class="text-color-subtle">{{ formatTime(row.series.points[h.index].t) }}</span>
+                </div>
+              </div>
+            </td>
+            <td class="text-s text-nowrap">{{ formatTime(row.series.latestTimestamp) }}</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div *ngIf="!groups.length" class="border rounded text-center text-s text-color-subtle py-3 px-2">
+      <ng-container *ngIf="searchTerm && !zeroCount">No metrics match "{{ searchTerm }}".</ng-container>
+      <ng-container *ngIf="zeroCount">
+        Every matching series is 0.
+        <button type="button" class="btn btn-sm btn-link p-0 text-s align-baseline" (click)="toggleZero()">Show them</button>
+      </ng-container>
+      <ng-container *ngIf="!searchTerm && !zeroCount && scope === 'broker'">
+        The newest records hold no metrics reported by broker {{ target }}. Check that the reporter is enabled on
+        this broker too, then refresh in a minute.
+      </ng-container>
+      <ng-container *ngIf="!searchTerm && !zeroCount && scope === 'topic'">
+        The newest records hold no metrics about this topic. Brokers report per-topic metrics only for topics
+        that see traffic; produce or consume some records, then refresh in a minute.
+      </ng-container>
+    </div>
 
     <details *ngIf="!allAvailable" class="mt-3 text-s">
       <summary>How to enable the other metrics topic</summary>
