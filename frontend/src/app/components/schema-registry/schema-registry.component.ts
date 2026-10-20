@@ -88,6 +88,12 @@ export class SchemaRegistryComponent {
     });
   }
 
+  /** Opens a subject from anywhere on its row, except its link and buttons, which do their own thing. */
+  openSubject(name: string, event: MouseEvent): void {
+    if ((event.target as HTMLElement).closest('button, a')) return;
+    this.router.navigate(['/subject', name]);
+  }
+
   openDeleteDialog(subject: Schema) {
     this.errors.delete('deleteSubject');
     this.deletedSubjectName = subject.name;

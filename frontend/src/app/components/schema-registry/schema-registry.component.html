@@ -35,7 +35,7 @@
           </thead>
           <tbody>
           @for (schema of pagedSubjects; track schema.name) {
-          <tr>
+          <tr class="cursor-pointer" (click)="openSubject(schema.name, $event)">
             <th scope="row">
                 <span class="badge bg-dark">
                   <a routerLink="/subject/{{schema.name}}" class="badge-link">{{schema.name}}</a>
