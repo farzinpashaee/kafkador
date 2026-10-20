@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
 import { TopicsComponent } from './topics.component';
@@ -112,5 +112,17 @@ describe('TopicsComponent', () => {
     component.toggleBookmark(topics[3]);
     expect(component.isBookmarked(topics[3])).toBeFalse();
     expect(component.errors.get('bookmarks')).toBeTruthy();
+  });
+
+  it('opens a topic from anywhere on its row except its buttons', () => {
+    fixture.detectChanges();
+    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    const row: HTMLElement = fixture.nativeElement.querySelector('tbody tr.cursor-pointer');
+
+    (row.querySelector('button') as HTMLElement).click();
+    expect(navigate).not.toHaveBeenCalled();
+
+    (row.querySelectorAll('td')[0] as HTMLElement).click();
+    expect(navigate).toHaveBeenCalledOnceWith(['/topic', jasmine.any(String)]);
   });
 });

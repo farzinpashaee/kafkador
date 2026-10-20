@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { ActivatedRoute,RouterModule } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
@@ -36,7 +36,7 @@ const EXPORT_FIELDS: ExportField<TopicOverview>[] = [
 
 @Component({
   selector: 'app-topics',
-  imports: [CommonModule,RouterModule,NgxChartsModule,FormsModule,ReactiveFormsModule,PaginationComponent],
+  imports: [CommonModule,NgxChartsModule,FormsModule,ReactiveFormsModule,PaginationComponent],
   templateUrl: './topics.component.html',
   styleUrl: './topics.component.scss'
 })
@@ -131,7 +131,8 @@ export class TopicsComponent {
     private commonService: CommonService,
     private validationService: ValidationService,
     private localStorageService: LocalStorageService,
-    private route: ActivatedRoute) {}
+    private route: ActivatedRoute,
+    private router: Router) {}
 
   ngOnInit() {
     this.newTopic = this.blankTopic();
@@ -302,6 +303,12 @@ export class TopicsComponent {
       names.add(name);
     }
     return errors;
+  }
+
+  /** Opens a topic from anywhere on its row, except its delete and bookmark buttons. */
+  openTopic(topic: TopicOverview, event: MouseEvent): void {
+    if ((event.target as HTMLElement).closest('button, a')) return;
+    this.router.navigate(['/topic', topic.name]);
   }
 
   openDeleteDialog(topic: TopicOverview) {

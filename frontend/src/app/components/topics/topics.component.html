@@ -87,15 +87,15 @@
         </thead>
         <tbody>
         @for (topic of pagedTopics; track topic.name) {
-          <tr>
-            <th scope="row" class="cursor-pointer text-nowrap" routerLink="/topic/{{topic.name}}">
+          <tr class="cursor-pointer" (click)="openTopic(topic, $event)">
+            <th scope="row" class="text-nowrap">
               {{topic.name}}<span *ngIf="topic.internal" class="badge tag-badge ms-2">Internal</span>
             </th>
-            <td routerLink="/topic/{{topic.name}}" class="cursor-pointer">{{topic.partitionCount}}</td>
-            <td routerLink="/topic/{{topic.name}}" class="cursor-pointer">{{topic.outOfSyncReplicaCount}}</td>
-            <td routerLink="/topic/{{topic.name}}" class="cursor-pointer">{{topic.replicationFactor}}</td>
-            <td routerLink="/topic/{{topic.name}}" class="cursor-pointer">{{ topic.messageCount ?? 'N/A' }}</td>
-            <td routerLink="/topic/{{topic.name}}" class="cursor-pointer text-nowrap">{{ formatSize(topic.sizeBytes) }}</td>
+            <td>{{topic.partitionCount}}</td>
+            <td>{{topic.outOfSyncReplicaCount}}</td>
+            <td>{{topic.replicationFactor}}</td>
+            <td>{{ topic.messageCount ?? 'N/A' }}</td>
+            <td class="text-nowrap">{{ formatSize(topic.sizeBytes) }}</td>
             <td>
               <div class="d-flex justify-content-end gap-2">
                 @if (!topic.internal) {

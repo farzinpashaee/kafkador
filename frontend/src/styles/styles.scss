@@ -165,6 +165,12 @@ span.placeholder{
     cursor: pointer;
 }
 
+// Table rows that open something are marked cursor-pointer; a light gray wash on hover shows the whole row is the
+// target. Bootstrap paints cells from --bs-table-bg-state, and mixing from the text color keeps it gray in both themes.
+.table > tbody > tr.cursor-pointer:hover > * {
+  --bs-table-bg-state: color-mix(in srgb, var(--bs-body-color) 7%, transparent);
+}
+
 /*
  * Centre button and dropdown item content on both axes. Flex drops the plain spaces
  * templates put between an icon and its label, so a gap provides the spacing instead
