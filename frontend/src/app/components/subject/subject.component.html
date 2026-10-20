@@ -47,15 +47,24 @@
               <span class="badge bg-dark ms-1">v{{ version }}</span>
               <span class="text-s text-color-subtle ms-2" *ngIf="versionDetails.get(version) as detail">schema id {{ detail.id }} &middot; {{ detail.schemaType }}</span>
             </div>
-            <div *ngIf="isDeletingVersion(version)" class="spinner-border spinner-border-sm" role="status">
-              <span class="visually-hidden">Loading...</span>
+            <div class="d-flex align-items-center gap-3">
+              <button *ngIf="versionDetails.get(version) as detail" [hidden]="formattedSchema(detail) === null" type="button"
+                      class="btn btn-link btn-icon p-0" [class.active]="formattedVersions.has(version)"
+                      [attr.aria-pressed]="formattedVersions.has(version)" attr.aria-label="Format the schema of version {{version}}"
+                      [title]="formattedVersions.has(version) ? 'Show as registered' : 'Format JSON'"
+                      (click)="$event.stopPropagation(); toggleFormatted(version)">
+                <i class="bi bi-braces" aria-hidden="true"></i>
+              </button>
+              <div *ngIf="isDeletingVersion(version)" class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <button *ngIf="!isDeletingVersion(version)" type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Delete version {{version}}"
+                      title="Delete this version" (click)="$event.stopPropagation(); deleteVersion(version)">
+                <i class="bi bi-trash3" aria-hidden="true"></i>
+              </button>
             </div>
-            <button *ngIf="!isDeletingVersion(version)" type="button" class="btn btn-link btn-icon p-0" attr.aria-label="Delete version {{version}}"
-                    title="Delete this version" (click)="$event.stopPropagation(); deleteVersion(version)">
-              <i class="bi bi-trash3" aria-hidden="true"></i>
-            </button>
           </div>
-          <pre *ngIf="expandedVersion === version && versionDetails.get(version) as detail" class="p-2 m-0 bg-body-tertiary text-s border-top"><code>{{ detail.schema }}</code></pre>
+          <pre *ngIf="expandedVersion === version && versionDetails.get(version) as detail" class="p-2 m-0 bg-body-tertiary text-s border-top"><code>{{ formattedVersions.has(version) ? (formattedSchema(detail) ?? detail.schema) : detail.schema }}</code></pre>
         </div>
       }
 

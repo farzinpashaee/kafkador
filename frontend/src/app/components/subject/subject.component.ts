@@ -28,6 +28,8 @@ export class SubjectComponent implements OnInit {
   versions: number[] = [];
   versionDetails: Map<number, SchemaVersion> = new Map();
   expandedVersion: number | null = null;
+  /** Versions whose schema is shown indented rather than as registered. */
+  formattedVersions = new Set<number>();
 
   compareLeftVersion: number | null = null;
   compareRightVersion: number | null = null;
@@ -258,6 +260,23 @@ export class SubjectComponent implements OnInit {
 
   isDeletingVersion(version: number): boolean {
     return this.flags.get('deletingVersion:' + version) === true;
+  }
+
+  /** The schema indented for reading, or null when it isn't JSON (Protobuf, or text that doesn't parse). */
+  formattedSchema(detail: SchemaVersion): string | null {
+    if (detail.schemaType === 'PROTOBUF') return null;
+    try {
+      return JSON.stringify(JSON.parse(detail.schema), null, 2);
+    } catch {
+      return null;
+    }
+  }
+
+  /** Switches a version's schema between as registered and indented; opens it first if it's closed. */
+  toggleFormatted(version: number) {
+    if (this.formattedVersions.has(version)) this.formattedVersions.delete(version);
+    else this.formattedVersions.add(version);
+    if (this.expandedVersion !== version) this.toggleVersion(version);
   }
 
   openDeleteSubjectDialog() {
