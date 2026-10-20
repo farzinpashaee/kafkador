@@ -6,10 +6,87 @@ import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { ApiService, CommonService } from '../../services';
 import { GenericResponse, SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, Error } from '../../models';
 
-interface DiffRow {
-  left: string;
-  right: string;
-  changed: boolean;
+/**
+ * One row of the side-by-side diff. A line only in A is 'removed', only in B 'added'; a removed line paired with the
+ * added line across from it is 'changed'. Line numbers are 1-based and absent on the side that has no line.
+ */
+export interface DiffRow {
+  left?: string;
+  right?: string;
+  leftNumber?: number;
+  rightNumber?: number;
+  kind: 'same' | 'removed' | 'added' | 'changed';
+}
+
+/** Past this many line pairs the LCS table gets too big to build in the browser; the diff falls back to positional. */
+const MAX_DIFF_CELLS = 4_000_000;
+
+/**
+ * Side-by-side line diff of a and b by longest common subsequence, so an inserted line shows as one added row rather
+ * than shifting every line after it. Removed and added lines next to each other are paired up as changed rows.
+ */
+export function diffLines(a: string, b: string): DiffRow[] {
+  const left = a.split('\n');
+  const right = b.split('\n');
+  const n = left.length;
+  const m = right.length;
+
+  // Steps that turn a into b: lines kept, removed from a, or added from b.
+  const steps: { op: 'same' | 'removed' | 'added'; i: number; j: number }[] = [];
+  if (n * m > MAX_DIFF_CELLS) {
+    for (let k = 0; k < Math.max(n, m); k++) {
+      if (k < n && k < m && left[k] === right[k]) steps.push({ op: 'same', i: k, j: k });
+      else {
+        if (k < n) steps.push({ op: 'removed', i: k, j: -1 });
+        if (k < m) steps.push({ op: 'added', i: -1, j: k });
+      }
+    }
+  } else {
+    // lcs[i][j]: length of the longest common subsequence of left[i..] and right[j..].
+    const lcs = Array.from({ length: n + 1 }, () => new Uint32Array(m + 1));
+    for (let i = n - 1; i >= 0; i--) {
+      for (let j = m - 1; j >= 0; j--) {
+        lcs[i][j] = left[i] === right[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
+      }
+    }
+    let i = 0;
+    let j = 0;
+    while (i < n || j < m) {
+      if (i < n && j < m && left[i] === right[j]) steps.push({ op: 'same', i: i++, j: j++ });
+      else if (j < m && (i === n || lcs[i][j + 1] >= lcs[i + 1][j])) steps.push({ op: 'added', i: -1, j: j++ });
+      else steps.push({ op: 'removed', i: i++, j: -1 });
+    }
+  }
+
+  const rows: DiffRow[] = [];
+  let k = 0;
+  while (k < steps.length) {
+    if (steps[k].op === 'same') {
+      const { i, j } = steps[k++];
+      rows.push({ left: left[i], right: right[j], leftNumber: i + 1, rightNumber: j + 1, kind: 'same' });
+      continue;
+    }
+    // A run of removals and additions: line them up side by side.
+    const removed: number[] = [];
+    const added: number[] = [];
+    while (k < steps.length && steps[k].op !== 'same') {
+      if (steps[k].op === 'removed') removed.push(steps[k].i);
+      else added.push(steps[k].j);
+      k++;
+    }
+    for (let r = 0; r < Math.max(removed.length, added.length); r++) {
+      const i = removed[r];
+      const j = added[r];
+      rows.push({
+        left: i === undefined ? undefined : left[i],
+        right: j === undefined ? undefined : right[j],
+        leftNumber: i === undefined ? undefined : i + 1,
+        rightNumber: j === undefined ? undefined : j + 1,
+        kind: i === undefined ? 'added' : j === undefined ? 'removed' : 'changed'
+      });
+    }
+  }
+  return rows;
 }
 
 const COMPATIBILITY_LEVELS = ['BACKWARD', 'BACKWARD_TRANSITIVE', 'FORWARD', 'FORWARD_TRANSITIVE', 'FULL', 'FULL_TRANSITIVE', 'NONE'];
@@ -103,9 +180,9 @@ export class SubjectComponent implements OnInit {
       next: (leftRes: HttpResponse<GenericResponse<SchemaVersion>>) => {
         right$.subscribe({
           next: (rightRes: HttpResponse<GenericResponse<SchemaVersion>>) => {
-            const left = leftRes.body?.data?.schema ?? '';
-            const right = rightRes.body?.data?.schema ?? '';
-            this.diffRows = this.diffLines(left, right);
+            // Registry stores JSON minified on one line; indent both so the diff can point at the lines that changed.
+            const text = (detail?: SchemaVersion) => detail ? this.formattedSchema(detail) ?? detail.schema : '';
+            this.diffRows = diffLines(text(leftRes.body?.data), text(rightRes.body?.data));
             this.flags.set('diffLoading', false);
           },
           error: () => {
@@ -121,22 +198,22 @@ export class SubjectComponent implements OnInit {
     });
   }
 
-  /**
-   * A positional (same-index) line comparison — not a real LCS diff. Good enough to spot
-   * what changed between two schema versions without pulling in a diff library; a line
-   * inserted/removed in the middle will shift every row after it rather than aligning.
-   */
-  private diffLines(a: string, b: string): DiffRow[] {
-    const linesA = a.split('\n');
-    const linesB = b.split('\n');
-    const max = Math.max(linesA.length, linesB.length);
-    const rows: DiffRow[] = [];
-    for (let i = 0; i < max; i++) {
-      const left = linesA[i] ?? '';
-      const right = linesB[i] ?? '';
-      rows.push({ left, right, changed: left !== right });
+  get diffAdded(): number {
+    return this.diffRows.filter(row => row.right !== undefined && row.kind !== 'same').length;
+  }
+
+  get diffRemoved(): number {
+    return this.diffRows.filter(row => row.left !== undefined && row.kind !== 'same').length;
+  }
+
+  /** Indents the schema being registered; says why when it isn't valid JSON. */
+  formatNewSchema() {
+    try {
+      this.newSchema = JSON.stringify(JSON.parse(this.newSchema), null, 2);
+      this.errors.delete('register');
+    } catch (e) {
+      this.errors.set('register', { code: '400', message: `The schema isn't valid JSON: ${e instanceof SyntaxError ? e.message : e}`, datetime: '' });
     }
-    return rows;
   }
 
   checkCompatibility() {

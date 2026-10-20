@@ -1,0 +1,49 @@
+
+// Side-by-side version diff: removed lines in red on the left, added in green on the right.
+.diff-table {
+  font-size: 0.8125rem;
+
+  td {
+    border-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .diff-number {
+    width: 1%;
+    padding-right: 0.5rem;
+    text-align: right;
+    color: var(--bs-secondary-color);
+    user-select: none;
+    font-family: var(--bs-font-monospace);
+  }
+
+  .diff-line {
+    width: 49%;
+    font-family: var(--bs-font-monospace);
+    white-space: pre;
+  }
+
+  .diff-removed {
+    --bs-table-bg-state: var(--bs-danger-bg-subtle);
+  }
+
+  .diff-added {
+    --bs-table-bg-state: var(--bs-success-bg-subtle);
+  }
+
+  // Across from an added or removed line: grayed so it doesn't read as an empty line in the file.
+  .diff-empty {
+    --bs-table-bg-state: var(--bs-tertiary-bg);
+  }
+}
+
+.diff-count-added {
+  color: var(--bs-success-text-emphasis);
+  font-weight: 600;
+}
+
+.diff-count-removed {
+  color: var(--bs-danger-text-emphasis);
+  font-weight: 600;
+}

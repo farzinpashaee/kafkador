@@ -95,19 +95,29 @@
         <div *ngIf="errors.get('diff')" class="alert alert-danger" role="alert">{{ errors.get('diff')?.message }}</div>
 
         <div *ngIf="diffRows.length > 0" class="table-responsive">
-          <p class="text-s text-color-subtle mb-1">Line-by-line comparison (not alignment-aware — an inserted line shifts everything after it).</p>
-          <table class="table table-sm">
+          <p class="text-s text-color-subtle mb-1">
+            <ng-container *ngIf="diffAdded || diffRemoved; else identical">
+              <span class="diff-count-added">+{{ diffAdded }}</span> <span class="diff-count-removed ms-1">−{{ diffRemoved }}</span>
+              {{ diffAdded + diffRemoved === 1 ? 'line' : 'lines' }} changed; JSON and Avro schemas are indented before comparing.
+            </ng-container>
+            <ng-template #identical>The two versions are identical.</ng-template>
+          </p>
+          <table class="table table-sm diff-table mb-0">
             <thead>
             <tr>
-              <th scope="col">v{{ compareLeftVersion }}</th>
-              <th scope="col">v{{ compareRightVersion }}</th>
+              <th scope="col" colspan="2">v{{ compareLeftVersion }}</th>
+              <th scope="col" colspan="2">v{{ compareRightVersion }}</th>
             </tr>
             </thead>
             <tbody>
             @for (row of diffRows; track $index) {
-              <tr [class.table-warning]="row.changed">
-                <td class="text-s font-monospace">{{ row.left }}</td>
-                <td class="text-s font-monospace">{{ row.right }}</td>
+              <tr>
+                <td class="diff-number" [class.diff-removed]="row.kind === 'removed' || row.kind === 'changed'" [class.diff-empty]="row.left === undefined">{{ row.leftNumber }}</td>
+                <td class="diff-line" [class.diff-removed]="row.kind === 'removed' || row.kind === 'changed'"
+                    [class.diff-empty]="row.left === undefined">{{ row.left }}</td>
+                <td class="diff-number" [class.diff-added]="row.kind === 'added' || row.kind === 'changed'" [class.diff-empty]="row.right === undefined">{{ row.rightNumber }}</td>
+                <td class="diff-line" [class.diff-added]="row.kind === 'added' || row.kind === 'changed'"
+                    [class.diff-empty]="row.right === undefined">{{ row.right }}</td>
               </tr>
             }
             </tbody>
@@ -128,7 +138,14 @@
       </select>
     </div>
     <div class="mb-3">
-      <label for="newSchema" class="form-label">Schema:</label>
+      <div class="d-flex align-items-end justify-content-between">
+        <label for="newSchema" class="form-label">Schema:</label>
+        <button *ngIf="newSchemaType !== 'PROTOBUF'" type="button" class="btn btn-link btn-icon mb-2 p-0"
+                title="Format JSON" aria-label="Format the schema as indented JSON" [disabled]="!newSchema.trim()"
+                (click)="formatNewSchema()">
+          <i class="bi bi-braces" aria-hidden="true"></i>
+        </button>
+      </div>
       <textarea class="form-control font-monospace text-s" id="newSchema" rows="12" placeholder="Paste the schema definition here" [(ngModel)]="newSchema"></textarea>
     </div>
 
