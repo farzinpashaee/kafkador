@@ -10,6 +10,7 @@ import { BookmarkEntityType, GenericResponse, KsqlDbConfig, KsqlServerInfo, Ksql
 import { PaginationComponent } from '../pagination/pagination.component';
 import { CodeEditorComponent } from '../code-editor/code-editor.component';
 import { KSQL_KEY_FORMATS, KSQL_VALUE_FORMATS, KsqlCreateForm, buildCreateStatement, isAsSelect, toReplaceStatement } from './ksql-statement-template';
+import { formatKsql } from './ksql-format';
 import { EXPORT_FORMATS, ExportField, ExportFormat, buildExport, downloadExport } from '../../services/table-export';
 
 export type KsqlTab = 'streams' | 'tables' | 'queries';
@@ -402,6 +403,12 @@ export class KsqlDBComponent implements OnInit {
   onStatementEdited(statement: string): void {
     this.statement = statement;
     this.statementEdited = true;
+  }
+
+  /** Lays the statement out a clause per line; like any edit, the fields stop rewriting it afterwards. */
+  formatStatement(): void {
+    const formatted = formatKsql(this.statement);
+    if (formatted !== this.statement) this.onStatementEdited(formatted);
   }
 
   /** Throws away hand edits and rebuilds the statement from the fields. */

@@ -207,6 +207,19 @@ describe('KsqlDBComponent', () => {
     expect(component.statement).toContain('CREATE TABLE OTHER');
   });
 
+  it('formats the statement in the dialog, which then counts as a hand edit', () => {
+    component.openCreateDialog('streams');
+    component.onStatementEdited("CREATE STREAM S (A INT, B STRING) WITH (KAFKA_TOPIC='t', VALUE_FORMAT='JSON');");
+    component.statementEdited = false;
+
+    component.formatStatement();
+
+    expect(component.statement.split('\n')).toEqual([
+      'CREATE STREAM S (', '  A INT,', '  B STRING', ')', 'WITH (', "  KAFKA_TOPIC = 't',", "  VALUE_FORMAT = 'JSON'", ');'
+    ]);
+    expect(component.statementEdited).toBeTrue();
+  });
+
   it('only sends "from earliest" for statements that start a query', () => {
     apiServiceSpy.createKsqlDbSource.and.returnValue(of({ data: {} } as any));
     component.openCreateDialog('streams');

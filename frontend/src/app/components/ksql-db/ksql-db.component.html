@@ -422,10 +422,14 @@
           </div>
         </ng-container>
 
-        <div class="d-flex align-items-end mb-1">
-          <label class="form-label text-s mb-0" for="ksqlStatement">Statement</label>
-          <button *ngIf="editor.mode === 'create' && statementEdited" type="button" class="btn btn-link btn-sm p-0 ms-auto"
+        <div class="d-flex align-items-end gap-3 mb-1">
+          <label class="form-label text-s mb-0 me-auto" for="ksqlStatement">Statement</label>
+          <button *ngIf="editor.mode === 'create' && statementEdited" type="button" class="btn btn-link btn-sm p-0"
                   (click)="resetStatement()">Rebuild from the fields</button>
+          <button type="button" class="btn btn-link btn-icon p-0" title="Format statement"
+                  aria-label="Format the statement" [disabled]="!statement.trim()" (click)="formatStatement()">
+            <i class="bi bi-text-indent-left" aria-hidden="true"></i>
+          </button>
         </div>
         <app-code-editor inputId="ksqlStatement" [rows]="12" [value]="statement" (valueChange)="onStatementEdited($event)"
                          placeholder="CREATE STREAM ..."></app-code-editor>
