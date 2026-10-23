@@ -1,7 +1,6 @@
 package com.csl.kafkador.interceptor;
 
 import com.csl.kafkador.domain.GenericResponse;
-import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.service.DatabaseCredentialsService;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,9 +12,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
- * Blocks everything (API and legacy pages alike) until first-run database credentials are set — the
- * most fundamental gate, ahead of the Kafka connection session. Paths for the setup flow itself, and
- * static assets needed to render it, are excluded in WebConfig.
+ * Blocks the API until first-run database credentials are set — the most fundamental gate, ahead of the
+ * Kafka connection session — answering 428 so the UI shows its setup page. The setup API itself is
+ * excluded in WebConfig.
  */
 @RequiredArgsConstructor
 public class DatabaseSetupInterceptor implements HandlerInterceptor {
@@ -36,19 +35,15 @@ public class DatabaseSetupInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        String path = request.getRequestURI();
-        if (path.startsWith("/api/")) {
-            response.setHeader(SETUP_REQUIRED_HEADER, "true");
-            response.setStatus(HttpStatus.PRECONDITION_REQUIRED.value());
-            response.setContentType("application/json;charset=UTF-8");
-            ResponseEntity<GenericResponse<Void>> error = new GenericResponse.Builder<Void>()
-                    .code(String.valueOf(HttpStatus.PRECONDITION_REQUIRED.value()))
-                    .message("Database setup is required before Kafkador can be used.")
-                    .failed(HttpStatus.INTERNAL_SERVER_ERROR);
-            response.getWriter().write(mapper.writeValueAsString(error.getBody()));
-            return false;
-        }
-        throw new ConnectionSessionExpiredException("Database setup is required.", "/setup");
+        response.setHeader(SETUP_REQUIRED_HEADER, "true");
+        response.setStatus(HttpStatus.PRECONDITION_REQUIRED.value());
+        response.setContentType("application/json;charset=UTF-8");
+        ResponseEntity<GenericResponse<Void>> error = new GenericResponse.Builder<Void>()
+                .code(String.valueOf(HttpStatus.PRECONDITION_REQUIRED.value()))
+                .message("Database setup is required before Kafkador can be used.")
+                .failed(HttpStatus.INTERNAL_SERVER_ERROR);
+        response.getWriter().write(mapper.writeValueAsString(error.getBody()));
+        return false;
     }
 
 }

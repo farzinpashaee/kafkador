@@ -1,5 +1,4 @@
 kafkador:
-  url: http://localhost:8080/
   connectionServiceImplementation:
   # Where first-run setup (see DatabaseCredentialsService) saves the chosen embedded-database
   # username/password, and where every later startup reads them from before the datasource connects

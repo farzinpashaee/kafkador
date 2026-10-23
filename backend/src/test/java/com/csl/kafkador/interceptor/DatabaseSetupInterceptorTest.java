@@ -1,13 +1,11 @@
 package com.csl.kafkador.interceptor;
 
-import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.service.DatabaseCredentialsService;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -38,20 +36,6 @@ class DatabaseSetupInterceptorTest {
         assertThat(response.getStatus()).isEqualTo(428);
         assertThat(response.getHeader(DatabaseSetupInterceptor.SETUP_REQUIRED_HEADER)).isEqualTo("true");
         assertThat(response.getContentAsString()).contains("Database setup is required");
-    }
-
-    @Test
-    void setupRequired_pageLoad_redirectsToSetupPage() {
-        DatabaseCredentialsService service = mock(DatabaseCredentialsService.class);
-        when(service.isSetupRequired()).thenReturn(true);
-        DatabaseSetupInterceptor interceptor = new DatabaseSetupInterceptor(service);
-
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/settings");
-        MockHttpServletResponse response = new MockHttpServletResponse();
-
-        assertThatThrownBy(() -> interceptor.preHandle(request, response, new Object()))
-                .isInstanceOf(ConnectionSessionExpiredException.class)
-                .satisfies(ex -> assertThat(((ConnectionSessionExpiredException) ex).getRedirectUrl()).isEqualTo("/setup"));
     }
 
     @Test

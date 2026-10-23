@@ -8,16 +8,9 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.util.UUID;
 
+/** Logs each API call with a request id and how long it took. */
 @Slf4j
 public class ResourceInterceptor  implements HandlerInterceptor {
-
-    private String baseUrl;
-
-    public ResourceInterceptor(){}
-
-    public ResourceInterceptor( String baseUrl ){
-        this.baseUrl = baseUrl;
-    }
 
     @Override
     public boolean preHandle(HttpServletRequest request,
@@ -36,9 +29,6 @@ public class ResourceInterceptor  implements HandlerInterceptor {
                             HttpServletResponse response,
                             Object handler,
                             ModelAndView modelAndView) throws Exception {
-        if(modelAndView != null) {
-            modelAndView.addObject("baseUrl",baseUrl);
-        }
         log.info( "{} - response in {}ms",
                 request.getAttribute("request-id"),
                 System.currentTimeMillis() - (long) request.getAttribute("start") );

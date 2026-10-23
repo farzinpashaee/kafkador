@@ -1,14 +1,11 @@
 package com.csl.kafkador.config;
 
-import org.springframework.context.annotation.Condition;
-import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.type.AnnotatedTypeMetadata;
 
 /**
- * Detects a frontend bundled into this jar (Maven "with-frontend" profile copies the Angular build to
- * classpath:/static/). When present, the jar serves the web UI itself; otherwise the backend is API-only,
- * with the legacy Thymeleaf pages, exactly as before.
+ * Detects the Angular UI bundled into this jar (the Maven "with-frontend" profile copies its build to
+ * classpath:/static/). When present, the jar serves the UI as well as the API; otherwise it serves only the API,
+ * for running the UI separately (ng serve, or a web server that forwards /api to the backend).
  */
 public final class BundledFrontend {
 
@@ -19,20 +16,6 @@ public final class BundledFrontend {
 
     public static boolean isPresent() {
         return INDEX.exists();
-    }
-
-    public static class Present implements Condition {
-        @Override
-        public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-            return isPresent();
-        }
-    }
-
-    public static class Absent implements Condition {
-        @Override
-        public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-            return !isPresent();
-        }
     }
 
 }

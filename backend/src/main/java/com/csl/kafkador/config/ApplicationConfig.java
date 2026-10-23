@@ -17,7 +17,6 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "kafkador")
 public class ApplicationConfig {
 
-    private String url;
     private Map<String,Service> services = new HashMap<String,Service>();
     private List<ConnectionDto> connections = new ArrayList<>();
     private Session session = new Session();

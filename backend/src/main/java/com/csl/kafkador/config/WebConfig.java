@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.CacheControl;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -25,36 +24,29 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
 
-    private final ApplicationConfig applicationConfig;
     private final SessionSettingsService sessionSettingsService;
     private final DatabaseCredentialsService databaseCredentialsService;
 
-    private static final String[] SETUP_PATHS = {"/setup", "/api/v1/setup/**"};
+    private static final String SETUP_API = "/api/v1/setup/**";
 
+    // Only the API is guarded: the Angular files must load without a session or completed setup, and the UI
+    // reacts to the 401 and 428 answers itself.
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        InterceptorRegistration databaseSetupInterceptor = registry.addInterceptor( new DatabaseSetupInterceptor(databaseCredentialsService) )
-                .excludePathPatterns("/assets/**","/css/**","/js/**", "/error", "/kafkador-h2","/kafkador-h2/**")
-                .excludePathPatterns(SETUP_PATHS);
+        registry.addInterceptor( new DatabaseSetupInterceptor(databaseCredentialsService) )
+                .addPathPatterns("/api/**")
+                .excludePathPatterns(SETUP_API);
         registry.addInterceptor( new SessionTimeoutInterceptor(sessionSettingsService) )
                 .addPathPatterns("/api/**");
-        registry.addInterceptor( new ResourceInterceptor(applicationConfig.getUrl()) )
-                .excludePathPatterns("/assets/**","/css/**","/js/**");
-        InterceptorRegistration sessionInterceptor = registry.addInterceptor( new SessionInterceptor() )
-                .excludePathPatterns("/assets/**","/css/**","/js/**", "/error",
-                        "/connect","/api/v1/apm/**",
-                        "/api/v1/connections","/api/v1/connections/**",
-                        "/kafkador-h2","/kafkador-h2/**")
-                .excludePathPatterns(SETUP_PATHS);
-        if (BundledFrontend.isPresent()) {
-            // The bundled Angular files (index.html, hashed js/css, images) must load without a session
-            // or completed setup; only the API is protected, and the UI reacts to 401/428 itself.
-            sessionInterceptor.addPathPatterns("/api/**");
-            databaseSetupInterceptor.addPathPatterns("/api/**");
-        }
+        registry.addInterceptor( new ResourceInterceptor() )
+                .addPathPatterns("/api/**");
+        registry.addInterceptor( new SessionInterceptor() )
+                .addPathPatterns("/api/**")
+                .excludePathPatterns("/api/v1/apm/**", "/api/v1/connections", "/api/v1/connections/**", SETUP_API);
         registry.addInterceptor(localeChangeInterceptor());
     }
 
+    /** Serves the Angular app when it's bundled into the jar; a jar built without it serves only the API. */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         if (BundledFrontend.isPresent()) {

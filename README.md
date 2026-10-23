@@ -101,8 +101,8 @@ java -jar target/kafkador.jar        # UI and API on http://localhost:8080
 
 The `with-frontend` profile downloads a local Node/npm (nothing to install), runs `npm ci` and `npm run build`
 in `frontend/`, and copies the result into the jar's `static/` folder. Add `-DskipTests` to skip backend tests.
-When the UI is bundled the jar serves the Angular app for every non-API URL (deep links and refreshes work) and the
-old server-rendered pages are switched off; without the profile nothing changes.
+When the UI is bundled the jar serves the Angular app for every non-API URL (deep links and refreshes work); without
+the profile the jar serves only the API.
 
 ### Starting the built jar
 
