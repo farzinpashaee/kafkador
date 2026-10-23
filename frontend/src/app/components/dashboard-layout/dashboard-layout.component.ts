@@ -9,6 +9,8 @@ import { Connection, GenericResponse, SearchResult, Config } from '../../models'
 import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
 import { AiAssistantComponent } from '../ai-assistant/ai-assistant.component';
 
+const SIDEBAR_COLLAPSED_STORAGE_KEY = 'sidebarCollapsed';
+
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
@@ -25,6 +27,9 @@ export class DashboardLayoutComponent {
   isDark = false;
   documentation!: string;
   commonModalBody!: string;
+
+  /** The menu shows only its icons; remembered across visits. */
+  sidebarCollapsed = false;
 
   isSearching = false;
   isSearchLoading = false;
@@ -43,6 +48,7 @@ export class DashboardLayoutComponent {
     const savedTheme = localStorage.getItem('theme') || 'light';
     this.document.body.setAttribute('data-bs-theme', savedTheme);
     this.isDark = savedTheme === 'dark';
+    this.sidebarCollapsed = this.localStorageService.getItem<boolean>(SIDEBAR_COLLAPSED_STORAGE_KEY) === true;
 
     const activeConnectionFromStorage = this.localStorageService.getItem('activeConnection');
     if (activeConnectionFromStorage !== null) {
@@ -84,6 +90,11 @@ export class DashboardLayoutComponent {
       }
     });
     },1000);
+  }
+
+  toggleSidebar() {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+    this.localStorageService.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, this.sidebarCollapsed);
   }
 
   toggleTheme() {

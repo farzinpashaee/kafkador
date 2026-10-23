@@ -6,3 +6,77 @@
 .search-result-description {
   opacity: 0.45;
 }
+
+// Collapsible menu (desktop only; on small screens it's a drawer with full labels). Collapsed, each menu item is a
+// square icon cell, the sidebar and the header's logo area shrink to that width, and the page content takes the rest.
+$sidebar-cell: 2.875rem;
+// Collapsed, the icons carry the menu on their own, so they grow to fill most of their cell.
+$sidebar-collapsed-icon: 1.1rem;
+// A little wider than a cell, plus the sidebar's 1px border on each side; the logo area matches it so the two line up.
+$sidebar-collapsed-width: calc(#{$sidebar-cell * 1.1} + 2px);
+
+.logo-mark {
+  display: none;
+}
+
+// In the dark header, right after the logo.
+.sidebar-toggle {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  align-self: stretch;
+
+  &:hover,
+  &:focus-visible {
+    color: #fff;
+  }
+}
+
+@media (min-width: 768px) {
+  .brand-collapsed {
+    flex: 0 0 auto;
+    width: $sidebar-collapsed-width;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    text-align: center;
+
+    .logo-full {
+      display: none;
+    }
+
+    .logo-mark {
+      display: inline;
+    }
+  }
+
+  .sidebar-collapsed {
+    > .row > .sidebar {
+      flex: 0 0 auto;
+      width: $sidebar-collapsed-width;
+
+      .offcanvas-body {
+        overflow-x: hidden;
+      }
+    }
+
+    > .row > main {
+      flex: 1 1 0;
+      width: auto;
+      max-width: none;
+    }
+
+    .nav-label {
+      display: none;
+    }
+
+    .sidebar .nav-link {
+      justify-content: center;
+      height: $sidebar-cell;
+      padding: 0;
+
+      .bi {
+        font-size: $sidebar-collapsed-icon;
+        line-height: 1; // a taller line box would overflow the cell and bring a scrollbar
+      }
+    }
+  }
+}
