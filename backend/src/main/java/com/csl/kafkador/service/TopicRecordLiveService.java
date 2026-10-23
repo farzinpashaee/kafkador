@@ -2,9 +2,11 @@ package com.csl.kafkador.service;
 
 import com.csl.kafkador.domain.dto.RecordFilterDto;
 import com.csl.kafkador.domain.dto.TopicRecordDto;
+import com.csl.kafkador.domain.options.RecordDecoder;
 import com.csl.kafkador.domain.options.RecordSerde;
 import com.csl.kafkador.exception.InvalidRecordRequestException;
 import com.csl.kafkador.exception.TopicNotFoundException;
+import com.csl.kafkador.service.registry.SchemaRegistryRecordDecoders;
 import com.csl.kafkador.util.RecordFilterMatcher;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -47,6 +49,7 @@ public class TopicRecordLiveService {
     static final long HEARTBEAT_MILLIS = 15_000;
 
     private final ConnectionService connectionService;
+    private final SchemaRegistryRecordDecoders recordDecoders;
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
     /** What the streaming loop writes to; an SSE emitter in production. */
@@ -61,9 +64,12 @@ public class TopicRecordLiveService {
     }
 
     public SseEmitter listen(String topic, List<Integer> partitions, RecordSerde keySerde, RecordSerde valueSerde,
-                             List<RecordFilterDto> filters) {
+                             List<RecordFilterDto> filters) throws InvalidRecordRequestException {
         // Read in the request thread: the active connection lives in the HTTP session.
         Properties properties = consumerProperties(connectionService.getActiveConnectionProperties());
+        String clusterId = connectionService.getActiveConnection().getClusterId();
+        RecordDecoder keyDecoder = recordDecoders.decoder(keySerde, topic, clusterId);
+        RecordDecoder valueDecoder = recordDecoders.decoder(valueSerde, topic, clusterId);
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
         AtomicBoolean running = new AtomicBoolean(true);
         emitter.onCompletion(() -> running.set(false));
@@ -72,7 +78,7 @@ public class TopicRecordLiveService {
 
         executor.execute(() -> {
             try (Consumer<byte[], byte[]> consumer = new KafkaConsumer<>(properties, new ByteArrayDeserializer(), new ByteArrayDeserializer())) {
-                stream(consumer, topic, partitions, keySerde, valueSerde, filters, sink(emitter), running::get);
+                stream(consumer, topic, partitions, keyDecoder, valueDecoder, filters, sink(emitter), running::get);
             } catch (Exception e) {
                 log.error("Live stream of topic {} failed to start", topic, e);
                 sink(emitter).failure("Live stream stopped: " + e.getMessage());
@@ -84,8 +90,8 @@ public class TopicRecordLiveService {
     }
 
     /** Positions at the end of the partitions and forwards matching records until {@code running} turns false. */
-    void stream(Consumer<byte[], byte[]> consumer, String topic, List<Integer> partitions, RecordSerde keySerde,
-                RecordSerde valueSerde, List<RecordFilterDto> filters, LiveSink sink, BooleanSupplier running) {
+    void stream(Consumer<byte[], byte[]> consumer, String topic, List<Integer> partitions, RecordDecoder keyDecoder,
+                RecordDecoder valueDecoder, List<RecordFilterDto> filters, LiveSink sink, BooleanSupplier running) {
         try {
             List<TopicPartition> assigned = TopicRecordService.resolvePartitions(consumer, topic, partitions);
             consumer.assign(assigned);
@@ -96,7 +102,7 @@ public class TopicRecordLiveService {
             while (running.getAsBoolean()) {
                 List<TopicRecordDto> batch = new ArrayList<>();
                 for (ConsumerRecord<byte[], byte[]> record : consumer.poll(TopicRecordService.POLL_TIMEOUT)) {
-                    TopicRecordDto dto = TopicRecordService.toDto(record, keySerde, valueSerde);
+                    TopicRecordDto dto = TopicRecordService.toDto(record, keyDecoder, valueDecoder);
                     if (RecordFilterMatcher.matches(dto, filters)) batch.add(dto);
                 }
                 long now = System.currentTimeMillis();

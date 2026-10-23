@@ -4,11 +4,12 @@ import com.csl.kafkador.domain.dto.TopicRecordDto;
 import com.csl.kafkador.domain.dto.TopicRecordSearchRequestDto;
 import com.csl.kafkador.domain.dto.TopicRecordSearchRequestDto.SeekType;
 import com.csl.kafkador.domain.dto.TopicRecordSearchResultDto;
-import com.csl.kafkador.domain.options.RecordSerde;
+import com.csl.kafkador.domain.options.RecordDecoder;
 import com.csl.kafkador.exception.ConnectionSessionExpiredException;
 import com.csl.kafkador.exception.InvalidRecordRequestException;
 import com.csl.kafkador.exception.KafkaAdminApiException;
 import com.csl.kafkador.exception.TopicNotFoundException;
+import com.csl.kafkador.service.registry.SchemaRegistryRecordDecoders;
 import com.csl.kafkador.util.RecordFilterMatcher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,11 +53,15 @@ public class TopicRecordService {
     static final int MAX_TEXT_LENGTH = 100_000;
 
     private final ConnectionService connectionService;
+    private final SchemaRegistryRecordDecoders recordDecoders;
 
     public TopicRecordSearchResultDto search(String topic, TopicRecordSearchRequestDto request)
             throws KafkaAdminApiException, TopicNotFoundException, InvalidRecordRequestException {
+        String clusterId = connectionService.getActiveConnection().getClusterId();
+        RecordDecoder keyDecoder = recordDecoders.decoder(request.getKeySerde(), topic, clusterId);
+        RecordDecoder valueDecoder = recordDecoders.decoder(request.getValueSerde(), topic, clusterId);
         try (Consumer<byte[], byte[]> consumer = createConsumer()) {
-            return search(consumer, topic, request);
+            return search(consumer, topic, request, keyDecoder, valueDecoder);
         } catch (ConnectionSessionExpiredException | TopicNotFoundException | InvalidRecordRequestException e) {
             throw e;
         } catch (Exception e) {
@@ -65,7 +70,14 @@ public class TopicRecordService {
         }
     }
 
+    /** A search decoding with the request's serdes as they are; Schema Registry ones only describe their bytes. */
     TopicRecordSearchResultDto search(Consumer<byte[], byte[]> consumer, String topic, TopicRecordSearchRequestDto request)
+            throws TopicNotFoundException, InvalidRecordRequestException {
+        return search(consumer, topic, request, request.getKeySerde(), request.getValueSerde());
+    }
+
+    TopicRecordSearchResultDto search(Consumer<byte[], byte[]> consumer, String topic, TopicRecordSearchRequestDto request,
+                                      RecordDecoder keyDecoder, RecordDecoder valueDecoder)
             throws TopicNotFoundException, InvalidRecordRequestException {
         if (request.getSeekType() == SeekType.OFFSET && request.getOffset() == null) {
             throw new InvalidRecordRequestException("An offset is required to read from an offset");
@@ -85,7 +97,7 @@ public class TopicRecordService {
         Map<TopicPartition, Long> start = startOffsets(request.getSeekType(), partitions, begin, end, fromTimestamp,
                 request.getOffset(), newestWindow);
 
-        Scan scan = scan(consumer, start, end, request, request.getSeekType() != SeekType.NEWEST);
+        Scan scan = scan(consumer, start, end, request, keyDecoder, valueDecoder, request.getSeekType() != SeekType.NEWEST);
         boolean newestCut = request.getSeekType() == SeekType.NEWEST && filtered && scan.matches.size() < request.getLimit()
                 && partitions.stream().anyMatch(tp -> start.get(tp) > begin.get(tp));
         return new TopicRecordSearchResultDto()
@@ -141,7 +153,7 @@ public class TopicRecordService {
         return matches.stream().sorted(order).limit(limit).toList();
     }
 
-    static TopicRecordDto toDto(ConsumerRecord<byte[], byte[]> record, RecordSerde keySerde, RecordSerde valueSerde) {
+    static TopicRecordDto toDto(ConsumerRecord<byte[], byte[]> record, RecordDecoder keyDecoder, RecordDecoder valueDecoder) {
         List<TopicRecordDto.Header> headers = StreamSupport.stream(record.headers().spliterator(), false)
                 .map(TopicRecordService::header)
                 .toList();
@@ -150,8 +162,8 @@ public class TopicRecordService {
                 .setOffset(record.offset())
                 .setTimestamp(record.timestamp())
                 .setTimestampType(record.timestampType() == null ? null : record.timestampType().name)
-                .setKey(truncate(keySerde.decode(record.key())))
-                .setValue(truncate(valueSerde.decode(record.value())))
+                .setKey(truncate(keyDecoder.decode(record.key())))
+                .setValue(truncate(valueDecoder.decode(record.value())))
                 .setKeySize(record.key() == null ? -1 : record.key().length)
                 .setValueSize(record.value() == null ? -1 : record.value().length)
                 .setHeaders(headers);
@@ -165,7 +177,8 @@ public class TopicRecordService {
      * meanwhile are left for the next refresh. {@code stopAtLimit} ends the scan early once enough records match.
      */
     private Scan scan(Consumer<byte[], byte[]> consumer, Map<TopicPartition, Long> start, Map<TopicPartition, Long> end,
-                      TopicRecordSearchRequestDto request, boolean stopAtLimit) {
+                      TopicRecordSearchRequestDto request, RecordDecoder keyDecoder, RecordDecoder valueDecoder,
+                      boolean stopAtLimit) {
         Set<TopicPartition> active = start.entrySet().stream()
                 .filter(e -> e.getValue() < end.getOrDefault(e.getKey(), 0L))
                 .map(Map.Entry::getKey)
@@ -185,7 +198,7 @@ public class TopicRecordService {
                 TopicPartition tp = new TopicPartition(record.topic(), record.partition());
                 if (!active.contains(tp) || record.offset() >= end.get(tp)) continue;
                 scanned++;
-                TopicRecordDto dto = toDto(record, request.getKeySerde(), request.getValueSerde());
+                TopicRecordDto dto = toDto(record, keyDecoder, valueDecoder);
                 if (RecordFilterMatcher.matches(dto, request.getFilters())) matches.add(dto);
             }
             // Compaction gaps and transaction markers mean the last offset may never arrive as a record.

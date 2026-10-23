@@ -22,7 +22,8 @@ describe('TopicComponent', () => {
   };
 
   beforeEach(async () => {
-    apiServiceSpy = jasmine.createSpyObj('ApiService', ['getTopicDetails', 'getTopicConsumerGroups', 'searchTopicRecords', 'getTopicMetrics']);
+    apiServiceSpy = jasmine.createSpyObj('ApiService', ['getTopicDetails', 'getTopicConsumerGroups', 'searchTopicRecords', 'getTopicMetrics', 'getSchemaSubjects']);
+    apiServiceSpy.getSchemaSubjects.and.returnValue(of({ data: { configured: false, subjects: [] } } as any));
     apiServiceSpy.getTopicDetails.and.returnValue(of({ data: topic } as GenericResponse<Topic>));
     apiServiceSpy.getTopicConsumerGroups.and.returnValue(of({ data: [] } as any));
     apiServiceSpy.getTopicMetrics.and.returnValue(of({ data: { sources: [], series: [], seriesLimitReached: false } } as any));

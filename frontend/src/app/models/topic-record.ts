@@ -1,4 +1,5 @@
-export type RecordSerde = 'STRING' | 'JSON' | 'INT' | 'LONG' | 'FLOAT' | 'DOUBLE' | 'BASE64' | 'HEX';
+/** SCHEMA_REGISTRY decodes Confluent's wire format (Avro, Protobuf, JSON Schema) to JSON; it can't be produced. */
+export type RecordSerde = 'STRING' | 'JSON' | 'INT' | 'LONG' | 'FLOAT' | 'DOUBLE' | 'BASE64' | 'HEX' | 'SCHEMA_REGISTRY';
 export type RecordSeekType = 'NEWEST' | 'OLDEST' | 'OFFSET' | 'TIMESTAMP';
 
 export interface RecordFilter {

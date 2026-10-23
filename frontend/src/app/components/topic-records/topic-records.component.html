@@ -225,13 +225,13 @@
           <div class="col-6 col-md-4">
             <label for="produceKeySerde" class="form-label">Key serde</label>
             <select id="produceKeySerde" class="form-select" [(ngModel)]="produceKeySerde">
-              <option *ngFor="let serde of serdes" [ngValue]="serde.value">{{ serde.label }}</option>
+              <option *ngFor="let serde of produceSerdes" [ngValue]="serde.value">{{ serde.label }}</option>
             </select>
           </div>
           <div class="col-6 col-md-4">
             <label for="produceValueSerde" class="form-label">Value serde</label>
             <select id="produceValueSerde" class="form-select" [(ngModel)]="produceValueSerde">
-              <option *ngFor="let serde of serdes" [ngValue]="serde.value">{{ serde.label }}</option>
+              <option *ngFor="let serde of produceSerdes" [ngValue]="serde.value">{{ serde.label }}</option>
             </select>
           </div>
         </div>

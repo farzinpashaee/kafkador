@@ -18,7 +18,8 @@ describe('TopicRecordsComponent', () => {
   const records = [record(1, 4, 3000), record(0, 9, 2000), record(0, 8, 1000, { key: null, keySize: -1 })];
 
   beforeEach(async () => {
-    api = jasmine.createSpyObj<ApiService>('ApiService', ['searchTopicRecords', 'produceTopicRecord', 'listenTopicRecords']);
+    api = jasmine.createSpyObj<ApiService>('ApiService', ['searchTopicRecords', 'produceTopicRecord', 'listenTopicRecords', 'getSchemaSubjects']);
+    api.getSchemaSubjects.and.returnValue(of({ data: { configured: true, subjects: [{ name: 'payments-value' }] } } as any));
     api.produceTopicRecord.and.returnValue(of({ data: { partition: 1, offset: 81, timestamp: 5000 } } as any));
     api.searchTopicRecords.and.returnValue(of({ data: { records, scannedCount: 3, scanLimitReached: false } } as any));
 
@@ -43,6 +44,32 @@ describe('TopicRecordsComponent', () => {
     const rows = (fixture.nativeElement as HTMLElement).querySelectorAll('tbody > tr');
     expect(rows.length).toBe(3);
     expect(rows[2].textContent).toContain('null');
+  });
+
+  it('reads with Schema Registry when the topic has a value or key subject', () => {
+    api.getSchemaSubjects.and.returnValue(of({ data: { configured: true, subjects: [{ name: 'orders-value' }, { name: 'orders-key' }] } } as any));
+    api.searchTopicRecords.calls.reset();
+
+    component.ngOnInit();
+
+    expect(api.searchTopicRecords).toHaveBeenCalledWith('orders', jasmine.objectContaining({ keySerde: 'SCHEMA_REGISTRY', valueSerde: 'SCHEMA_REGISTRY' }));
+  });
+
+  it('still reads records when the subject list is unavailable', () => {
+    api.getSchemaSubjects.and.returnValue(throwError(() => ({ status: 500 })));
+    api.searchTopicRecords.calls.reset();
+
+    component.ngOnInit();
+
+    expect(api.searchTopicRecords).toHaveBeenCalledWith('orders', jasmine.objectContaining({ keySerde: 'STRING', valueSerde: 'STRING' }));
+  });
+
+  it('produces JSON when the table reads with Schema Registry, which it cannot produce', () => {
+    component.valueSerde = 'SCHEMA_REGISTRY';
+    component.openProduceDialog();
+
+    expect(component.produceValueSerde).toBe('JSON');
+    expect(component.produceSerdes.map(s => s.value)).not.toContain('SCHEMA_REGISTRY');
   });
 
   it('waits for an offset before reading from one', () => {

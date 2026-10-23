@@ -2,7 +2,8 @@ import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Subscription } from 'rxjs';
+import { Subscription, of, timeout } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { ApiService, CommonService } from '../../services';
 import { Error, GenericResponse, RecordFilter, RecordSeekType, RecordSerde, TopicRecord, TopicRecordProduceResult,
   TopicRecordSearchRequest, TopicRecordSearchResult } from '../../models';
@@ -23,6 +24,9 @@ const EXPORT_FIELDS: ExportField<TopicRecord>[] = [
   { key: 'value', label: 'Value', value: r => r.value },
   { key: 'headers', label: 'Headers', value: r => r.headers.length ? JSON.stringify(r.headers) : null }
 ];
+
+/** How long the Records tab waits for the subject list before loading with the usual serdes. */
+const SUBJECT_LOOKUP_TIMEOUT_MS = 3000;
 
 /** Records tab of the topic page: reads a window of records with server-side seek, serdes and filters. */
 @Component({
@@ -50,8 +54,11 @@ export class TopicRecordsComponent implements OnInit, OnDestroy {
     { value: 'FLOAT', label: 'Float' },
     { value: 'DOUBLE', label: 'Double' },
     { value: 'BASE64', label: 'Bytes (Base64)' },
-    { value: 'HEX', label: 'Bytes (Hex)' }
+    { value: 'HEX', label: 'Bytes (Hex)' },
+    { value: 'SCHEMA_REGISTRY', label: 'Schema Registry (Avro, Protobuf, JSON Schema)' }
   ];
+  /** Producing with Schema Registry isn't supported, so the produce dialog leaves it out. */
+  readonly produceSerdes = this.serdes.filter(serde => serde.value !== 'SCHEMA_REGISTRY');
   readonly filterFields: { value: RecordFilter['field']; label: string }[] = [
     { value: 'ANY', label: 'Key, value or headers' },
     { value: 'KEY', label: 'Key' },
@@ -109,7 +116,23 @@ export class TopicRecordsComponent implements OnInit, OnDestroy {
   constructor(private apiService: ApiService, private commonService: CommonService) {}
 
   ngOnInit(): void {
-    this.load();
+    this.preselectSchemaRegistry();
+  }
+
+  /**
+   * Reads with Schema Registry when the topic has a subject for its values (or keys) under the default naming,
+   * <topic>-value and <topic>-key, then loads. No registry, or one that's slow to answer, just means the usual serdes.
+   */
+  private preselectSchemaRegistry(): void {
+    this.apiService.getSchemaSubjects().pipe(
+      timeout(SUBJECT_LOOKUP_TIMEOUT_MS),
+      catchError(() => of(undefined))
+    ).subscribe(res => {
+      const subjects = new Set((res?.data?.subjects ?? []).map(subject => subject.name));
+      if (subjects.has(`${this.topicName}-value`)) this.valueSerde = 'SCHEMA_REGISTRY';
+      if (subjects.has(`${this.topicName}-key`)) this.keySerde = 'SCHEMA_REGISTRY';
+      this.load();
+    });
   }
 
   ngOnDestroy(): void {
@@ -297,9 +320,14 @@ export class TopicRecordsComponent implements OnInit, OnDestroy {
     this.errors.delete('produce');
     this.produceResult = undefined;
     if (!this.keepProduceContents) {
-      this.produceKeySerde = this.keySerde;
-      this.produceValueSerde = this.valueSerde;
+      this.produceKeySerde = this.producible(this.keySerde);
+      this.produceValueSerde = this.producible(this.valueSerde);
     }
+  }
+
+  /** Schema Registry data can't be produced yet, so the dialog starts from JSON instead. */
+  private producible(serde: RecordSerde): RecordSerde {
+    return serde === 'SCHEMA_REGISTRY' ? 'JSON' : serde;
   }
 
   /** The headers editor as a name to value map, or an error message when it isn't a JSON object of plain values. */

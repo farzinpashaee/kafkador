@@ -8,6 +8,7 @@ import com.csl.kafkador.domain.dto.TopicRecordSearchResultDto;
 import com.csl.kafkador.domain.options.RecordSerde;
 import com.csl.kafkador.exception.InvalidRecordRequestException;
 import com.csl.kafkador.exception.TopicNotFoundException;
+import com.csl.kafkador.service.registry.SchemaRegistryRecordDecoders;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.common.PartitionInfo;
@@ -35,7 +36,7 @@ class TopicRecordServiceTest {
     private static final TopicPartition P0 = new TopicPartition(TOPIC, 0);
     private static final TopicPartition P1 = new TopicPartition(TOPIC, 1);
 
-    private final TopicRecordService service = new TopicRecordService(mock(ConnectionService.class));
+    private final TopicRecordService service = new TopicRecordService(mock(ConnectionService.class), mock(SchemaRegistryRecordDecoders.class));
     private MockConsumer<byte[], byte[]> consumer;
 
     /** Partition 0 holds offsets 0-9 (t=1000..1090), partition 1 offsets 0-4 (t=1055..1095), so newest interleaves them. */

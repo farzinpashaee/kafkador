@@ -4,6 +4,7 @@ import com.csl.kafkador.domain.dto.RecordFilterDto;
 import com.csl.kafkador.domain.dto.TopicRecordDto;
 import com.csl.kafkador.domain.options.RecordSerde;
 import com.csl.kafkador.exception.InvalidRecordRequestException;
+import com.csl.kafkador.service.registry.SchemaRegistryRecordDecoders;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.common.PartitionInfo;
@@ -29,7 +30,7 @@ class TopicRecordLiveServiceTest {
     private static final String TOPIC = "orders";
     private static final TopicPartition P0 = new TopicPartition(TOPIC, 0);
 
-    private final TopicRecordLiveService service = new TopicRecordLiveService(mock(ConnectionService.class));
+    private final TopicRecordLiveService service = new TopicRecordLiveService(mock(ConnectionService.class), mock(SchemaRegistryRecordDecoders.class));
     private final RecordingSink sink = new RecordingSink();
     private MockConsumer<byte[], byte[]> consumer;
 
