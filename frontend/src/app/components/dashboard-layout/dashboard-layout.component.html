@@ -9,7 +9,7 @@
           (click)="toggleSidebar()" [attr.aria-expanded]="!sidebarCollapsed" aria-controls="sidebarMenu"
           [attr.aria-label]="sidebarCollapsed ? 'Expand menu' : 'Collapse menu'"
           [attr.title]="sidebarCollapsed ? 'Expand menu' : 'Collapse menu'">
-    <span class="toggle-ring" aria-hidden="true"><i class="bi" [ngClass]="sidebarCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'"></i></span>
+    <span class="toggle-icon" aria-hidden="true"><i class="bi" [ngClass]="sidebarCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'"></i></span>
   </button>
   <div>
     <div class="search-container">
