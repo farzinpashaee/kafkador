@@ -19,15 +19,52 @@ $sidebar-collapsed-width: calc(#{$sidebar-cell * 1.1} + 2px);
   display: none;
 }
 
-// In the dark header, right after the logo.
+// A small chevron in a gray ring (as in the design), in the dark header: inside the logo area's right edge while
+// the menu is open, just past the logo mark once it's collapsed. The button's width sets how far the ring's centre
+// sits from that edge.
+$toggle-width: 2.25rem;
+$toggle-ring: 1.2rem;
+
 .sidebar-toggle {
-  color: rgba(255, 255, 255, 0.6);
+  width: $toggle-width;
+  margin-left: -$toggle-width;
+  color: rgba(255, 255, 255, 0.3);
   text-decoration: none;
   align-self: stretch;
 
+  &.is-collapsed {
+    margin-left: 0;
+  }
+
   &:hover,
   &:focus-visible {
-    color: #fff;
+    color: rgba(255, 255, 255, 0.75);
+  }
+}
+
+.toggle-ring {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: $toggle-ring;
+  height: $toggle-ring;
+  border: 3px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.6rem;
+  line-height: 1;
+
+  // The glyph's own box, exactly its size, so the ring centres the glyph itself. The global .bi box is 1rem square,
+  // taller than this small glyph, which then sits at its top and looks too high.
+  .bi {
+    display: flex;
+    width: auto;
+    height: auto;
+    -webkit-text-stroke: 0.4px; // the glyph alone is thinner than the ring at this size
+
+    &::before {
+      line-height: 1;
+      vertical-align: 0;
+    }
   }
 }
 

@@ -4,11 +4,12 @@
     <img src="/images/logo-shape-white-v1-256.svg" class="logo-image logo-mark" alt="" aria-hidden="true">
   </a>
   <!-- Desktop only: on small screens the menu is a full-width drawer anyway. -->
-  <button type="button" class="sidebar-toggle btn btn-link d-none d-md-inline-flex align-items-center px-3 me-auto"
+  <button type="button" class="sidebar-toggle btn btn-link d-none d-md-inline-flex align-items-center justify-content-center p-0 me-auto"
+          [class.is-collapsed]="sidebarCollapsed"
           (click)="toggleSidebar()" [attr.aria-expanded]="!sidebarCollapsed" aria-controls="sidebarMenu"
           [attr.aria-label]="sidebarCollapsed ? 'Expand menu' : 'Collapse menu'"
           [attr.title]="sidebarCollapsed ? 'Expand menu' : 'Collapse menu'">
-    <i class="bi" [ngClass]="sidebarCollapsed ? 'bi-chevron-double-right' : 'bi-chevron-double-left'" aria-hidden="true"></i>
+    <span class="toggle-ring" aria-hidden="true"><i class="bi" [ngClass]="sidebarCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'"></i></span>
   </button>
   <div>
     <div class="search-container">
