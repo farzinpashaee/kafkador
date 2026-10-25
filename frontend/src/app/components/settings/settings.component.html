@@ -110,6 +110,9 @@
           <div id="schemaRegistryUrlHelp" class="form-text">The base URL of your Schema Registry server's REST API.</div>
         </div>
 
+        <app-service-auth-form idPrefix="schemaRegistry" serviceName="Schema Registry" [auth]="schemaRegistryConfig.auth!"
+                               (changed)="savedAt.delete('schemaRegistrySettings')"></app-service-auth-form>
+
         <hr class="my-3">
 
         <h6>Default Compatibility Level</h6>
@@ -157,6 +160,9 @@
           <div id="ksqlDbUrlHelp" class="form-text">The base URL of your ksqlDB server's REST API.</div>
         </div>
 
+        <app-service-auth-form idPrefix="ksqlDb" serviceName="ksqlDB" [auth]="ksqlDbConfig.auth!"
+                               (changed)="savedAt.delete('ksqlDbConfig')"></app-service-auth-form>
+
         <div *ngIf="errors.get('getKsqlDbConfig')" class="alert alert-danger" role="alert">
           {{ errors.get('getKsqlDbConfig')?.message }}
         </div>
@@ -191,6 +197,9 @@
           <input required [(ngModel)]="kafkaConnectConfig.url" (ngModelChange)="savedAt.delete('kafkaConnectConfig')" type="text" class="form-control" id="kafkaConnectUrl" placeholder="e.g. http://localhost:8083" aria-describedby="kafkaConnectUrlHelp">
           <div id="kafkaConnectUrlHelp" class="form-text">The base URL of your Kafka Connect worker's REST API.</div>
         </div>
+
+        <app-service-auth-form idPrefix="kafkaConnect" serviceName="Kafka Connect" [auth]="kafkaConnectConfig.auth!"
+                               (changed)="savedAt.delete('kafkaConnectConfig')"></app-service-auth-form>
 
         <div *ngIf="errors.get('getKafkaConnectConfig')" class="alert alert-danger" role="alert">
           {{ errors.get('getKafkaConnectConfig')?.message }}

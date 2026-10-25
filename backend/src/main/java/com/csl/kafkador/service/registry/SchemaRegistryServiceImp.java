@@ -11,6 +11,8 @@ import com.csl.kafkador.domain.dto.SchemaRegistryDto;
 import com.csl.kafkador.domain.dto.SchemaVersionDto;
 import com.csl.kafkador.domain.model.Cluster;
 import com.csl.kafkador.exception.ConfigNotFoundException;
+import com.csl.kafkador.exception.InvalidServiceConfigException;
+import com.csl.kafkador.service.ExternalServiceConnections;
 import com.csl.kafkador.exception.SchemaRegistryApiException;
 import com.csl.kafkador.repository.ClusterRepository;
 import com.csl.kafkador.service.config.KafkadorConfigService;
@@ -47,6 +49,7 @@ public class SchemaRegistryServiceImp implements SchemaRegistryService {
     private static final String DEFAULT_PORT = "8081";
 
     private final RestTemplate restTemplate;
+    private final ExternalServiceConnections connections;
     private final ObjectMapper objectMapper;
     private final KafkadorConfigService<String,Map.Entry<String,String>> kafkadorConfigService;
     private final ClusterRepository clusterRepository;
@@ -57,7 +60,7 @@ public class SchemaRegistryServiceImp implements SchemaRegistryService {
         try {
             String url = resolveUrl(clusterId);
             schemaRegistry.setConfigured(true);
-            ResponseEntity<List<String>> response = restTemplate.exchange(
+            ResponseEntity<List<String>> response = http(clusterId).exchange(
                     url + "/subjects",
                     HttpMethod.GET,
                     null,
@@ -87,20 +90,28 @@ public class SchemaRegistryServiceImp implements SchemaRegistryService {
         } catch (ConfigNotFoundException e) {
             log.warn(e.toString());
         }
+        config.setAuth(connections.describe(ExternalServiceConnections.SCHEMA_REGISTRY, clusterId));
         return config;
     }
 
     @Override
-    public SchemaRegistryConfigDto saveConfig(String url, String clusterId) {
-        String saved = kafkadorConfigService.save(new AbstractMap.SimpleEntry<>(CONFIG_KEY, url), clusterId);
-        return new SchemaRegistryConfigDto().setUrl(saved).setConfigured(true);
+    public SchemaRegistryConfigDto saveConfig(SchemaRegistryConfigDto config, String clusterId) throws InvalidServiceConfigException {
+        // Sign-in settings first: if they're rejected, the URL isn't half-saved either.
+        connections.save(ExternalServiceConnections.SCHEMA_REGISTRY, config.getAuth(), clusterId);
+        kafkadorConfigService.save(new AbstractMap.SimpleEntry<>(CONFIG_KEY, config.getUrl()), clusterId);
+        return getConfig(clusterId);
+    }
+
+    /** The client for this service, signed in and trusting its CA as set in Settings. */
+    private RestTemplate http(String clusterId) {
+        return connections.restTemplate(ExternalServiceConnections.SCHEMA_REGISTRY, clusterId);
     }
 
     @Override
     public List<Integer> getVersions(String subject, String clusterId) throws ConfigNotFoundException, SchemaRegistryApiException {
         String url = resolveUrl(clusterId);
         try {
-            ResponseEntity<List<Integer>> response = restTemplate.exchange(
+            ResponseEntity<List<Integer>> response = http(clusterId).exchange(
                     url + "/subjects/" + encode(subject) + "/versions",
                     HttpMethod.GET, null,
                     new ParameterizedTypeReference<List<Integer>>() {}
@@ -115,7 +126,7 @@ public class SchemaRegistryServiceImp implements SchemaRegistryService {
     public SchemaVersionDto getVersion(String subject, String version, String clusterId) throws ConfigNotFoundException, SchemaRegistryApiException {
         String url = resolveUrl(clusterId);
         try {
-            Map<String, Object> body = restTemplate.exchange(
+            Map<String, Object> body = http(clusterId).exchange(
                     url + "/subjects/" + encode(subject) + "/versions/" + version,
                     HttpMethod.GET, null,
                     new ParameterizedTypeReference<Map<String, Object>>() {}
@@ -133,7 +144,7 @@ public class SchemaRegistryServiceImp implements SchemaRegistryService {
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("schema", request.getSchema());
             if (request.getSchemaType() != null) body.put("schemaType", request.getSchemaType());
-            restTemplate.exchange(
+            http(clusterId).exchange(
                     url + "/subjects/" + encode(subject) + "/versions",
                     HttpMethod.POST, new HttpEntity<>(body),
                     new ParameterizedTypeReference<Map<String, Object>>() {}
@@ -155,7 +166,7 @@ public class SchemaRegistryServiceImp implements SchemaRegistryService {
                     .queryParam("verbose", "true")
                     .build(true)
                     .toUri();
-            Map<String, Object> response = restTemplate.exchange(uri, HttpMethod.POST, new HttpEntity<>(body),
+            Map<String, Object> response = http(clusterId).exchange(uri, HttpMethod.POST, new HttpEntity<>(body),
                     new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
             if (response == null) return new CompatibilityCheckResultDto().setCompatible(false);
             boolean compatible = Boolean.TRUE.equals(response.get("is_compatible"));
@@ -176,7 +187,7 @@ public class SchemaRegistryServiceImp implements SchemaRegistryService {
                     .queryParam("permanent", permanent)
                     .build(true)
                     .toUri();
-            ResponseEntity<List<Integer>> response = restTemplate.exchange(uri, HttpMethod.DELETE, null,
+            ResponseEntity<List<Integer>> response = http(clusterId).exchange(uri, HttpMethod.DELETE, null,
                     new ParameterizedTypeReference<List<Integer>>() {});
             return response.getBody() == null ? Collections.emptyList() : response.getBody();
         } catch (RestClientException e) {
@@ -192,7 +203,7 @@ public class SchemaRegistryServiceImp implements SchemaRegistryService {
                     .queryParam("permanent", permanent)
                     .build(true)
                     .toUri();
-            restTemplate.exchange(uri, HttpMethod.DELETE, null, Void.class);
+            http(clusterId).exchange(uri, HttpMethod.DELETE, null, Void.class);
         } catch (RestClientException e) {
             throw wrap(e, "Error deleting version '" + version + "' of subject '" + subject + "'");
         }
@@ -202,7 +213,7 @@ public class SchemaRegistryServiceImp implements SchemaRegistryService {
     public CompatibilityConfigDto getGlobalCompatibility(String clusterId) throws ConfigNotFoundException, SchemaRegistryApiException {
         String url = resolveUrl(clusterId);
         try {
-            Map<String, Object> body = restTemplate.exchange(url + "/config", HttpMethod.GET, null,
+            Map<String, Object> body = http(clusterId).exchange(url + "/config", HttpMethod.GET, null,
                     new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
             return new CompatibilityConfigDto().setLevel(body == null ? null : asString(body.get("compatibilityLevel")));
         } catch (RestClientException e) {
@@ -215,7 +226,7 @@ public class SchemaRegistryServiceImp implements SchemaRegistryService {
         String url = resolveUrl(clusterId);
         try {
             Map<String, Object> body = Map.of("compatibility", config.getLevel());
-            Map<String, Object> response = restTemplate.exchange(url + "/config", HttpMethod.PUT, new HttpEntity<>(body),
+            Map<String, Object> response = http(clusterId).exchange(url + "/config", HttpMethod.PUT, new HttpEntity<>(body),
                     new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
             return new CompatibilityConfigDto().setLevel(response == null ? config.getLevel() : asString(response.get("compatibility")));
         } catch (RestClientException e) {
@@ -227,7 +238,7 @@ public class SchemaRegistryServiceImp implements SchemaRegistryService {
     public CompatibilityConfigDto getSubjectCompatibility(String subject, String clusterId) throws ConfigNotFoundException, SchemaRegistryApiException {
         String url = resolveUrl(clusterId);
         try {
-            Map<String, Object> body = restTemplate.exchange(url + "/config/" + encode(subject), HttpMethod.GET, null,
+            Map<String, Object> body = http(clusterId).exchange(url + "/config/" + encode(subject), HttpMethod.GET, null,
                     new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
             return new CompatibilityConfigDto().setLevel(body == null ? null : asString(body.get("compatibilityLevel")));
         } catch (HttpClientErrorException.NotFound e) {
@@ -242,7 +253,7 @@ public class SchemaRegistryServiceImp implements SchemaRegistryService {
         String url = resolveUrl(clusterId);
         try {
             Map<String, Object> body = Map.of("compatibility", config.getLevel());
-            Map<String, Object> response = restTemplate.exchange(url + "/config/" + encode(subject), HttpMethod.PUT, new HttpEntity<>(body),
+            Map<String, Object> response = http(clusterId).exchange(url + "/config/" + encode(subject), HttpMethod.PUT, new HttpEntity<>(body),
                     new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
             return new CompatibilityConfigDto().setLevel(response == null ? config.getLevel() : asString(response.get("compatibility")));
         } catch (RestClientException e) {
@@ -254,7 +265,7 @@ public class SchemaRegistryServiceImp implements SchemaRegistryService {
     public void clearSubjectCompatibility(String subject, String clusterId) throws ConfigNotFoundException, SchemaRegistryApiException {
         String url = resolveUrl(clusterId);
         try {
-            restTemplate.exchange(url + "/config/" + encode(subject), HttpMethod.DELETE, null, Void.class);
+            http(clusterId).exchange(url + "/config/" + encode(subject), HttpMethod.DELETE, null, Void.class);
         } catch (RestClientException e) {
             throw wrap(e, "Error clearing compatibility override for subject '" + subject + "'");
         }
@@ -264,12 +275,12 @@ public class SchemaRegistryServiceImp implements SchemaRegistryService {
     public SchemaLookupResultDto lookupById(Integer id, String clusterId) throws ConfigNotFoundException, SchemaRegistryApiException {
         String url = resolveUrl(clusterId);
         try {
-            Map<String, Object> schemaBody = restTemplate.exchange(url + "/schemas/ids/" + id, HttpMethod.GET, null,
+            Map<String, Object> schemaBody = http(clusterId).exchange(url + "/schemas/ids/" + id, HttpMethod.GET, null,
                     new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
 
             List<Map<String, Object>> versions;
             try {
-                ResponseEntity<List<Map<String, Object>>> versionsResponse = restTemplate.exchange(
+                ResponseEntity<List<Map<String, Object>>> versionsResponse = http(clusterId).exchange(
                         url + "/schemas/ids/" + id + "/versions", HttpMethod.GET, null,
                         new ParameterizedTypeReference<List<Map<String, Object>>>() {});
                 versions = versionsResponse.getBody() == null ? Collections.emptyList() : versionsResponse.getBody();

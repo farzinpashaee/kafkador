@@ -1,3 +1,4 @@
+import { ServiceAuth } from './service-auth';
 import { Schema } from './schema';
 export class SchemaRegistry {
     configured!: boolean;
@@ -7,6 +8,7 @@ export class SchemaRegistry {
 export class SchemaRegistryConfig {
     configured!: boolean;
     url?: string;
+    auth?: ServiceAuth;
 }
 
 export class SchemaVersion {

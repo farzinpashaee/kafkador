@@ -4,6 +4,7 @@ import com.csl.kafkador.domain.dto.SchemaRegistryConfigDto;
 import com.csl.kafkador.domain.options.RecordDecoder;
 import com.csl.kafkador.domain.options.RecordSerde;
 import com.csl.kafkador.exception.InvalidRecordRequestException;
+import com.csl.kafkador.service.ExternalServiceConnections;
 import com.csl.kafkador.service.registry.SchemaRegistryRecordDecoders.WireFormatDecoder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -105,7 +106,7 @@ class SchemaRegistryRecordDecodersTest {
     void plainSerdesDecodeByThemselvesAndAMissingRegistryIsReported() throws Exception {
         SchemaRegistryService service = mock(SchemaRegistryService.class);
         when(service.getConfig("c1")).thenReturn(new SchemaRegistryConfigDto());
-        SchemaRegistryRecordDecoders decoders = new SchemaRegistryRecordDecoders(service);
+        SchemaRegistryRecordDecoders decoders = new SchemaRegistryRecordDecoders(service, mock(ExternalServiceConnections.class));
 
         RecordDecoder hex = decoders.decoder(RecordSerde.HEX, TOPIC, "c1");
         assertThat(hex.decode(new byte[]{(byte) 0xAB})).isEqualTo("ab");

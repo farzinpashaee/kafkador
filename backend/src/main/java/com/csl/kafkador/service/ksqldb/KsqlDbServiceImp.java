@@ -10,6 +10,8 @@ import com.csl.kafkador.domain.dto.KsqlStreamDto;
 import com.csl.kafkador.domain.dto.KsqlTableDto;
 import com.csl.kafkador.domain.model.Cluster;
 import com.csl.kafkador.exception.ConfigNotFoundException;
+import com.csl.kafkador.exception.InvalidServiceConfigException;
+import com.csl.kafkador.service.ExternalServiceConnections;
 import com.csl.kafkador.exception.KsqlDbApiException;
 import com.csl.kafkador.exception.KsqlStatementException;
 import com.csl.kafkador.repository.ClusterRepository;
@@ -48,6 +50,7 @@ public class KsqlDbServiceImp implements KsqlDbService {
     private static final MediaType KSQL_MEDIA_TYPE = MediaType.valueOf("application/vnd.ksql.v1+json; charset=utf-8");
 
     private final RestTemplate restTemplate;
+    private final ExternalServiceConnections connections;
     private final KafkadorConfigService<String, Map.Entry<String, String>> kafkadorConfigService;
     private final ClusterRepository clusterRepository;
     private final ObjectMapper objectMapper;
@@ -61,6 +64,7 @@ public class KsqlDbServiceImp implements KsqlDbService {
         } catch (ConfigNotFoundException e) {
             log.warn(e.toString());
         }
+        config.setAuth(connections.describe(ExternalServiceConnections.KSQL_DB, clusterId));
         return config;
     }
 
@@ -114,16 +118,23 @@ public class KsqlDbServiceImp implements KsqlDbService {
     }
 
     @Override
-    public KsqlDbConfigDto saveConfig(String url, String clusterId) {
-        String saved = kafkadorConfigService.save(new AbstractMap.SimpleEntry<>(CONFIG_KEY, url), clusterId);
-        return new KsqlDbConfigDto().setUrl(saved).setConfigured(true);
+    public KsqlDbConfigDto saveConfig(KsqlDbConfigDto config, String clusterId) throws InvalidServiceConfigException {
+        // Sign-in settings first: if they're rejected, the URL isn't half-saved either.
+        connections.save(ExternalServiceConnections.KSQL_DB, config.getAuth(), clusterId);
+        kafkadorConfigService.save(new AbstractMap.SimpleEntry<>(CONFIG_KEY, config.getUrl()), clusterId);
+        return getConfig(clusterId);
+    }
+
+    /** The client for this service, signed in and trusting its CA as set in Settings. */
+    private RestTemplate http(String clusterId) {
+        return connections.restTemplate(ExternalServiceConnections.KSQL_DB, clusterId);
     }
 
     @Override
     public KsqlServerInfoDto getServerInfo(String clusterId) throws ConfigNotFoundException, KsqlDbApiException {
         String url = resolveUrl(clusterId);
         try {
-            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+            ResponseEntity<Map<String, Object>> response = http(clusterId).exchange(
                     url + "/info",
                     HttpMethod.GET,
                     null,
@@ -269,7 +280,7 @@ public class KsqlDbServiceImp implements KsqlDbService {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(KSQL_MEDIA_TYPE);
             Map<String, Object> body = Map.of("ksql", statement, "streamsProperties", properties);
-            ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
+            ResponseEntity<List<Map<String, Object>>> response = http(clusterId).exchange(
                     url + "/ksql",
                     HttpMethod.POST,
                     new HttpEntity<>(body, headers),
@@ -310,7 +321,7 @@ public class KsqlDbServiceImp implements KsqlDbService {
             headers.setContentType(KSQL_MEDIA_TYPE);
             Map<String, Object> body = Map.of("ksql", statement, "streamsProperties", Collections.emptyMap());
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-            ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
+            ResponseEntity<List<Map<String, Object>>> response = http(clusterId).exchange(
                     url + "/ksql",
                     HttpMethod.POST,
                     request,

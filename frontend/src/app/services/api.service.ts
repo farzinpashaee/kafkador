@@ -6,7 +6,7 @@ import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Al
   KsqlSourceKind, KsqlStatementRequest, KsqlStatementResult, KsqlSourceDefinition,
   AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest,
   SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, SchemaLookupResult,
-  AiConfig, AiChatResponse, AiChatSession, SessionConfig, DatabaseSetupStatus, DatabaseCredentials, EntityMetrics } from '../models';
+  AiConfig, AiChatResponse, AiChatSession, SessionConfig, DatabaseSetupStatus, DatabaseCredentials, EntityMetrics, ServiceAuth } from '../models';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -157,8 +157,8 @@ export class ApiService {
       { withCredentials: true, observe: 'response' });
   }
 
-  public saveSchemaRegistryConfig(url:string): Observable<HttpResponse<GenericResponse<SchemaRegistryConfig>>> {
-    return this.http.put<GenericResponse<SchemaRegistryConfig>>(`${ApiService.ApiBaseUrl}/schema-registry/config`,{ url },
+  public saveSchemaRegistryConfig(url:string, auth?: ServiceAuth): Observable<HttpResponse<GenericResponse<SchemaRegistryConfig>>> {
+    return this.http.put<GenericResponse<SchemaRegistryConfig>>(`${ApiService.ApiBaseUrl}/schema-registry/config`,{ url, auth },
       { withCredentials: true, observe: 'response' });
   }
 
@@ -229,8 +229,8 @@ export class ApiService {
       { withCredentials: true, observe: 'response' });
   }
 
-  public saveKsqlDbConfig(url:string): Observable<HttpResponse<GenericResponse<KsqlDbConfig>>> {
-    return this.http.put<GenericResponse<KsqlDbConfig>>(`${ApiService.ApiBaseUrl}/ksqldb/config`,{ url },
+  public saveKsqlDbConfig(url:string, auth?: ServiceAuth): Observable<HttpResponse<GenericResponse<KsqlDbConfig>>> {
+    return this.http.put<GenericResponse<KsqlDbConfig>>(`${ApiService.ApiBaseUrl}/ksqldb/config`,{ url, auth },
       { withCredentials: true, observe: 'response' });
   }
 
@@ -369,8 +369,8 @@ export class ApiService {
       { withCredentials: true, observe: 'response' });
   }
 
-  public saveKafkaConnectConfig(url:string): Observable<HttpResponse<GenericResponse<KafkaConnectConfig>>> {
-    return this.http.put<GenericResponse<KafkaConnectConfig>>(`${ApiService.ApiBaseUrl}/kafka-connect/config`,{ url },
+  public saveKafkaConnectConfig(url:string, auth?: ServiceAuth): Observable<HttpResponse<GenericResponse<KafkaConnectConfig>>> {
+    return this.http.put<GenericResponse<KafkaConnectConfig>>(`${ApiService.ApiBaseUrl}/kafka-connect/config`,{ url, auth },
       { withCredentials: true, observe: 'response' });
   }
 

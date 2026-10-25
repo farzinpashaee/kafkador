@@ -1,0 +1,66 @@
+<div class="mb-3">
+  <label [for]="idPrefix + 'AuthMethod'" class="form-label">Authentication:</label>
+  <select class="form-select" [id]="idPrefix + 'AuthMethod'" style="max-width: 420px;"
+          [(ngModel)]="auth.method" (ngModelChange)="edited()" [attr.aria-describedby]="idPrefix + 'AuthHelp'">
+    <option *ngFor="let method of methods" [ngValue]="method.value">{{ method.label }}</option>
+  </select>
+  <div [id]="idPrefix + 'AuthHelp'" class="form-text">
+    Managed services need one: Confluent Cloud takes an API key and secret, Aiven a username and password.
+  </div>
+</div>
+
+<div *ngIf="auth.method === 'BASIC'" class="row g-3 mb-3">
+  <div class="col-12 col-md-6">
+    <label [for]="idPrefix + 'AuthUsername'" class="form-label">Username or API key:</label>
+    <input type="text" class="form-control" [id]="idPrefix + 'AuthUsername'" autocomplete="off"
+           [(ngModel)]="auth.username" (ngModelChange)="edited()">
+  </div>
+  <div class="col-12 col-md-6">
+    <label [for]="idPrefix + 'AuthPassword'" class="form-label">Password or API secret:</label>
+    <input type="password" class="form-control" [id]="idPrefix + 'AuthPassword'" autocomplete="new-password"
+           [placeholder]="auth.passwordSaved ? 'Saved; leave blank to keep it' : ''"
+           [(ngModel)]="auth.password" (ngModelChange)="edited()">
+  </div>
+</div>
+
+<div *ngIf="auth.method === 'BEARER'" class="mb-3">
+  <label [for]="idPrefix + 'AuthToken'" class="form-label">Token:</label>
+  <input type="password" class="form-control" [id]="idPrefix + 'AuthToken'" autocomplete="off"
+         [placeholder]="auth.tokenSaved ? 'Saved; leave blank to keep it' : ''"
+         [(ngModel)]="auth.token" (ngModelChange)="edited()">
+  <div class="form-text">Sent as <code>Authorization: Bearer …</code> with every request.</div>
+</div>
+
+<div class="mb-3">
+  <label [for]="idPrefix + 'CaCertificate'" class="form-label">CA certificate (optional):</label>
+
+  <div *ngIf="hasSavedCertificate && !replacingCertificate" class="d-flex flex-wrap align-items-center gap-2">
+    <span class="text-s"><i class="bi bi-patch-check me-1" aria-hidden="true"></i>Trusting <strong>{{ auth.caCertificateSubject }}</strong></span>
+    <button type="button" class="btn btn-sm btn-link p-0" (click)="replacingCertificate = true">Replace</button>
+    <button type="button" class="btn btn-sm btn-link p-0 text-danger" (click)="removeCertificate()">Remove</button>
+  </div>
+
+  <div *ngIf="auth.clearCaCertificate" class="text-s">
+    The saved certificate will be removed when you save.
+    <button type="button" class="btn btn-sm btn-link p-0 align-baseline" (click)="keepCertificate()">Keep it</button>
+  </div>
+
+  <ng-container *ngIf="(!hasSavedCertificate || replacingCertificate) && !auth.clearCaCertificate">
+    <textarea class="form-control font-monospace text-s" [id]="idPrefix + 'CaCertificate'" rows="4"
+              placeholder="-----BEGIN CERTIFICATE-----"
+              [(ngModel)]="auth.caCertificate" (ngModelChange)="edited()" [attr.aria-describedby]="idPrefix + 'CaHelp'"></textarea>
+    <div class="d-flex align-items-center gap-2 mt-1">
+      <label class="btn btn-sm outline-button mb-0" [for]="idPrefix + 'CaFile'">
+        <i class="bi bi-upload me-1" aria-hidden="true"></i> Load from file
+      </label>
+      <input type="file" class="visually-hidden" [id]="idPrefix + 'CaFile'" accept=".pem,.crt,.cer,text/plain"
+             (change)="loadCertificateFile($event)">
+      <button *ngIf="replacingCertificate" type="button" class="btn btn-sm btn-link p-0" (click)="keepCertificate()">Cancel</button>
+    </div>
+    <div *ngIf="certificateFileError" class="text-danger text-s mt-1">{{ certificateFileError }}</div>
+  </ng-container>
+  <div [id]="idPrefix + 'CaHelp'" class="form-text">
+    Only needed when {{ serviceName }}'s TLS certificate isn't signed by a public CA, e.g. Aiven's project CA. Once set,
+    only this CA is trusted for it.
+  </div>
+</div>

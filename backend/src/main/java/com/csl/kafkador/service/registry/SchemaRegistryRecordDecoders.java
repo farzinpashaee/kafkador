@@ -4,6 +4,7 @@ import com.csl.kafkador.domain.dto.SchemaRegistryConfigDto;
 import com.csl.kafkador.domain.options.RecordDecoder;
 import com.csl.kafkador.domain.options.RecordSerde;
 import com.csl.kafkador.exception.InvalidRecordRequestException;
+import com.csl.kafkador.service.ExternalServiceConnections;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
@@ -25,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -41,6 +43,7 @@ public class SchemaRegistryRecordDecoders {
     static final int SCHEMA_CACHE_SIZE = 1_000;
 
     private final SchemaRegistryService schemaRegistryService;
+    private final ExternalServiceConnections connections;
     private final Map<String, SchemaRegistryClient> clients = new ConcurrentHashMap<>();
 
     /**
@@ -56,8 +59,11 @@ public class SchemaRegistryRecordDecoders {
                     "Schema Registry isn't set up for this cluster. Add its URL in Settings > Schema Registry to decode records with it.");
         }
         String url = config.getUrl();
-        SchemaRegistryClient client = clients.computeIfAbsent(url, u -> new CachedSchemaRegistryClient(List.of(u), SCHEMA_CACHE_SIZE,
-                List.of(new AvroSchemaProvider(), new ProtobufSchemaProvider(), new JsonSchemaProvider()), Map.of()));
+        // Signs in and trusts the CA as set in Settings; a changed setting gets a client of its own.
+        Map<String, Object> clientConfig = connections.schemaRegistryClientConfig(clusterId);
+        SchemaRegistryClient client = clients.computeIfAbsent(url + "\u0000" + new TreeMap<>(clientConfig), key -> new CachedSchemaRegistryClient(
+                List.of(url), SCHEMA_CACHE_SIZE, List.of(new AvroSchemaProvider(), new ProtobufSchemaProvider(), new JsonSchemaProvider()),
+                clientConfig));
         return new WireFormatDecoder(client, url, topic);
     }
 

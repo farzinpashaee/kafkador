@@ -18,6 +18,7 @@ export * from './schema-registry';
 export * from './ksql-db';
 export * from './acl-binding';
 export * from './kafka-connect';
+export * from './service-auth';
 export * from './ai';
 export * from './session-config';
 export * from './database-setup';

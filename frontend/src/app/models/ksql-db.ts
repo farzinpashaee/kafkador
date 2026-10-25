@@ -1,6 +1,8 @@
+import { ServiceAuth } from './service-auth';
 export class KsqlDbConfig {
     configured!: boolean;
     url?: string;
+    auth?: ServiceAuth;
 }
 
 export class KsqlServerInfo {

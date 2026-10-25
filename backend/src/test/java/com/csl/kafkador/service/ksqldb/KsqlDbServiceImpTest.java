@@ -6,6 +6,7 @@ import com.csl.kafkador.domain.dto.KsqlStatementResultDto;
 import com.csl.kafkador.exception.KsqlDbApiException;
 import com.csl.kafkador.exception.KsqlStatementException;
 import com.csl.kafkador.repository.ClusterRepository;
+import com.csl.kafkador.service.ExternalServiceConnections;
 import com.csl.kafkador.service.config.KafkadorConfigService;
 import com.csl.kafkador.util.KsqlStatements.SourceType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,7 +45,10 @@ class KsqlDbServiceImpTest {
         server = MockRestServiceServer.bindTo(restTemplate).build();
         KafkadorConfigService<String, Map.Entry<String, String>> config = mock(KafkadorConfigService.class);
         when(config.get("kafkador.ksql-db.url", CLUSTER)).thenReturn(URL);
-        service = new KsqlDbServiceImp(restTemplate, config, mock(ClusterRepository.class), new ObjectMapper());
+        // The signed-in client Settings would build; here the mocked server.
+        ExternalServiceConnections connections = mock(ExternalServiceConnections.class);
+        when(connections.restTemplate(ExternalServiceConnections.KSQL_DB, CLUSTER)).thenReturn(restTemplate);
+        service = new KsqlDbServiceImp(restTemplate, connections, config, mock(ClusterRepository.class), new ObjectMapper());
     }
 
     @Test

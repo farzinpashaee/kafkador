@@ -5,11 +5,12 @@ import { ActivatedRoute } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { AiAssistantService, ApiService, CommonService } from '../../services';
 import { SecuritySettingsComponent } from '../security-settings/security-settings.component';
-import { GenericResponse, KsqlDbConfig, SchemaRegistryConfig, KafkaConnectConfig, CompatibilityConfig, ConnectorPlugin, AiConfig, SessionConfig, Error } from '../../models';
+import { ServiceAuthFormComponent } from '../service-auth-form/service-auth-form.component';
+import { GenericResponse, KsqlDbConfig, SchemaRegistryConfig, KafkaConnectConfig, CompatibilityConfig, ConnectorPlugin, AiConfig, SessionConfig, Error, withAuth } from '../../models';
 
 @Component({
   selector: 'app-settings',
-  imports: [CommonModule, FormsModule, SecuritySettingsComponent],
+  imports: [CommonModule, FormsModule, SecuritySettingsComponent, ServiceAuthFormComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss'
 })
@@ -23,9 +24,9 @@ export class SettingsComponent implements OnInit {
 
   readonly compatibilityLevels =['BACKWARD', 'BACKWARD_TRANSITIVE', 'FORWARD', 'FORWARD_TRANSITIVE', 'FULL', 'FULL_TRANSITIVE', 'NONE'];
 
-  ksqlDbConfig: KsqlDbConfig = { configured: false, url: '' };
-  schemaRegistryConfig: SchemaRegistryConfig = { configured: false, url: '' };
-  kafkaConnectConfig: KafkaConnectConfig = { configured: false, url: '' };
+  ksqlDbConfig: KsqlDbConfig = withAuth();
+  schemaRegistryConfig: SchemaRegistryConfig = withAuth();
+  kafkaConnectConfig: KafkaConnectConfig = withAuth();
   connectorPlugins: ConnectorPlugin[] = [];
   aiConfig: AiConfig = { provider: 'openai', enabled: false };
   aiApiKey = '';
@@ -110,12 +111,12 @@ export class SettingsComponent implements OnInit {
     this.flags.set('ksqlDbConfigLoading', true);
     this.apiService.getKsqlDbConfig().subscribe({
       next: (res: HttpResponse<GenericResponse<KsqlDbConfig>>) => {
-        this.ksqlDbConfig = res.body?.data ?? { configured: false, url: '' };
+        this.ksqlDbConfig = withAuth(res.body?.data);
         this.flags.set('ksqlDbConfigLoading', false);
       },
       error: (res:HttpErrorResponse) => {
         if (res.status === 404) {
-          this.ksqlDbConfig = { configured: false, url: '' };
+          this.ksqlDbConfig = withAuth();
         } else {
           this.errors.set('getKsqlDbConfig', this.commonService.prepareError(res.error.error,'500','Failed to load ksqlDB configuration!'));
         }
@@ -132,9 +133,9 @@ export class SettingsComponent implements OnInit {
     this.errors.delete('saveKsqlDbConfig');
     this.savedAt.delete('ksqlDbConfig');
     this.flags.set('ksqlDbConfigSaving', true);
-    this.apiService.saveKsqlDbConfig(this.ksqlDbConfig.url).subscribe({
+    this.apiService.saveKsqlDbConfig(this.ksqlDbConfig.url!, this.ksqlDbConfig.auth).subscribe({
       next: (res: HttpResponse<GenericResponse<KsqlDbConfig>>) => {
-        this.ksqlDbConfig = res.body?.data ?? this.ksqlDbConfig;
+        this.ksqlDbConfig = withAuth(res.body?.data ?? this.ksqlDbConfig);
         this.savedAt.set('ksqlDbConfig', new Date());
         this.flags.set('ksqlDbConfigSaving', false);
       },
@@ -151,12 +152,12 @@ export class SettingsComponent implements OnInit {
     this.flags.set('schemaRegistryConfigLoading', true);
     this.apiService.getSchemaRegistryConfig().subscribe({
       next: (res: HttpResponse<GenericResponse<SchemaRegistryConfig>>) => {
-        this.schemaRegistryConfig = res.body?.data ?? { configured: false, url: '' };
+        this.schemaRegistryConfig = withAuth(res.body?.data);
         this.flags.set('schemaRegistryConfigLoading', false);
       },
       error: (res:HttpErrorResponse) => {
         if (res.status === 404) {
-          this.schemaRegistryConfig = { configured: false, url: '' };
+          this.schemaRegistryConfig = withAuth();
         } else {
           this.errors.set('getSchemaRegistryConfig', this.commonService.prepareError(res.error.error,'500','Failed to load Schema Registry configuration!'));
         }
@@ -189,9 +190,9 @@ export class SettingsComponent implements OnInit {
     this.errors.delete('saveSchemaRegistrySettings');
     this.savedAt.delete('schemaRegistrySettings');
     this.flags.set('schemaRegistrySettingsSaving', true);
-    this.apiService.saveSchemaRegistryConfig(this.schemaRegistryConfig.url).subscribe({
+    this.apiService.saveSchemaRegistryConfig(this.schemaRegistryConfig.url!, this.schemaRegistryConfig.auth).subscribe({
       next: (res: HttpResponse<GenericResponse<SchemaRegistryConfig>>) => {
-        this.schemaRegistryConfig = res.body?.data ?? this.schemaRegistryConfig;
+        this.schemaRegistryConfig = withAuth(res.body?.data ?? this.schemaRegistryConfig);
         this.apiService.saveGlobalCompatibility(this.selectedCompatibilityLevel).subscribe({
           next: (res2: HttpResponse<GenericResponse<CompatibilityConfig>>) => {
             this.globalCompatibility = res2.body?.data ?? { level: this.selectedCompatibilityLevel };
@@ -216,13 +217,13 @@ export class SettingsComponent implements OnInit {
     this.flags.set('kafkaConnectConfigLoading', true);
     this.apiService.getKafkaConnectConfig().subscribe({
       next: (res: HttpResponse<GenericResponse<KafkaConnectConfig>>) => {
-        this.kafkaConnectConfig = res.body?.data ?? { configured: false, url: '' };
+        this.kafkaConnectConfig = withAuth(res.body?.data);
         this.flags.set('kafkaConnectConfigLoading', false);
         if (this.kafkaConnectConfig.configured) this.getConnectorPlugins();
       },
       error: (res:HttpErrorResponse) => {
         if (res.status === 404) {
-          this.kafkaConnectConfig = { configured: false, url: '' };
+          this.kafkaConnectConfig = withAuth();
         } else {
           this.errors.set('getKafkaConnectConfig', this.commonService.prepareError(res.error.error,'500','Failed to load Kafka Connect configuration!'));
         }
@@ -239,9 +240,9 @@ export class SettingsComponent implements OnInit {
     this.errors.delete('saveKafkaConnectConfig');
     this.savedAt.delete('kafkaConnectConfig');
     this.flags.set('kafkaConnectConfigSaving', true);
-    this.apiService.saveKafkaConnectConfig(this.kafkaConnectConfig.url).subscribe({
+    this.apiService.saveKafkaConnectConfig(this.kafkaConnectConfig.url!, this.kafkaConnectConfig.auth).subscribe({
       next: (res: HttpResponse<GenericResponse<KafkaConnectConfig>>) => {
-        this.kafkaConnectConfig = res.body?.data ?? this.kafkaConnectConfig;
+        this.kafkaConnectConfig = withAuth(res.body?.data ?? this.kafkaConnectConfig);
         this.savedAt.set('kafkaConnectConfig', new Date());
         this.flags.set('kafkaConnectConfigSaving', false);
         if (this.kafkaConnectConfig.configured) this.getConnectorPlugins();

@@ -8,6 +8,7 @@ import com.csl.kafkador.domain.dto.KsqlStatementRequestDto;
 import com.csl.kafkador.domain.dto.KsqlStatementResultDto;
 import com.csl.kafkador.domain.dto.KsqlStreamDto;
 import com.csl.kafkador.domain.dto.KsqlTableDto;
+import com.csl.kafkador.exception.InvalidServiceConfigException;
 import com.csl.kafkador.exception.ConfigNotFoundException;
 import com.csl.kafkador.exception.KsqlDbApiException;
 import com.csl.kafkador.exception.KsqlStatementException;
@@ -20,7 +21,7 @@ public interface KsqlDbService {
     KsqlDbConfigDto getConfig(String clusterId);
     /** Whether a ksqlDB URL is saved for the cluster; unlike getConfig, never probes for a server. */
     boolean isConfigured(String clusterId);
-    KsqlDbConfigDto saveConfig(String url, String clusterId);
+    KsqlDbConfigDto saveConfig(KsqlDbConfigDto config, String clusterId) throws InvalidServiceConfigException;
     KsqlServerInfoDto getServerInfo(String clusterId) throws ConfigNotFoundException, KsqlDbApiException;
     List<KsqlStreamDto> getStreams(String clusterId) throws ConfigNotFoundException, KsqlDbApiException;
     List<KsqlTableDto> getTables(String clusterId) throws ConfigNotFoundException, KsqlDbApiException;

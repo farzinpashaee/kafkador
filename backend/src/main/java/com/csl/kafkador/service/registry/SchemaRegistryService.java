@@ -7,6 +7,7 @@ import com.csl.kafkador.domain.dto.SchemaRegisterRequestDto;
 import com.csl.kafkador.domain.dto.SchemaRegistryConfigDto;
 import com.csl.kafkador.domain.dto.SchemaRegistryDto;
 import com.csl.kafkador.domain.dto.SchemaVersionDto;
+import com.csl.kafkador.exception.InvalidServiceConfigException;
 import com.csl.kafkador.exception.ConfigNotFoundException;
 import com.csl.kafkador.exception.SchemaRegistryApiException;
 
@@ -16,7 +17,7 @@ public interface SchemaRegistryService {
 
     SchemaRegistryDto getSubjects(String clusterId);
     SchemaRegistryConfigDto getConfig(String clusterId);
-    SchemaRegistryConfigDto saveConfig(String url, String clusterId);
+    SchemaRegistryConfigDto saveConfig(SchemaRegistryConfigDto config, String clusterId) throws InvalidServiceConfigException;
 
     List<Integer> getVersions(String subject, String clusterId) throws ConfigNotFoundException, SchemaRegistryApiException;
     SchemaVersionDto getVersion(String subject, String version, String clusterId) throws ConfigNotFoundException, SchemaRegistryApiException;

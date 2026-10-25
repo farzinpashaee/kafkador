@@ -7,6 +7,8 @@ import com.csl.kafkador.domain.dto.ConnectorTaskDto;
 import com.csl.kafkador.domain.dto.KafkaConnectConfigDto;
 import com.csl.kafkador.domain.model.Cluster;
 import com.csl.kafkador.exception.ConfigNotFoundException;
+import com.csl.kafkador.exception.InvalidServiceConfigException;
+import com.csl.kafkador.service.ExternalServiceConnections;
 import com.csl.kafkador.exception.KafkaConnectApiException;
 import com.csl.kafkador.repository.ClusterRepository;
 import com.csl.kafkador.service.config.KafkadorConfigService;
@@ -38,6 +40,7 @@ public class KafkaConnectServiceImp implements KafkaConnectService {
     private static final String DEFAULT_PORT = "8083";
 
     private final RestTemplate restTemplate;
+    private final ExternalServiceConnections connections;
     private final KafkadorConfigService<String, Map.Entry<String, String>> kafkadorConfigService;
     private final ClusterRepository clusterRepository;
 
@@ -50,6 +53,7 @@ public class KafkaConnectServiceImp implements KafkaConnectService {
         } catch (ConfigNotFoundException e) {
             log.warn(e.toString());
         }
+        config.setAuth(connections.describe(ExternalServiceConnections.KAFKA_CONNECT, clusterId));
         return config;
     }
 
@@ -93,16 +97,23 @@ public class KafkaConnectServiceImp implements KafkaConnectService {
     }
 
     @Override
-    public KafkaConnectConfigDto saveConfig(String url, String clusterId) {
-        String saved = kafkadorConfigService.save(new AbstractMap.SimpleEntry<>(CONFIG_KEY, url), clusterId);
-        return new KafkaConnectConfigDto().setUrl(saved).setConfigured(true);
+    public KafkaConnectConfigDto saveConfig(KafkaConnectConfigDto config, String clusterId) throws InvalidServiceConfigException {
+        // Sign-in settings first: if they're rejected, the URL isn't half-saved either.
+        connections.save(ExternalServiceConnections.KAFKA_CONNECT, config.getAuth(), clusterId);
+        kafkadorConfigService.save(new AbstractMap.SimpleEntry<>(CONFIG_KEY, config.getUrl()), clusterId);
+        return getConfig(clusterId);
+    }
+
+    /** The client for this service, signed in and trusting its CA as set in Settings. */
+    private RestTemplate http(String clusterId) {
+        return connections.restTemplate(ExternalServiceConnections.KAFKA_CONNECT, clusterId);
     }
 
     @Override
     public List<ConnectorPluginDto> getPlugins(String clusterId) throws ConfigNotFoundException, KafkaConnectApiException {
         String url = resolveUrl(clusterId);
         try {
-            ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
+            ResponseEntity<List<Map<String, Object>>> response = http(clusterId).exchange(
                     url + "/connector-plugins",
                     HttpMethod.GET,
                     null,
@@ -129,7 +140,7 @@ public class KafkaConnectServiceImp implements KafkaConnectService {
                     .queryParam("expand", "info")
                     .build()
                     .toUri();
-            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+            ResponseEntity<Map<String, Object>> response = http(clusterId).exchange(
                     expandUri,
                     HttpMethod.GET,
                     null,
@@ -147,17 +158,17 @@ public class KafkaConnectServiceImp implements KafkaConnectService {
     @Override
     public ConnectorDto getConnector(String name, String clusterId) throws ConfigNotFoundException, KafkaConnectApiException {
         String url = resolveUrl(clusterId);
-        return fetchConnectorDetail(name, url);
+        return fetchConnectorDetail(name, url, clusterId);
     }
 
-    private ConnectorDto fetchConnectorDetail(String name, String url) throws KafkaConnectApiException {
+    private ConnectorDto fetchConnectorDetail(String name, String url, String clusterId) throws KafkaConnectApiException {
         try {
-            Map<String, Object> info = restTemplate.exchange(
+            Map<String, Object> info = http(clusterId).exchange(
                     url + "/connectors/" + name,
                     HttpMethod.GET, null,
                     new ParameterizedTypeReference<Map<String, Object>>() {}
             ).getBody();
-            Map<String, Object> status = restTemplate.exchange(
+            Map<String, Object> status = http(clusterId).exchange(
                     url + "/connectors/" + name + "/status",
                     HttpMethod.GET, null,
                     new ParameterizedTypeReference<Map<String, Object>>() {}
@@ -212,7 +223,7 @@ public class KafkaConnectServiceImp implements KafkaConnectService {
         String url = resolveUrl(clusterId);
         try {
             Map<String, Object> body = Map.of("name", request.getName(), "config", request.getConfig());
-            restTemplate.exchange(
+            http(clusterId).exchange(
                     url + "/connectors",
                     HttpMethod.POST,
                     new HttpEntity<>(body),
@@ -221,14 +232,14 @@ public class KafkaConnectServiceImp implements KafkaConnectService {
         } catch (RestClientException e) {
             throw new KafkaConnectApiException("Error creating connector '" + request.getName() + "': " + e.getMessage());
         }
-        return fetchConnectorDetail(request.getName(), url);
+        return fetchConnectorDetail(request.getName(), url, clusterId);
     }
 
     @Override
     public ConnectorDto updateConnectorConfig(String name, Map<String, String> config, String clusterId) throws ConfigNotFoundException, KafkaConnectApiException {
         String url = resolveUrl(clusterId);
         try {
-            restTemplate.exchange(
+            http(clusterId).exchange(
                     url + "/connectors/" + name + "/config",
                     HttpMethod.PUT,
                     new HttpEntity<>(config),
@@ -237,7 +248,7 @@ public class KafkaConnectServiceImp implements KafkaConnectService {
         } catch (RestClientException e) {
             throw new KafkaConnectApiException("Error updating connector '" + name + "': " + e.getMessage());
         }
-        return fetchConnectorDetail(name, url);
+        return fetchConnectorDetail(name, url, clusterId);
     }
 
     @Override
@@ -254,7 +265,7 @@ public class KafkaConnectServiceImp implements KafkaConnectService {
     public void restartConnector(String name, String clusterId) throws ConfigNotFoundException, KafkaConnectApiException {
         String url = resolveUrl(clusterId);
         try {
-            restTemplate.postForEntity(url + "/connectors/" + name + "/restart", null, Void.class);
+            http(clusterId).postForEntity(url + "/connectors/" + name + "/restart", null, Void.class);
         } catch (RestClientException e) {
             throw new KafkaConnectApiException("Error restarting connector '" + name + "': " + e.getMessage());
         }
@@ -263,7 +274,7 @@ public class KafkaConnectServiceImp implements KafkaConnectService {
     private void putAction(String name, String action, String clusterId) throws ConfigNotFoundException, KafkaConnectApiException {
         String url = resolveUrl(clusterId);
         try {
-            restTemplate.put(url + "/connectors/" + name + "/" + action, null);
+            http(clusterId).put(url + "/connectors/" + name + "/" + action, null);
         } catch (RestClientException e) {
             throw new KafkaConnectApiException("Error updating connector '" + name + "': " + e.getMessage());
         }
@@ -273,7 +284,7 @@ public class KafkaConnectServiceImp implements KafkaConnectService {
     public void deleteConnector(String name, String clusterId) throws ConfigNotFoundException, KafkaConnectApiException {
         String url = resolveUrl(clusterId);
         try {
-            restTemplate.delete(url + "/connectors/" + name);
+            http(clusterId).delete(url + "/connectors/" + name);
         } catch (RestClientException e) {
             throw new KafkaConnectApiException("Error deleting connector '" + name + "': " + e.getMessage());
         }

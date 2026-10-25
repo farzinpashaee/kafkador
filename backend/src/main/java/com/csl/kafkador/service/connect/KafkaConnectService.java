@@ -4,6 +4,7 @@ import com.csl.kafkador.domain.dto.ConnectorCreateRequestDto;
 import com.csl.kafkador.domain.dto.ConnectorDto;
 import com.csl.kafkador.domain.dto.ConnectorPluginDto;
 import com.csl.kafkador.domain.dto.KafkaConnectConfigDto;
+import com.csl.kafkador.exception.InvalidServiceConfigException;
 import com.csl.kafkador.exception.ConfigNotFoundException;
 import com.csl.kafkador.exception.KafkaConnectApiException;
 
@@ -13,7 +14,7 @@ import java.util.Map;
 public interface KafkaConnectService {
 
     KafkaConnectConfigDto getConfig(String clusterId);
-    KafkaConnectConfigDto saveConfig(String url, String clusterId);
+    KafkaConnectConfigDto saveConfig(KafkaConnectConfigDto config, String clusterId) throws InvalidServiceConfigException;
     List<ConnectorPluginDto> getPlugins(String clusterId) throws ConfigNotFoundException, KafkaConnectApiException;
     List<ConnectorDto> getConnectors(String clusterId) throws ConfigNotFoundException, KafkaConnectApiException;
     ConnectorDto getConnector(String name, String clusterId) throws ConfigNotFoundException, KafkaConnectApiException;

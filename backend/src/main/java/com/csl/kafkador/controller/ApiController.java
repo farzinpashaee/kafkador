@@ -430,10 +430,10 @@ public class ApiController {
     }
 
     @PutMapping("/schema-registry/config")
-    public ResponseEntity<GenericResponse<SchemaRegistryConfigDto>> saveSchemaRegistryConfig(@Valid @RequestBody SchemaRegistryConfigDto config) {
+    public ResponseEntity<GenericResponse<SchemaRegistryConfigDto>> saveSchemaRegistryConfig(@Valid @RequestBody SchemaRegistryConfigDto config) throws InvalidServiceConfigException {
         ConnectionDto connection = connectionService.getActiveConnection();
         return new GenericResponse.Builder<SchemaRegistryConfigDto>()
-                .data(schemaRegistryService().saveConfig(config.getUrl(), connection.getClusterId()))
+                .data(schemaRegistryService().saveConfig(config, connection.getClusterId()))
                 .success(HttpStatus.OK);
     }
 
@@ -560,12 +560,12 @@ public class ApiController {
     }
 
     @PutMapping("/ksqldb/config")
-    public ResponseEntity<GenericResponse<KsqlDbConfigDto>> saveKsqlDbConfig(@Valid @RequestBody KsqlDbConfigDto config) {
+    public ResponseEntity<GenericResponse<KsqlDbConfigDto>> saveKsqlDbConfig(@Valid @RequestBody KsqlDbConfigDto config) throws InvalidServiceConfigException {
         ConnectionDto connection = connectionService.getActiveConnection();
         KsqlDbService ksqlDbService = (KsqlDbService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KSQL_DB));
         return new GenericResponse.Builder<KsqlDbConfigDto>()
-                .data(ksqlDbService.saveConfig(config.getUrl(), connection.getClusterId()))
+                .data(ksqlDbService.saveConfig(config, connection.getClusterId()))
                 .success(HttpStatus.OK);
     }
 
@@ -680,12 +680,12 @@ public class ApiController {
     }
 
     @PutMapping("/kafka-connect/config")
-    public ResponseEntity<GenericResponse<KafkaConnectConfigDto>> saveKafkaConnectConfig(@Valid @RequestBody KafkaConnectConfigDto config) {
+    public ResponseEntity<GenericResponse<KafkaConnectConfigDto>> saveKafkaConnectConfig(@Valid @RequestBody KafkaConnectConfigDto config) throws InvalidServiceConfigException {
         ConnectionDto connection = connectionService.getActiveConnection();
         KafkaConnectService kafkaConnectService = (KafkaConnectService) applicationContext
                 .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.KAFKA_CONNECT));
         return new GenericResponse.Builder<KafkaConnectConfigDto>()
-                .data(kafkaConnectService.saveConfig(config.getUrl(), connection.getClusterId()))
+                .data(kafkaConnectService.saveConfig(config, connection.getClusterId()))
                 .success(HttpStatus.OK);
     }
 
