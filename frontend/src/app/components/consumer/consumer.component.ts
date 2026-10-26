@@ -4,7 +4,8 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ApiService, CommonService } from '../../services';
-import { ConsumerGroupDetails, ConsumerGroupPartition, ConsumerGroupTopic, Error, GenericResponse } from '../../models';
+import { ConsumerGroupDetails, ConsumerGroupPartition, ConsumerGroupTopic, Error, GenericResponse, OffsetResetRequest,
+  OffsetResetResult, OffsetResetTarget } from '../../models';
 import { PaginationComponent } from '../pagination/pagination.component';
 import { EXPORT_FORMATS, ExportField, ExportFormat, buildExport, downloadExport } from '../../services/table-export';
 
@@ -43,6 +44,25 @@ export class ConsumerComponent {
   readonly pageSize = 10;
   page = 1;
   readonly exportFormats = EXPORT_FORMATS;
+
+  // Reset offsets dialog. Any change to these clears the preview, so what's applied is what was previewed.
+  readonly resetTargets: { value: OffsetResetTarget; label: string }[] = [
+    { value: 'EARLIEST', label: 'Earliest' },
+    { value: 'LATEST', label: 'Latest' },
+    { value: 'TIMESTAMP', label: 'Date & time' },
+    { value: 'OFFSET', label: 'Offset' }
+  ];
+  /** '' resets every topic the group has offsets on. */
+  resetTopic = '';
+  /** null resets every partition of the topic. */
+  resetPartition: number | null = null;
+  resetTarget: OffsetResetTarget = 'EARLIEST';
+  /** TIMESTAMP, as a datetime-local value in the browser's time zone. */
+  resetTime = '';
+  resetOffset: number | null = null;
+  resetPreview?: OffsetResetResult;
+  /** Shown on the page after a reset is applied. */
+  resetDone?: string;
 
   readonly columns: { key: ConsumerTopicSortKey; label: string; hint?: string }[] = [
     { key: 'name', label: 'Topic' },
@@ -132,6 +152,91 @@ export class ConsumerComponent {
   export(format: ExportFormat): void {
     const rows = this.filteredTopics.flatMap(t => t.partitions.map(partition => ({ topic: t.name, partition })));
     downloadExport(buildExport(format, EXPORT_FIELDS, rows, 'partitions', 'partition'), format, `consumer-group-${this.groupId}`);
+  }
+
+  openResetDialog(topic = ''): void {
+    this.resetTopic = topic;
+    this.resetPartition = null;
+    this.onResetChange();
+  }
+
+  /** Partitions of the chosen topic that the group knows, to reset just one. */
+  get resetPartitions(): number[] {
+    const topic = this.group?.topics.find(t => t.name === this.resetTopic);
+    return (topic?.partitions ?? []).map(p => p.partition).sort((a, b) => a - b);
+  }
+
+  /** What's missing before the reset can be previewed, if anything. */
+  get resetInputError(): string | undefined {
+    if (this.resetTarget === 'TIMESTAMP' && (!this.resetTime || isNaN(new Date(this.resetTime).getTime()))) {
+      return 'Choose the date and time to reset to.';
+    }
+    if (this.resetTarget === 'OFFSET' && (this.resetOffset == null || this.resetOffset < 0 || !Number.isInteger(this.resetOffset))) {
+      return 'Enter the offset to reset to, 0 or more.';
+    }
+    return undefined;
+  }
+
+  get canApplyReset(): boolean {
+    return !!this.resetPreview && !this.resetPreview.blockedReason && this.resetPreview.changes.length > 0
+      && !this.flags.get('resetLoading');
+  }
+
+  onResetChange(): void {
+    this.resetPreview = undefined;
+    this.errors.delete('reset');
+  }
+
+  onResetTopicChange(): void {
+    this.resetPartition = null;
+    this.onResetChange();
+  }
+
+  previewReset(): void {
+    this.sendReset(true);
+  }
+
+  applyReset(): void {
+    if (this.canApplyReset) this.sendReset(false);
+  }
+
+  buildResetRequest(dryRun: boolean): OffsetResetRequest {
+    return {
+      topic: this.resetTopic || undefined,
+      partitions: this.resetTopic && this.resetPartition != null ? [this.resetPartition] : [],
+      target: this.resetTarget,
+      timestamp: this.resetTarget === 'TIMESTAMP' ? new Date(this.resetTime).getTime() : undefined,
+      offset: this.resetTarget === 'OFFSET' ? this.resetOffset ?? undefined : undefined,
+      dryRun
+    };
+  }
+
+  private sendReset(dryRun: boolean): void {
+    if (this.resetInputError) return;
+    this.flags.set('resetLoading', true);
+    this.errors.delete('reset');
+    this.apiService.resetConsumerGroupOffsets(this.groupId, this.buildResetRequest(dryRun)).subscribe({
+      next: (res: GenericResponse<OffsetResetResult>) => {
+        this.flags.set('resetLoading', false);
+        if (dryRun) {
+          this.resetPreview = res.data;
+          return;
+        }
+        const count = res.data?.changes.length ?? 0;
+        this.resetDone = `Reset ${count} ${count === 1 ? 'partition' : 'partitions'} to ${this.resetTargetLabel.toLowerCase()}.`;
+        this.resetPreview = undefined;
+        this.commonService.hideModal('resetOffsetsModal');
+        this.loadGroup();
+      },
+      error: (res: HttpErrorResponse) => {
+        this.errors.set('reset', this.commonService.prepareError(res.error?.error, '500', 'Failed to reset the offsets!'));
+        this.flags.set('resetLoading', false);
+      }
+    });
+  }
+
+  get resetTargetLabel(): string {
+    return this.resetTargets.find(t => t.value === this.resetTarget)?.label ?? this.resetTarget;
   }
 
   private compare(a: ConsumerGroupTopic, b: ConsumerGroupTopic, key: ConsumerTopicSortKey): number {

@@ -66,7 +66,15 @@
               </li>
             </ul>
           </div>
+          <button type="button" class="btn btn-sm outline-button" data-bs-toggle="modal" data-bs-target="#resetOffsetsModal"
+                  (click)="openResetDialog()">
+            <i class="bi bi-skip-backward me-1" aria-hidden="true"></i> Reset offsets
+          </button>
         </div>
+      </div>
+      <div *ngIf="resetDone" class="alert alert-success text-s p-2 d-flex align-items-center" role="status">
+        {{ resetDone }}
+        <button type="button" class="btn-close ms-auto" aria-label="Dismiss" (click)="resetDone = undefined"></button>
       </div>
       <div class="table-responsive mt-2">
         <table class="table">
@@ -144,4 +152,114 @@
       <app-pagination [totalItems]="filteredTopics.length" [pageSize]="pageSize" [page]="page" (pageChange)="page = $event"></app-pagination>
     </div>
   </ng-container>
+</div>
+
+<!-- Reset offsets: preview first, then apply what was previewed. -->
+<div class="modal fade" id="resetOffsetsModal" tabindex="-1" aria-labelledby="resetOffsetsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="resetOffsetsModalLabel"><i class="bi bi-skip-backward" aria-hidden="true"></i> Reset offsets of {{ groupId }}</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-s text-color-subtle">
+          Moves where the group resumes reading. Kafka only allows it while the group has no active members, so stop its
+          consumers first.
+        </p>
+
+        <div class="row g-3 mb-3">
+          <div class="col-12 col-md-7">
+            <label for="resetTopic" class="form-label">Topic:</label>
+            <select id="resetTopic" class="form-select" [(ngModel)]="resetTopic" (ngModelChange)="onResetTopicChange()">
+              <option value="">All topics of this group</option>
+              <option *ngFor="let topic of group?.topics ?? []" [value]="topic.name">{{ topic.name }}</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-5">
+            <label for="resetPartition" class="form-label">Partition:</label>
+            <select id="resetPartition" class="form-select" [(ngModel)]="resetPartition" (ngModelChange)="onResetChange()"
+                    [disabled]="!resetTopic">
+              <option [ngValue]="null">All partitions</option>
+              <option *ngFor="let partition of resetPartitions" [ngValue]="partition">Partition {{ partition }}</option>
+            </select>
+          </div>
+        </div>
+
+        <span class="form-label d-block" id="resetTargetLabel">Reset to:</span>
+        <div class="btn-group w-100 mb-3" role="group" aria-labelledby="resetTargetLabel">
+          <ng-container *ngFor="let target of resetTargets">
+            <input type="radio" class="btn-check" name="resetTarget" [id]="'resetTarget' + target.value" [value]="target.value"
+                   [(ngModel)]="resetTarget" (ngModelChange)="onResetChange()">
+            <label class="btn btn-outline-secondary" [for]="'resetTarget' + target.value">{{ target.label }}</label>
+          </ng-container>
+        </div>
+
+        <div *ngIf="resetTarget === 'TIMESTAMP'" class="mb-3">
+          <label for="resetTime" class="form-label">Date and time:</label>
+          <input id="resetTime" type="datetime-local" step="1" class="form-control" style="max-width: 280px;"
+                 [(ngModel)]="resetTime" (ngModelChange)="onResetChange()">
+          <div class="form-text">In your browser's time zone. The group resumes at the first record written at or after it.</div>
+        </div>
+        <div *ngIf="resetTarget === 'OFFSET'" class="mb-3">
+          <label for="resetOffset" class="form-label">Offset:</label>
+          <input id="resetOffset" type="number" min="0" step="1" class="form-control" style="max-width: 220px;"
+                 [(ngModel)]="resetOffset" (ngModelChange)="onResetChange()">
+          <div class="form-text">Applied to every chosen partition; kept within what each partition still holds.</div>
+        </div>
+
+        <div *ngIf="resetPreview as preview">
+          <div *ngIf="preview.blockedReason" class="alert alert-warning text-s p-2" role="alert">
+            <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ preview.blockedReason }}
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm text-s mb-0">
+              <thead>
+              <tr>
+                <th scope="col">Topic</th>
+                <th scope="col">Partition</th>
+                <th scope="col" class="text-end">Current offset</th>
+                <th scope="col" class="text-end">New offset</th>
+                <th scope="col" class="text-end">Lag after</th>
+              </tr>
+              </thead>
+              <tbody>
+              @for (change of preview.changes; track change.topic + ':' + change.partition) {
+                <tr>
+                  <td>{{ change.topic }}</td>
+                  <td>{{ change.partition }}</td>
+                  <td class="text-end">{{ formatNumber(change.currentOffset) }}</td>
+                  <td class="text-end fw-semibold">
+                    {{ formatNumber(change.newOffset) }}
+                    <i *ngIf="change.note" class="bi bi-info-circle ms-1" [attr.title]="change.note" [attr.aria-label]="change.note"></i>
+                  </td>
+                  <td class="text-end">{{ formatNumber(change.lagAfter) }}</td>
+                </tr>
+              }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div *ngIf="resetInputError && resetTarget !== 'EARLIEST' && resetTarget !== 'LATEST'" class="text-s text-color-subtle mt-2">
+          {{ resetInputError }}
+        </div>
+        <div *ngIf="errors.get('reset')" class="alert alert-danger text-s p-2 mt-3 mb-0" role="alert">
+          {{ errors.get('reset')?.message }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div *ngIf="flags.get('resetLoading')" class="me-auto text-s">
+          <span class="spinner-border spinner-border-sm" role="status"></span> Working…
+        </div>
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn outline-button" (click)="previewReset()"
+                [disabled]="!!resetInputError || flags.get('resetLoading')">Preview</button>
+        <button type="button" class="btn btn-danger" (click)="applyReset()" [disabled]="!canApplyReset"
+                [attr.title]="resetPreview ? null : 'Preview the reset first'">
+          Reset {{ resetPreview?.changes?.length ?? '' }} {{ resetPreview?.changes?.length === 1 ? 'partition' : 'partitions' }}
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

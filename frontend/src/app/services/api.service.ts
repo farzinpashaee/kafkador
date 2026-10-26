@@ -6,7 +6,8 @@ import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Al
   KsqlSourceKind, KsqlStatementRequest, KsqlStatementResult, KsqlSourceDefinition,
   AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest,
   SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, SchemaLookupResult,
-  AiConfig, AiChatResponse, AiChatSession, SessionConfig, DatabaseSetupStatus, DatabaseCredentials, EntityMetrics, ServiceAuth } from '../models';
+  AiConfig, AiChatResponse, AiChatSession, SessionConfig, DatabaseSetupStatus, DatabaseCredentials, EntityMetrics, ServiceAuth,
+  OffsetResetRequest, OffsetResetResult } from '../models';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -132,6 +133,12 @@ export class ApiService {
   public getConsumerGroupDetails(id:string): Observable<GenericResponse<ConsumerGroupDetails>> {
     return this.http.get<GenericResponse<ConsumerGroupDetails>>(`${ApiService.ApiBaseUrl}/consumer-groups/${encodeURIComponent(id)}`,
       { withCredentials: true });
+  }
+
+  /** Moves a consumer group's offsets; with dryRun only works out where they would go. */
+  public resetConsumerGroupOffsets(id:string, request:OffsetResetRequest): Observable<GenericResponse<OffsetResetResult>> {
+    return this.http.post<GenericResponse<OffsetResetResult>>(
+      `${ApiService.ApiBaseUrl}/consumer-groups/${encodeURIComponent(id)}/offsets/reset`, request, { withCredentials: true });
   }
 
   public getBookmarks(type:BookmarkEntityType): Observable<GenericResponse<Bookmark[]>> {

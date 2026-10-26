@@ -336,6 +336,19 @@ public class ApiController {
                 .success(HttpStatus.OK);
     }
 
+    /** Moves the group's committed offsets; with dryRun (the default) only shows where they would go. */
+    @PostMapping("/consumer-groups/{id}/offsets/reset")
+    public ResponseEntity<GenericResponse<OffsetResetResultDto>> resetConsumerGroupOffsets(@PathVariable @NotBlank String id,
+                                                                                          @Valid @RequestBody OffsetResetRequestDto request)
+            throws KafkaAdminApiException, InvalidOffsetResetException, TopicNotFoundException {
+        ConsumerService consumersService = (ConsumerService) applicationContext
+                .getBean(applicationConfig.getServiceImplementation(KafkadorContext.Service.CONSUMER));
+        ConnectionDto connection = connectionService.getActiveConnection();
+        return new GenericResponse.Builder<OffsetResetResultDto>()
+                .data(consumersService.resetOffsets(connection.getClusterId(), id, request))
+                .success(HttpStatus.OK);
+    }
+
     @GetMapping("/metrics/{metric}/{entityId}")
     public ResponseEntity<GenericResponse<MetricChartDto>> getMetrics(@PathVariable MetricEnum metric,
                                                                        @PathVariable String entityId,

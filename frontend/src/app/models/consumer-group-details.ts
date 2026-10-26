@@ -31,3 +31,37 @@ export interface ConsumerGroupPartition {
     clientId?: string;
     host?: string;
 }
+
+/** Where a consumer group's offsets are moved to, as with kafka-consumer-groups --reset-offsets. */
+export type OffsetResetTarget = 'EARLIEST' | 'LATEST' | 'TIMESTAMP' | 'OFFSET';
+
+export interface OffsetResetRequest {
+    /** The topic to reset; none resets every topic the group has offsets on. */
+    topic?: string;
+    /** Partitions of the topic; none means all of them. */
+    partitions: number[];
+    target: OffsetResetTarget;
+    /** TIMESTAMP: epoch milliseconds. */
+    timestamp?: number;
+    /** OFFSET: the offset to move to. */
+    offset?: number;
+    /** Only work out the new offsets. */
+    dryRun: boolean;
+}
+
+export interface OffsetResetChange {
+    topic: string;
+    partition: number;
+    currentOffset?: number | null;
+    newOffset: number;
+    endOffset: number;
+    lagAfter: number;
+    note?: string | null;
+}
+
+export interface OffsetResetResult {
+    applied: boolean;
+    /** Why it can't be applied now, e.g. the group has active members. */
+    blockedReason?: string | null;
+    changes: OffsetResetChange[];
+}
