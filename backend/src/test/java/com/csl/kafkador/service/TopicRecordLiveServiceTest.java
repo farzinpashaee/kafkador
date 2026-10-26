@@ -4,6 +4,7 @@ import com.csl.kafkador.domain.dto.RecordFilterDto;
 import com.csl.kafkador.domain.dto.TopicRecordDto;
 import com.csl.kafkador.domain.options.RecordSerde;
 import com.csl.kafkador.exception.InvalidRecordRequestException;
+import com.csl.kafkador.component.SessionHolder;
 import com.csl.kafkador.service.registry.SchemaRegistryRecordDecoders;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.MockConsumer;
@@ -30,7 +31,7 @@ class TopicRecordLiveServiceTest {
     private static final String TOPIC = "orders";
     private static final TopicPartition P0 = new TopicPartition(TOPIC, 0);
 
-    private final TopicRecordLiveService service = new TopicRecordLiveService(mock(ConnectionService.class), mock(SchemaRegistryRecordDecoders.class));
+    private final TopicRecordLiveService service = new TopicRecordLiveService(mock(ConnectionService.class), mock(SchemaRegistryRecordDecoders.class), mock(SessionHolder.class));
     private final RecordingSink sink = new RecordingSink();
     private MockConsumer<byte[], byte[]> consumer;
 
@@ -53,7 +54,7 @@ class TopicRecordLiveServiceTest {
         List<RecordFilterDto> filters = List.of(new RecordFilterDto().setField(RecordFilterDto.Field.VALUE)
                 .setOperator(RecordFilterDto.Operator.CONTAINS).setValue("ORDER"));
 
-        service.stream(consumer, TOPIC, List.of(), RecordSerde.STRING, RecordSerde.STRING, filters, sink, stopAfterPolls(2));
+        service.stream(consumer, TOPIC, List.of(), RecordSerde.STRING, RecordSerde.STRING, filters, sink, stopAfterPolls(2), Long.MAX_VALUE);
 
         assertThat(sink.ready).isTrue();
         assertThat(sink.batches).hasSize(1);
@@ -63,15 +64,47 @@ class TopicRecordLiveServiceTest {
 
     @Test
     void reportsAPartitionTheTopicDoesNotHave() {
-        service.stream(consumer, TOPIC, List.of(3), RecordSerde.STRING, RecordSerde.STRING, List.of(), sink, () -> true);
+        service.stream(consumer, TOPIC, List.of(3), RecordSerde.STRING, RecordSerde.STRING, List.of(), sink, () -> true, Long.MAX_VALUE);
 
         assertThat(sink.ready).isFalse();
         assertThat(sink.failures).containsExactly("Topic 'orders' has no partition 3");
     }
 
     @Test
+    void stopsAtItsTimeLimitAndSaysSo() {
+        service.stream(consumer, TOPIC, List.of(), RecordSerde.STRING, RecordSerde.STRING, List.of(), sink, () -> true,
+                System.currentTimeMillis() - 1);
+
+        assertThat(sink.ready).isTrue();
+        assertThat(sink.failures).singleElement().asString()
+                .contains("stopped after 30 minutes").contains("Start it again");
+    }
+
+    @Test
+    void capsLiveViewsPerSessionAndInAllAndFreesASlotWhenOneEnds() {
+        service.maxPerSession = 2;
+        service.maxTotal = 3;
+
+        assertThat(service.slots.tryAcquire("alice")).isNull();
+        assertThat(service.slots.tryAcquire("alice")).isNull();
+        assertThat(service.slots.tryAcquire("alice")).contains("already have 2 live views open");
+        assertThat(service.slots.tryAcquire("bob")).isNull();
+        assertThat(service.slots.tryAcquire("carol")).contains("already running 3 live views");
+
+        service.slots.release("alice");
+        assertThat(service.slots.tryAcquire("carol")).isNull();
+        assertThat(service.slots.total()).isEqualTo(3);
+
+        service.slots.release("alice");
+        service.slots.release("bob");
+        service.slots.release("carol");
+        assertThat(service.slots.total()).isZero();
+        assertThat(service.slots.tryAcquire("alice")).isNull();
+    }
+
+    @Test
     void reportsAMissingTopic() {
-        service.stream(consumer, "missing", List.of(), RecordSerde.STRING, RecordSerde.STRING, List.of(), sink, () -> true);
+        service.stream(consumer, "missing", List.of(), RecordSerde.STRING, RecordSerde.STRING, List.of(), sink, () -> true, Long.MAX_VALUE);
 
         assertThat(sink.failures).containsExactly("Topic 'missing' does not exist");
     }

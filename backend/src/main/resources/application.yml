@@ -37,6 +37,12 @@ kafkador:
   # the same origin. The dev profile allows the Angular dev server.
   cors:
     allowed-origins: []
+  # Live mode of the Records tab: each view holds a thread and a Kafka consumer on the server.
+  records:
+    live:
+      max-per-session: 3
+      max-total: 20
+      max-duration: 30m
 
 server:
   servlet:

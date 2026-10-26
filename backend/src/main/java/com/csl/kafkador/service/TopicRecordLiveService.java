@@ -1,5 +1,6 @@
 package com.csl.kafkador.service;
 
+import com.csl.kafkador.component.SessionHolder;
 import com.csl.kafkador.domain.dto.RecordFilterDto;
 import com.csl.kafkador.domain.dto.TopicRecordDto;
 import com.csl.kafkador.domain.options.RecordDecoder;
@@ -20,12 +21,15 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -50,7 +54,48 @@ public class TopicRecordLiveService {
 
     private final ConnectionService connectionService;
     private final SchemaRegistryRecordDecoders recordDecoders;
+    private final SessionHolder sessionHolder;
     private final ExecutorService executor = Executors.newCachedThreadPool();
+
+    // Each live view holds a thread and a Kafka consumer, so they're capped and end on their own.
+    @Value("${kafkador.records.live.max-per-session:3}")
+    int maxPerSession = 3;
+    @Value("${kafkador.records.live.max-total:20}")
+    int maxTotal = 20;
+    @Value("${kafkador.records.live.max-duration:30m}")
+    Duration maxDuration = Duration.ofMinutes(30);
+
+    final Slots slots = new Slots();
+
+    /** Live views running, per session and in all. */
+    final class Slots {
+        private final Map<String, Integer> perSession = new HashMap<>();
+        private int total;
+
+        /** Takes a slot, or says why there's none. */
+        synchronized String tryAcquire(String sessionId) {
+            int mine = perSession.getOrDefault(sessionId, 0);
+            if (mine >= maxPerSession) {
+                return "You already have " + mine + " live " + (mine == 1 ? "view" : "views")
+                        + " open, the most allowed. Stop one, or close its tab, to start another.";
+            }
+            if (total >= maxTotal) {
+                return "Kafkador is already running " + total + " live views, the most it allows at once. Try again in a few minutes.";
+            }
+            perSession.merge(sessionId, 1, Integer::sum);
+            total++;
+            return null;
+        }
+
+        synchronized void release(String sessionId) {
+            perSession.computeIfPresent(sessionId, (id, count) -> count > 1 ? count - 1 : null);
+            total = Math.max(0, total - 1);
+        }
+
+        synchronized int total() {
+            return total;
+        }
+    }
 
     /** What the streaming loop writes to; an SSE emitter in production. */
     interface LiveSink {
@@ -70,28 +115,50 @@ public class TopicRecordLiveService {
         String clusterId = connectionService.getActiveConnection().getClusterId();
         RecordDecoder keyDecoder = recordDecoders.decoder(keySerde, topic, clusterId);
         RecordDecoder valueDecoder = recordDecoders.decoder(valueSerde, topic, clusterId);
-        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+        // A little past the stream's own limit, which ends it with a message; this is the backstop.
+        SseEmitter emitter = new SseEmitter(maxDuration.plusMinutes(1).toMillis());
+
+        String sessionId = sessionHolder.getSession().getId();
+        String refused = slots.tryAcquire(sessionId);
+        if (refused != null) {
+            // Said as a stream event, which the Records tab shows; an HTTP error would reach it without its message.
+            log.info("Refused a live view of topic {}: {}", topic, refused);
+            sink(emitter).failure(refused);
+            emitter.complete();
+            return emitter;
+        }
+
         AtomicBoolean running = new AtomicBoolean(true);
         emitter.onCompletion(() -> running.set(false));
         emitter.onError(e -> running.set(false));
         emitter.onTimeout(() -> running.set(false));
-
-        executor.execute(() -> {
-            try (Consumer<byte[], byte[]> consumer = new KafkaConsumer<>(properties, new ByteArrayDeserializer(), new ByteArrayDeserializer())) {
-                stream(consumer, topic, partitions, keyDecoder, valueDecoder, filters, sink(emitter), running::get);
-            } catch (Exception e) {
-                log.error("Live stream of topic {} failed to start", topic, e);
-                sink(emitter).failure("Live stream stopped: " + e.getMessage());
-            } finally {
-                emitter.complete();
-            }
-        });
+        long deadline = System.currentTimeMillis() + maxDuration.toMillis();
+        try {
+            executor.execute(() -> {
+                try (Consumer<byte[], byte[]> consumer = new KafkaConsumer<>(properties, new ByteArrayDeserializer(), new ByteArrayDeserializer())) {
+                    stream(consumer, topic, partitions, keyDecoder, valueDecoder, filters, sink(emitter), running::get, deadline);
+                } catch (Exception e) {
+                    log.error("Live stream of topic {} failed to start", topic, e);
+                    sink(emitter).failure("Live stream stopped: " + e.getMessage());
+                } finally {
+                    slots.release(sessionId);
+                    emitter.complete();
+                }
+            });
+        } catch (RuntimeException e) {
+            slots.release(sessionId);
+            throw e;
+        }
         return emitter;
     }
 
-    /** Positions at the end of the partitions and forwards matching records until {@code running} turns false. */
+    /**
+     * Positions at the end of the partitions and forwards matching records until {@code running} turns false, or until
+     * {@code deadline} (epoch milliseconds), when it says the view stopped.
+     */
     void stream(Consumer<byte[], byte[]> consumer, String topic, List<Integer> partitions, RecordDecoder keyDecoder,
-                RecordDecoder valueDecoder, List<RecordFilterDto> filters, LiveSink sink, BooleanSupplier running) {
+                RecordDecoder valueDecoder, List<RecordFilterDto> filters, LiveSink sink, BooleanSupplier running,
+                long deadline) {
         try {
             List<TopicPartition> assigned = TopicRecordService.resolvePartitions(consumer, topic, partitions);
             consumer.assign(assigned);
@@ -100,6 +167,10 @@ public class TopicRecordLiveService {
             sink.ready();
             long lastSent = System.currentTimeMillis();
             while (running.getAsBoolean()) {
+                if (System.currentTimeMillis() >= deadline) {
+                    sink.failure("Live view stopped after " + minutes(maxDuration) + ", the longest one runs. Start it again to keep watching.");
+                    return;
+                }
                 List<TopicRecordDto> batch = new ArrayList<>();
                 for (ConsumerRecord<byte[], byte[]> record : consumer.poll(TopicRecordService.POLL_TIMEOUT)) {
                     TopicRecordDto dto = TopicRecordService.toDto(record, keyDecoder, valueDecoder);
@@ -144,6 +215,11 @@ public class TopicRecordLiveService {
     }
 
     private static final ObjectMapper JSON = new ObjectMapper();
+
+    private static String minutes(Duration duration) {
+        long minutes = Math.max(1, duration.toMinutes());
+        return minutes + (minutes == 1 ? " minute" : " minutes");
+    }
 
     private static LiveSink sink(SseEmitter emitter) {
         return new LiveSink() {
