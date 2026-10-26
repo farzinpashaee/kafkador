@@ -1,0 +1,12 @@
+# Local development: run with --spring.profiles.active=dev (or SPRING_PROFILES_ACTIVE=dev). Not for deployments.
+kafkador:
+  cors:
+    # The Angular dev server (npm start), which calls the API on port 8080 from another origin.
+    allowed-origins:
+      - http://localhost:4200
+      - http://localhost:4210
+
+spring:
+  h2:
+    console:
+      enabled: true

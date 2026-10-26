@@ -67,7 +67,7 @@
           <input [(ngModel)]="sessionTimeoutMinutes" (ngModelChange)="savedAt.delete('sessionConfig')" type="number" class="form-control" id="sessionTimeoutMinutes"
                  [min]="sessionTimeoutMin" [max]="sessionTimeoutMax" step="1" aria-describedby="sessionTimeoutHelp" (keydown.enter)="saveSessionConfig()">
           <div id="sessionTimeoutHelp" class="form-text">
-            {{ formatDuration(sessionTimeoutMinutes) ? '= ' + formatDuration(sessionTimeoutMinutes) + '. ' : '' }}Between {{ sessionTimeoutMin }} minute and {{ sessionTimeoutMax }} minutes (365 days).
+            {{ formatDuration(sessionTimeoutMinutes) ? '= ' + formatDuration(sessionTimeoutMinutes) + '. ' : '' }}Between {{ sessionTimeoutMin }} minute and {{ sessionTimeoutMax }} minutes (24 hours).
           </div>
         </div>
 

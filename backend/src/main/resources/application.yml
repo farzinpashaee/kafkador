@@ -25,6 +25,10 @@ kafkador:
   services:
     connection:
       implementation: "ConnectionService"
+  # Other origins (scheme://host:port) allowed to call the API from a browser. None by default: the UI is served from
+  # the same origin. The dev profile allows the Angular dev server.
+  cors:
+    allowed-origins: []
 
 server:
   servlet:
@@ -52,11 +56,13 @@ spring:
     store-type: jdbc
     jdbc:
       initialize-schema: always
-    timeout:
-      seconds: 365d # TODO: update
+    # What a new session starts with; the idle timeout from Settings (30 minutes unless changed there, at most 24
+    # hours) replaces it on the next API call.
+    timeout: 30m
   h2:
+    # Off by default: it gives full access to Kafkador's database, saved secrets included. The dev profile turns it on.
     console:
-      enabled: true
+      enabled: false
       path: /kafkador-h2
   jackson:
     default-property-inclusion: non_null

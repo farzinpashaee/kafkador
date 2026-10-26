@@ -67,6 +67,22 @@ git clone https://github.com/your-org/kafkador.git
 cd kafkador
 ./mvnw spring-boot:run
 ```
+
+### Local development
+
+Run the backend with the `dev` profile, then the Angular dev server:
+
+```bash
+cd backend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+cd frontend && npm start          # http://localhost:4200
+```
+
+In IntelliJ, put `dev` under **Active profiles** in the run configuration (or set `SPRING_PROFILES_ACTIVE=dev`).
+The profile lets the dev server (ports 4200 and 4210) call the API from its own origin and turns on the H2 console at
+`/kafkador-h2`. Neither is on without it: deployments serve the UI from the API's origin, and the console gives full
+access to Kafkador's database. To let another origin call the API, list it under `kafkador.cors.allowed-origins`.
+
+Sessions start with a 30-minute idle timeout; **Settings → Generic** can raise it to at most 24 hours.
 ---
 
 ## 📦 Building the final package

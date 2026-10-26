@@ -85,9 +85,16 @@ class SessionSettingsServiceTest {
     @Test
     void rejectsValuesOutsideTheAllowedRange() {
         assertThatThrownBy(() -> service.saveTimeoutMinutes(0)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> service.saveTimeoutMinutes(525_601)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.saveTimeoutMinutes(1_441)).isInstanceOf(IllegalArgumentException.class);
         assertThat(service.saveTimeoutMinutes(1)).isEqualTo(1);
-        assertThat(service.saveTimeoutMinutes(525_600)).isEqualTo(525_600);
+        assertThat(service.saveTimeoutMinutes(1_440)).isEqualTo(1_440);
+    }
+
+    @Test
+    void capsATimeoutSavedBeforeTheMaximumCameDown() {
+        // 7 days, allowed when the maximum was 365 days.
+        SessionSettingsService old = new SessionSettingsService(configWith("10080"), new ApplicationConfig());
+        assertThat(old.getTimeoutMinutes()).isEqualTo(1_440);
     }
 
     @Test

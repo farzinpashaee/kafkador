@@ -18,12 +18,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 
+import java.util.List;
 import java.util.Locale;
 
 @Configuration
 @RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
 
+    private final ApplicationConfig applicationConfig;
     private final SessionSettingsService sessionSettingsService;
     private final DatabaseCredentialsService databaseCredentialsService;
 
@@ -74,11 +76,14 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Bean
     public WebMvcConfigurer corsConfigurer() {
+        List<String> origins = applicationConfig.getCors().getAllowedOrigins();
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
+                // No other origin by default: the UI calls the API from its own.
+                if (origins.isEmpty()) return;
                 registry.addMapping("/api/**")
-                        .allowedOrigins("http://localhost:4200")
+                        .allowedOrigins(origins.toArray(String[]::new))
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .exposedHeaders(DatabaseSetupInterceptor.SETUP_REQUIRED_HEADER)

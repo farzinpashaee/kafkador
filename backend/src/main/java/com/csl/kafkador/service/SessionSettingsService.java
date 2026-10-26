@@ -22,7 +22,8 @@ import java.util.Map;
 public class SessionSettingsService {
 
     public static final int MIN_TIMEOUT_MINUTES = 1;
-    public static final int MAX_TIMEOUT_MINUTES = 525_600; // 365 days
+    /** A day: a forgotten browser shouldn't stay connected to a cluster for longer. */
+    public static final int MAX_TIMEOUT_MINUTES = 1_440;
 
     private static final String GLOBAL_SCOPE = "global";
     private static final String CONFIG_KEY = "kafkador.session.timeout-minutes";
@@ -63,6 +64,11 @@ public class SessionSettingsService {
         try {
             int saved = Integer.parseInt(kafkadorConfigService.get(CONFIG_KEY, GLOBAL_SCOPE).trim());
             if (saved >= MIN_TIMEOUT_MINUTES && saved <= MAX_TIMEOUT_MINUTES) return saved;
+            // Saved before the maximum came down from 365 days: keep the longest allowed rather than the default.
+            if (saved > MAX_TIMEOUT_MINUTES) {
+                log.warn("Saved session timeout of {} minutes is above the {}-minute maximum; using the maximum", saved, MAX_TIMEOUT_MINUTES);
+                return MAX_TIMEOUT_MINUTES;
+            }
             log.warn("Ignoring out-of-range saved session timeout: {}", saved);
         } catch (ConfigNotFoundException e) {
             // nothing saved yet: use the default

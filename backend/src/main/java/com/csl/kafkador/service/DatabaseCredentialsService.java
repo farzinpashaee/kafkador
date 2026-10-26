@@ -24,7 +24,7 @@ import java.util.Properties;
 
 /**
  * First-run setup: Kafkador ships with the embedded H2 database wide open (its default "sa" user,
- * blank password — the same H2 console exposed at /kafkador-h2 can log in with that). This lets an
+ * blank password — the H2 console at /kafkador-h2, when the dev profile turns it on, can log in with that). This lets an
  * operator replace it, once, with a username and password of their own choosing.
  *
  * <p>The credentials file on disk is the single source of truth for "is setup done" — the database

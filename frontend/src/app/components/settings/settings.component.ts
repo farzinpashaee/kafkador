@@ -31,7 +31,7 @@ export class SettingsComponent implements OnInit {
   aiConfig: AiConfig = { provider: 'openai', enabled: false };
   aiApiKey = '';
   readonly sessionTimeoutMin = 1;
-  readonly sessionTimeoutMax = 525600;
+  readonly sessionTimeoutMax = 1440;
   sessionTimeoutMinutes: number | null = null;
   globalCompatibility: CompatibilityConfig = {};
   selectedCompatibilityLevel = 'BACKWARD';

@@ -20,6 +20,7 @@ public class ApplicationConfig {
     private Map<String,Service> services = new HashMap<String,Service>();
     private List<ConnectionDto> connections = new ArrayList<>();
     private Session session = new Session();
+    private Cors cors = new Cors();
 
     public String getServiceImplementation(KafkadorContext.Service service){
         if( !services.containsKey(service.getKey()) )
@@ -30,6 +31,12 @@ public class ApplicationConfig {
     @Data
     public static class Service {
         String implementation;
+    }
+
+    @Data
+    public static class Cors {
+        /** Other origins allowed to call the API from a browser; none by default (the dev profile adds the Angular dev server). */
+        private List<String> allowedOrigins = new ArrayList<>();
     }
 
     @Data
