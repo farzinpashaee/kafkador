@@ -10,22 +10,41 @@
 	</parent>
 	<groupId>com.csl</groupId>
 	<artifactId>kafkador</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<!-- The one place the version is set: the build writes it into the jar, and the UI reads it from /api/v1/app-info.
+	     frontend/package.json carries the same number, which ProjectVersionTest checks. -->
+	<version>1.0.0-beta.1</version>
 	<name>Kafkador</name>
-	<description>Kafkador Dashboard</description>
-	<url/>
+	<description>Web console for Apache Kafka and Confluent Platform: brokers, topics, records, consumer groups, ACLs, Schema Registry, Kafka Connect and ksqlDB.</description>
+	<url>https://github.com/farzinpashaee/kafkador</url>
+	<organization>
+		<name>Codestreamlab</name>
+		<url>https://codestreamlab.com</url>
+	</organization>
 	<licenses>
-		<license/>
+		<license>
+			<name>PolyForm Shield License 1.0.0</name>
+			<url>https://polyformproject.org/licenses/shield/1.0.0</url>
+			<distribution>repo</distribution>
+			<comments>Source-available, not open source: free to use, change and share, but not to compete with Kafkador, e.g. by selling it.</comments>
+		</license>
 	</licenses>
 	<developers>
-		<developer/>
+		<developer>
+			<id>farzinpashaee</id>
+			<url>https://github.com/farzinpashaee</url>
+			<organization>Codestreamlab</organization>
+		</developer>
 	</developers>
 	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
+		<connection>scm:git:https://github.com/farzinpashaee/kafkador.git</connection>
+		<developerConnection>scm:git:git@github.com:farzinpashaee/kafkador.git</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/farzinpashaee/kafkador</url>
 	</scm>
+	<issueManagement>
+		<system>GitHub</system>
+		<url>https://github.com/farzinpashaee/kafkador/issues</url>
+	</issueManagement>
 	<properties>
 		<java.version>21</java.version>
 		<!-- Confluent Platform 8.0 is built on Kafka 4.0, matching kafka-clients below. -->
@@ -135,6 +154,14 @@
 						</exclude>
 					</excludes>
 				</configuration>
+				<executions>
+					<!-- META-INF/build-info.properties: the version /api/v1/app-info reports. -->
+					<execution>
+						<goals>
+							<goal>build-info</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

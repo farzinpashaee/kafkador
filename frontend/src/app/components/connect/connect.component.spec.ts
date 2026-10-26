@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { ConnectComponent } from './connect.component';
 import { ApiService, CommonService } from '../../services';
@@ -22,7 +24,7 @@ describe('ConnectComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [ConnectComponent],
-      providers: [provideRouter([]), { provide: ApiService, useValue: api }]
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(), { provide: ApiService, useValue: api }]
     })
     .compileComponents();
 

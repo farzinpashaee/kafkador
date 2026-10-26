@@ -4,11 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
-import { ApiService, ValidationService, LocalStorageService, CommonService } from '../../services';
+import { ApiService, ValidationService, LocalStorageService, CommonService, AppInfoService } from '../../services';
 import { GenericResponse, Connection, Error, ClusterCredentials, CREDENTIALS_REQUIRED, blankCredentials } from '../../models';
 import { ClusterCredentialsFormComponent } from '../cluster-credentials-form/cluster-credentials-form.component';
 import { environment } from '../../environments/environment';
-import { APP_VERSION, CODESTREAMLAB_URL } from '../../app-info';
+import { CODESTREAMLAB_URL } from '../../app-info';
 
 @Component({
   selector: 'app-connect',
@@ -24,7 +24,7 @@ export class ConnectComponent  {
   editConnection!: Connection;
   deletedConnection!: Connection;
   baseUrl = environment.baseUrl;
-  readonly version = APP_VERSION;
+  readonly version$ = inject(AppInfoService).version$;
   readonly website = CODESTREAMLAB_URL;
   router = inject(Router);
   errors: Map<string, Error> = new Map();

@@ -8,3 +8,4 @@ export * from './kafkador-title-strategy';
 export * from './local-storage.service';
 export * from './validation.service';
 export * from './bookmark.service';
+export * from './app-info.service';

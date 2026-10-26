@@ -12,7 +12,7 @@
 <div class="stat-grid stat-grid-3 mt-2" aria-label="Kafkador details">
   <div class="stat-tile">
     <div class="stat-label">Version</div>
-    <div class="stat-value" data-testid="about-version">{{ version }}</div>
+    <div class="stat-value" data-testid="about-version">{{ (version$ | async) || "unknown" }}</div>
   </div>
   <div class="stat-tile">
     <div class="stat-label">Made by</div>

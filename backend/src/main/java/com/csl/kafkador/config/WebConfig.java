@@ -30,6 +30,8 @@ public class WebConfig implements WebMvcConfigurer {
     private final DatabaseCredentialsService databaseCredentialsService;
 
     private static final String SETUP_API = "/api/v1/setup/**";
+    // The version, shown on the setup and Connect pages.
+    private static final String APP_INFO_API = "/api/v1/app-info";
 
     // Only the API is guarded: the Angular files must load without a session or completed setup, and the UI
     // reacts to the 401 and 428 answers itself.
@@ -37,14 +39,14 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor( new DatabaseSetupInterceptor(databaseCredentialsService) )
                 .addPathPatterns("/api/**")
-                .excludePathPatterns(SETUP_API);
+                .excludePathPatterns(SETUP_API, APP_INFO_API);
         registry.addInterceptor( new SessionTimeoutInterceptor(sessionSettingsService) )
                 .addPathPatterns("/api/**");
         registry.addInterceptor( new ResourceInterceptor() )
                 .addPathPatterns("/api/**");
         registry.addInterceptor( new SessionInterceptor() )
                 .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/v1/apm/**", "/api/v1/connections", "/api/v1/connections/**", SETUP_API);
+                .excludePathPatterns("/api/v1/apm/**", "/api/v1/connections", "/api/v1/connections/**", SETUP_API, APP_INFO_API);
         registry.addInterceptor(localeChangeInterceptor());
     }
 

@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 
 import { SetupComponent } from './setup.component';
@@ -16,7 +18,7 @@ describe('SetupComponent', () => {
     api.configureDatabase.and.returnValue(of({ body: { data: null } } as any));
     await TestBed.configureTestingModule({
       imports: [SetupComponent],
-      providers: [provideRouter([{ path: 'connect', children: [] }]), { provide: ApiService, useValue: api }]
+      providers: [provideRouter([{ path: 'connect', children: [] }]), provideHttpClient(), provideHttpClientTesting(), { provide: ApiService, useValue: api }]
     }).compileComponents();
     fixture = TestBed.createComponent(SetupComponent);
     component = fixture.componentInstance;

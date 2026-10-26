@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ApiService, CommonService } from '../../services';
+import { ApiService, AppInfoService, CommonService } from '../../services';
 import { Error } from '../../models';
 
 @Component({
@@ -22,6 +22,7 @@ export class SetupComponent {
   tokenRequired = false;
 
   router = inject(Router);
+  readonly version$ = inject(AppInfoService).version$;
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
 
