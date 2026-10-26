@@ -44,14 +44,6 @@
     </ul>
   </div>
 
-  <label class="visually-hidden" for="recordsKeySerde">Key serde</label>
-  <select id="recordsKeySerde" class="form-select form-select-sm w-auto" [(ngModel)]="keySerde" (ngModelChange)="load()" [disabled]="live">
-    <option *ngFor="let serde of serdes" [ngValue]="serde.value">Key: {{ serde.label }}</option>
-  </select>
-  <label class="visually-hidden" for="recordsValueSerde">Value serde</label>
-  <select id="recordsValueSerde" class="form-select form-select-sm w-auto" [(ngModel)]="valueSerde" (ngModelChange)="load()" [disabled]="live">
-    <option *ngFor="let serde of serdes" [ngValue]="serde.value">Value: {{ serde.label }}</option>
-  </select>
   <label class="visually-hidden" for="recordsLimit">Number of records</label>
   <select id="recordsLimit" class="form-select form-select-sm w-auto" [(ngModel)]="limit" (ngModelChange)="load()" [disabled]="live">
     <option *ngFor="let l of limits" [ngValue]="l">{{ l }} records</option>
@@ -90,6 +82,18 @@
       <i class="bi bi-send" aria-hidden="true"></i> Produce
     </button>
   </div>
+</div>
+
+<!-- How keys and values are decoded, on a row of their own: the Schema Registry option is long. -->
+<div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+  <label class="visually-hidden" for="recordsKeySerde">Key serde</label>
+  <select id="recordsKeySerde" class="form-select form-select-sm w-auto" [(ngModel)]="keySerde" (ngModelChange)="load()" [disabled]="live">
+    <option *ngFor="let serde of serdes" [ngValue]="serde.value">Key: {{ serde.label }}</option>
+  </select>
+  <label class="visually-hidden" for="recordsValueSerde">Value serde</label>
+  <select id="recordsValueSerde" class="form-select form-select-sm w-auto" [(ngModel)]="valueSerde" (ngModelChange)="load()" [disabled]="live">
+    <option *ngFor="let serde of serdes" [ngValue]="serde.value">Value: {{ serde.label }}</option>
+  </select>
 </div>
 
 <div *ngIf="filters.length" class="mt-2 d-flex flex-column gap-2">
