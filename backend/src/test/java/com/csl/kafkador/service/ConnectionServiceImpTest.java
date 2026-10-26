@@ -34,6 +34,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -108,6 +109,38 @@ class ConnectionServiceImpTest {
 
         assertThat(result).isSameAs(admin);
         verify(admin, never()).close(any(Duration.class));
+    }
+
+    @Test
+    void trustsAPassedHealthCheckForThirtySecondsInsteadOfCheckingEveryRequest() throws Exception {
+        long[] now = {-5_000_000_000L}; // nanoTime may well be negative
+        service.clock = () -> now[0];
+        Admin admin = adminWithClusterId(completed(CLUSTER_ID));
+        adminFactory.when(() -> Admin.create(any(Properties.class))).thenReturn(admin);
+
+        service.getAdminClient(CLUSTER_ID);        // created: not checked yet
+        service.getAdminClient(CLUSTER_ID);        // checked
+        verify(admin, times(1)).describeCluster();
+
+        now[0] += Duration.ofSeconds(29).toNanos();
+        for (int i = 0; i < 5; i++) service.getAdminClient(CLUSTER_ID);
+        verify(admin, times(1)).describeCluster();
+
+        now[0] += Duration.ofSeconds(2).toNanos();
+        assertThat(service.getAdminClient(CLUSTER_ID).getAdmin()).isSameAs(admin);
+        verify(admin, times(2)).describeCluster();
+    }
+
+    @Test
+    void aNewClientIsCheckedOnItsNextUseWhateverTheClockSays() throws Exception {
+        service.clock = () -> -1L;
+        Admin broken = adminWithClusterId(failed());
+        Admin fresh = mock(Admin.class);
+        adminFactory.when(() -> Admin.create(any(Properties.class))).thenReturn(broken, fresh);
+        service.getAdminClient(CLUSTER_ID);
+
+        assertThat(service.getAdminClient(CLUSTER_ID).getAdmin()).isSameAs(fresh);
+        verify(broken).close(any(Duration.class));
     }
 
     @Test

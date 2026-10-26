@@ -11,4 +11,6 @@ public class AdminClusterWrapper {
 
     private Admin admin;
     private ClusterDto cluster;
+    /** System.nanoTime() until which the client counts as healthy without asking the cluster again; null until checked. */
+    private volatile Long healthyUntilNanos;
 }

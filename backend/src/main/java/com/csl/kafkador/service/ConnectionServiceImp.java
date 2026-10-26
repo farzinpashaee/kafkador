@@ -39,6 +39,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.LongSupplier;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -57,6 +58,9 @@ public class ConnectionServiceImp implements ConnectionService {
 
     // How long a cached Admin may take to prove it can still reach its cluster before it is replaced.
     private static final long HEALTH_CHECK_TIMEOUT_SECONDS = 5;
+    // How long a passed health check is trusted, so most requests don't pay a round trip (or the timeout above,
+    // when the cluster is down) before their own call.
+    static final Duration HEALTHY_FOR = Duration.ofSeconds(30);
     private static final Duration ADMIN_CLOSE_TIMEOUT = Duration.ofSeconds(1);
     // How long connecting waits for the cluster to answer. A SASL or SSL listener doesn't reject a plaintext
     // client, it just drops the connection, so a wait that runs out is what "needs credentials" looks like.
@@ -67,6 +71,8 @@ public class ConnectionServiceImp implements ConnectionService {
     // Shared by every session. Each Admin owns a network thread that keeps polling (and, once the brokers are
     // unreachable, re-bootstrapping) until close() is called, so an entry must be closed whenever it is dropped.
     private final Map<String, AdminClusterWrapper> adminClientMap = new ConcurrentHashMap<>();
+    /** System.nanoTime, replaceable in tests. */
+    LongSupplier clock = System::nanoTime;
 
     /**
      * The Admin for the cluster, using this session's credentials for it if it connected with any. Cached per
@@ -79,9 +85,13 @@ public class ConnectionServiceImp implements ConnectionService {
         String cacheKey = adminCacheKey(clusterId, credentials, security);
         AdminClusterWrapper cached = adminClientMap.get(cacheKey);
         if(cached != null) {
+            // Checked moments ago: trust it, rather than ask the cluster before every request.
+            Long healthyUntil = cached.getHealthyUntilNanos();
+            if (healthyUntil != null && clock.getAsLong() - healthyUntil < 0) return cached;
             try {
                 KafkaFuture<String> clusterIdFuture = cached.getAdmin().describeCluster().clusterId();
                 clusterIdFuture.get(HEALTH_CHECK_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                cached.setHealthyUntilNanos(clock.getAsLong() + HEALTHY_FOR.toNanos());
                 return cached;
             } catch (Exception e){
                 log.warn("Admin disconnected! Trying to reconnect... - " + e.getMessage());
