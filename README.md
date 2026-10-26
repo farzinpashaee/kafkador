@@ -83,6 +83,27 @@ The profile lets the dev server (ports 4200 and 4210) call the API from its own 
 access to Kafkador's database. To let another origin call the API, list it under `kafkador.cors.allowed-origins`.
 
 Sessions start with a 30-minute idle timeout; **Settings → Generic** can raise it to at most 24 hours.
+
+### First-run setup
+
+The first time Kafkador starts, it asks for a username and password for its embedded database. So that whoever reaches
+a new instance first can't claim it, the setup page also asks for a **one-time setup token**, printed in the log at
+startup:
+
+```
+============================================================
+Kafkador needs first-run setup. The setup page asks for this
+one-time setup token:  3f9c1e...
+============================================================
+```
+
+Or skip the setup page by giving the credentials up front, e.g. in Docker or Kubernetes:
+
+```bash
+KAFKADOR_SETUP_USERNAME=kafkador_admin KAFKADOR_SETUP_PASSWORD='a-long-password' java -jar kafkador.jar
+```
+
+`KAFKADOR_SETUP_TOKEN` chooses the token instead of a random one. The `dev` profile doesn't ask for a token.
 ---
 
 ## 📦 Building the final package

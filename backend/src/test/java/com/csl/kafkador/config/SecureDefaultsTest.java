@@ -23,6 +23,7 @@ class SecureDefaultsTest {
         assertThat(defaults.getProperty("spring.h2.console.enabled")).isEqualTo(false);
         assertThat(defaults.getProperty("kafkador.cors.allowed-origins[0]")).isNull();
         assertThat(defaults.getProperty("spring.session.timeout")).isEqualTo("30m");
+        assertThat(defaults.getProperty("kafkador.setup.require-token")).isEqualTo(true);
     }
 
     @Test
@@ -31,6 +32,7 @@ class SecureDefaultsTest {
 
         assertThat(dev.getProperty("spring.h2.console.enabled")).isEqualTo(true);
         assertThat(dev.getProperty("kafkador.cors.allowed-origins[0]")).isEqualTo("http://localhost:4200");
+        assertThat(dev.getProperty("kafkador.setup.require-token")).isEqualTo(false);
     }
 
     @Test

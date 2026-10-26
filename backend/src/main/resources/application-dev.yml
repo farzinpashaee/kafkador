@@ -5,6 +5,9 @@ kafkador:
     allowed-origins:
       - http://localhost:4200
       - http://localhost:4210
+  setup:
+    # First-run setup without the one-time token from the log (see SetupGuard).
+    require-token: false
 
 spring:
   h2:

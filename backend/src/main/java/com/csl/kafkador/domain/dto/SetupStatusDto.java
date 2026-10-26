@@ -9,4 +9,7 @@ public class SetupStatusDto {
 
     private boolean databaseSetupRequired;
 
+    /** Setup asks for the one-time token printed to the log at startup. */
+    private boolean setupTokenRequired;
+
 }

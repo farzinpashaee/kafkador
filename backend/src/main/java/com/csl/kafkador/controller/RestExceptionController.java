@@ -83,6 +83,14 @@ public class RestExceptionController {
                 .failed(HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(SetupTokenException.class)
+    public ResponseEntity<GenericResponse<Void>> handleSetupToken(SetupTokenException ex) {
+        return new GenericResponse.Builder<Void>()
+                .code(String.valueOf(HttpStatus.FORBIDDEN.value()))
+                .message(ex.getMessage())
+                .failed(HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(DatabaseSetupException.class)
     public ResponseEntity<GenericResponse<Void>> handleDatabaseSetupException(DatabaseSetupException ex) {
         log.error("Database setup failed", ex);

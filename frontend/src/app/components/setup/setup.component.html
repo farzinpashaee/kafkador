@@ -18,6 +18,15 @@
         </div>
 
         <form (ngSubmit)="submit()">
+          <div *ngIf="tokenRequired" class="mb-3">
+            <label for="setupToken" class="form-label">Setup token:</label>
+            <input required [(ngModel)]="setupToken" name="setupToken" type="text" class="form-control font-monospace" id="setupToken"
+                   autocomplete="off" spellcheck="false" aria-describedby="setupTokenHelp">
+            <div id="setupTokenHelp" class="form-text">
+              Printed in Kafkador's log when it started (look for "setup token"), so only whoever runs the server can
+              complete setup.
+            </div>
+          </div>
           <div class="mb-3">
             <label for="username" class="form-label">Username:</label>
             <input required [(ngModel)]="username" name="username" type="text" class="form-control" id="username"

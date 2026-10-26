@@ -17,12 +17,23 @@ export class SetupComponent {
   username = '';
   password = '';
   confirmPassword = '';
+  setupToken = '';
+  /** The server asks for the one-time token from its log. */
+  tokenRequired = false;
 
   router = inject(Router);
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
 
   constructor(private apiService: ApiService, private commonService: CommonService) {}
+
+  ngOnInit() {
+    this.apiService.getSetupStatus().subscribe({
+      next: res => this.tokenRequired = !!res.body?.data?.setupTokenRequired,
+      // The submit still says what's missing if this check fails.
+      error: () => this.tokenRequired = true
+    });
+  }
 
   submit() {
     this.errors.delete('setup');
@@ -31,7 +42,8 @@ export class SetupComponent {
       return;
     }
     this.flags.set('setupLoading', true);
-    this.apiService.configureDatabase({ username: this.username, password: this.password }).subscribe({
+    const setupToken = this.setupToken.trim() || undefined;
+    this.apiService.configureDatabase({ username: this.username, password: this.password, setupToken }).subscribe({
       next: () => {
         this.flags.set('setupLoading', false);
         this.router.navigate(['/connect']);

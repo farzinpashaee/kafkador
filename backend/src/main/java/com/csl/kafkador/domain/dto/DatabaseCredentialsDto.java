@@ -19,4 +19,7 @@ public class DatabaseCredentialsDto {
     @Size(min = 8, max = 128, message = "Password must be between 8 and 128 characters")
     private String password;
 
+    /** The one-time token from the log, when setup asks for one (see SetupGuard). */
+    private String setupToken;
+
 }
