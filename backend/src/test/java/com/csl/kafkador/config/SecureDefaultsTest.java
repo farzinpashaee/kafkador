@@ -27,6 +27,17 @@ class SecureDefaultsTest {
     }
 
     @Test
+    void actuatorShowsOnlyWhetherKafkadorIsHealthy() throws Exception {
+        PropertySource<?> defaults = load("application.yml");
+
+        assertThat(defaults.getProperty("management.endpoints.access.default")).isEqualTo("none");
+        assertThat(defaults.getProperty("management.endpoints.web.exposure.include")).isEqualTo("health");
+        assertThat(defaults.getProperty("management.endpoint.health.access")).isEqualTo("read-only");
+        assertThat(defaults.getProperty("management.endpoint.health.show-details")).isEqualTo("never");
+        assertThat(defaults.getProperty("management.endpoint.health.show-components")).isEqualTo("never");
+    }
+
+    @Test
     void theDevProfileTurnsOnTheConsoleAndAllowsTheAngularDevServer() throws Exception {
         PropertySource<?> dev = load("application-dev.yml");
 

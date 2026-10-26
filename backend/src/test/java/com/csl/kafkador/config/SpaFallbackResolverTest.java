@@ -50,6 +50,8 @@ class SpaFallbackResolverTest {
     @Test
     void unknownApiPaths_stayNotFound() throws IOException {
         assertThat(resolver.getResource("api/v1/nothing", location)).isNull();
+        assertThat(resolver.getResource("actuator/env", location)).isNull();
+        assertThat(resolver.getResource("actuator", location)).isNull();
     }
 
     @Test

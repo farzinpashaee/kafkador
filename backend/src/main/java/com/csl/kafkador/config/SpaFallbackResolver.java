@@ -9,7 +9,7 @@ import java.util.Set;
 
 /**
  * Serves the Angular app for client-side routes: a request that matches no file is answered with
- * index.html so deep links and page refreshes (e.g. /topic/orders) work. Missing API paths and missing
+ * index.html so deep links and page refreshes (e.g. /topic/orders) work. Missing API and Actuator paths and missing
  * files that look like assets stay 404 instead of returning HTML.
  */
 class SpaFallbackResolver extends PathResourceResolver {
@@ -24,7 +24,8 @@ class SpaFallbackResolver extends PathResourceResolver {
         if (requested.exists() && requested.isReadable()) {
             return requested;
         }
-        if (resourcePath.startsWith("api/") || looksLikeAsset(resourcePath)) {
+        if (resourcePath.startsWith("api/") || resourcePath.equals("actuator") || resourcePath.startsWith("actuator/")
+                || looksLikeAsset(resourcePath)) {
             return null;
         }
         Resource index = location.createRelative("index.html");

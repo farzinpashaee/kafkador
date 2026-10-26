@@ -46,8 +46,12 @@ EXPOSE 8080
 
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0"
 
+# Healthy when /actuator/health says UP: the app is serving and its database answers, not just the port open.
+# Plain bash (/dev/tcp), so it doesn't depend on curl or wget being in the base image.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-  CMD bash -c '</dev/tcp/127.0.0.1/8080' || exit 1
+  CMD bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080 \
+    && printf "GET /actuator/health HTTP/1.0\r\nHost: localhost\r\n\r\n" >&3 \
+    && grep -q "\"status\":\"UP\"" <&3' || exit 1
 
 # exec so java is PID 1 and receives SIGTERM; extra "docker run" arguments are passed on to Spring Boot.
 ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/kafkador.jar \"$@\"", "--"]

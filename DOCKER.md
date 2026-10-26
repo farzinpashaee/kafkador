@@ -6,6 +6,17 @@ that serves both the web UI and the API on port **8080**. Images are built for `
 
 You only need [Docker](https://docs.docker.com/get-docker/) with the Compose plugin (`docker compose version`).
 
+> [!WARNING]
+> **Don't expose Kafkador to the internet or an untrusted network.** It has no user login yet: anyone who can
+> reach port 8080 can browse your clusters, read and produce records, change topics, ACLs and consumer offsets,
+> and use any credentials saved in it. Until login is in place, keep it reachable only by people you trust, for
+> example:
+>
+> - publish it on this machine only, by setting `KAFKADOR_PORT=127.0.0.1:8080` in `.env` (then use an SSH tunnel
+>   or a VPN to reach it from elsewhere), or
+> - put it behind a reverse proxy that requires sign-in (e.g. an identity-aware proxy, or basic auth over HTTPS),
+>   or on a private network behind a firewall.
+
 ---
 
 ## Quick start
@@ -16,8 +27,22 @@ docker compose up -d
 ```
 
 Open **http://localhost:8080**. On first start Kafkador asks you to choose the embedded database
-username/password (saved to the data volume, so you're asked only once). Then add a connection to your Kafka
-cluster and you're done.
+username/password (saved to the data volume, so you're asked only once). So that nobody else can do this
+before you, the setup page also asks for a one-time **setup token**, printed in the container log:
+
+```bash
+docker compose logs kafkador | grep -A1 "setup token"
+```
+
+Then add a connection to your Kafka cluster and you're done.
+
+To skip the setup page, give the credentials up front in `docker-compose.yml` (only read on first start):
+
+```yaml
+    environment:
+      KAFKADOR_SETUP_USERNAME: kafkador_admin
+      KAFKADOR_SETUP_PASSWORD: ${KAFKADOR_SETUP_PASSWORD}   # from .env, at least 8 characters
+```
 
 <details>
 <summary>Without Compose</summary>
@@ -80,7 +105,7 @@ Create a `.env` file next to `docker-compose.yml`
 | Variable | Default | Description |
 |---|---|---|
 | `KAFKADOR_VERSION` | `latest` | Image tag. Pin a release (`1.2.3`), a minor line (`1.2`) or a major (`1`). |
-| `KAFKADOR_PORT` | `8080` | Host port the UI is served on. |
+| `KAFKADOR_PORT` | `8080` | Host port the UI is served on. `127.0.0.1:8080` publishes it on this machine only. |
 | `JAVA_OPTS` | `-XX:MaxRAMPercentage=75.0` | JVM options, e.g. `-Xmx512m`. |
 
 Any Spring Boot property can also be set as an environment variable in `docker-compose.yml`, for example:
@@ -132,7 +157,7 @@ To use a host folder instead of a named volume, replace `kafkador-data:/app/data
 |---|---|
 | Upgrade to the newest image | `docker compose pull && docker compose up -d` |
 | View logs | `docker compose logs -f kafkador` |
-| Status / health | `docker compose ps` |
+| Status / health | `docker compose ps` (healthy once `/actuator/health` reports UP) |
 | Stop | `docker compose down` |
 | Stop and delete all data | `docker compose down -v` |
 

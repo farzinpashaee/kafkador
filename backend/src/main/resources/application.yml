@@ -44,6 +44,23 @@ kafkador:
       max-total: 20
       max-duration: 30m
 
+management:
+  # Only /actuator/health, for the Docker healthcheck, and only UP or DOWN: details would describe the setup to anyone.
+  # It counts Kafkador's own database, not the Kafka clusters it connects to, which may come and go.
+  endpoints:
+    access:
+      default: none
+    web:
+      discovery:
+        enabled: false
+      exposure:
+        include: health
+  endpoint:
+    health:
+      access: read-only
+      show-details: never
+      show-components: never
+
 server:
   servlet:
     session:
