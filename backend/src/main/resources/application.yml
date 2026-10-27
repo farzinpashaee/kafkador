@@ -13,6 +13,21 @@ kafkador:
     password: ""
     token: ""
     require-token: true
+  # Who may use Kafkador: chosen on the setup page and in Settings > Access, unless the mode is set here (e.g.
+  # KAFKADOR_ACCESS_MODE), which then applies at every startup. none: no sign-in; database: the admin account below,
+  # kept in the database; ldap: LDAP accounts. See AccessService.
+  access:
+    mode: ""
+    admin-username: ""
+    admin-password: ""
+    ldap:
+      url: ""                 # ldap://host:389 or ldaps://host:636
+      base-dn: ""             # dc=example,dc=com
+      user-dn-pattern: ""     # uid={0},ou=people, relative to base-dn; or leave empty and search:
+      user-search-base: ""    # ou=people
+      user-search-filter: ""  # (uid={0})
+      manager-dn: ""          # an account to search with, if searches can't be anonymous
+      manager-password: ""
   observerService: # TODO: move to database enable per cluster. the config record must create when the cluster record created
     enabled: false
     retentionPeriod: 30 # in days

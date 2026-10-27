@@ -21,6 +21,8 @@ const SIDEBAR_COLLAPSED_STORAGE_KEY = 'sidebarCollapsed';
 export class DashboardLayoutComponent {
 
   connectedHost = "Active Host" ;
+  /** Who is signed in to Kafkador, when sign-in is on. */
+  signedInAs?: string;
   activeConnection!: Connection ;
   router = inject(Router);
   document = inject(DOCUMENT);
@@ -50,6 +52,11 @@ export class DashboardLayoutComponent {
     this.isDark = savedTheme === 'dark';
     this.sidebarCollapsed = this.localStorageService.getItem<boolean>(SIDEBAR_COLLAPSED_STORAGE_KEY) === true;
 
+    this.apiService.getAccessStatus().subscribe({
+      next: res => this.signedInAs = res.body?.data?.authenticated ? res.body.data.username : undefined,
+      error: () => this.signedInAs = undefined
+    });
+
     const activeConnectionFromStorage = this.localStorageService.getItem('activeConnection');
     if (activeConnectionFromStorage !== null) {
       this.activeConnection = activeConnectionFromStorage as Connection;
@@ -71,6 +78,19 @@ export class DashboardLayoutComponent {
             this.searchResults = res.data;
             this.isSearchLoading = false;
           });
+  }
+
+  /** Signs out of Kafkador, which also ends the cluster connection. */
+  signOut() {
+    this.apiService.logout().subscribe({
+      next: () => this.signedOut(),
+      error: () => this.signedOut()
+    });
+  }
+
+  private signedOut() {
+    this.localStorageService.removeItem('activeConnection');
+    this.router.navigate(['/login']);
   }
 
   disconnect(){

@@ -1,0 +1,48 @@
+<div class="connect-page d-flex align-items-center justify-content-center">
+  <div class="connect-wrapper">
+    <div class="connect-card">
+      <div class="connect-visual">
+        <img src="/images/kafkador-splash.png" class="connect-visual-image" alt="">
+        <div class="connect-logo">
+          <img src="/images/kafkador-logo-white-v1.svg" class="connect-logo-image" alt="Kafkador">
+        </div>
+      </div>
+
+      <div class="connect-panel">
+        <div class="connect-intro">
+          <h1>Sign In</h1>
+          <p class="text-muted" *ngIf="mode === 'LDAP'">Sign in with your directory (LDAP) account.</p>
+          <p class="text-muted" *ngIf="mode !== 'LDAP'">Sign in with the Kafkador admin account.</p>
+        </div>
+
+        <form (ngSubmit)="submit()">
+          <div class="mb-3">
+            <label for="loginUsername" class="form-label">Username:</label>
+            <input required [(ngModel)]="username" name="username" type="text" class="form-control" id="loginUsername"
+                   autocomplete="username" autofocus>
+          </div>
+          <div class="mb-3">
+            <label for="loginPassword" class="form-label">Password:</label>
+            <input required [(ngModel)]="password" name="password" type="password" class="form-control" id="loginPassword"
+                   autocomplete="current-password">
+          </div>
+
+          <div *ngIf="errors.get('login')" class="alert alert-danger" role="alert">
+            {{ errors.get('login')?.message }}
+          </div>
+
+          <button *ngIf="!flags.get('loginLoading')" type="submit" class="btn btn-primary">Sign In</button>
+          <div *ngIf="flags.get('loginLoading')">
+            <div class="spinner-border spinner-border-sm" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div> Signing in...&nbsp;
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="connect-footer">
+      <p><ng-container *ngIf="version$ | async as version">Version {{ version }} - </ng-container>© 2025 <a target="_blank" rel="noopener" [href]="website">Codestreamlab</a></p>
+    </div>
+  </div>
+</div>

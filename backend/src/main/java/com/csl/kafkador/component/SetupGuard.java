@@ -1,7 +1,9 @@
 package com.csl.kafkador.component;
 
 import com.csl.kafkador.exception.SetupTokenException;
+import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.service.DatabaseCredentialsService;
+import com.csl.kafkador.service.access.AccessService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
@@ -20,6 +22,10 @@ import java.util.regex.Pattern;
  * setup completes at startup, or the setup page asks for a one-time token printed to the log at startup
  * (kafkador.setup.token / KAFKADOR_SETUP_TOKEN to choose it). kafkador.setup.require-token=false, as in the dev
  * profile, lets setup go without one.
+ *
+ * <p>Setup has two steps: the database credentials, then who may use Kafkador (see AccessService). The token covers
+ * both, and an instance set up before the second step existed asks for it on its next start. kafkador.access.mode
+ * (KAFKADOR_ACCESS_MODE) settles the second step up front.</p>
  */
 @Slf4j
 @Component
@@ -31,6 +37,8 @@ public class SetupGuard implements ApplicationRunner {
     static final int MAX_PASSWORD = 128;
 
     private final DatabaseCredentialsService databaseCredentialsService;
+    private final AccessService accessService;
+    private final ApplicationConfig applicationConfig;
     private final String presetUsername;
     private final String presetPassword;
     private final String configuredToken;
@@ -40,11 +48,15 @@ public class SetupGuard implements ApplicationRunner {
     private volatile String token;
 
     public SetupGuard(DatabaseCredentialsService databaseCredentialsService,
+                      AccessService accessService,
+                      ApplicationConfig applicationConfig,
                       @Value("${kafkador.setup.username:}") String presetUsername,
                       @Value("${kafkador.setup.password:}") String presetPassword,
                       @Value("${kafkador.setup.token:}") String configuredToken,
                       @Value("${kafkador.setup.require-token:true}") boolean tokenRequired) {
         this.databaseCredentialsService = databaseCredentialsService;
+        this.accessService = accessService;
+        this.applicationConfig = applicationConfig;
         this.presetUsername = presetUsername.trim();
         this.presetPassword = presetPassword;
         this.configuredToken = configuredToken.trim();
@@ -56,15 +68,15 @@ public class SetupGuard implements ApplicationRunner {
         prepare();
     }
 
-    /** Completes setup from preset credentials, or else makes the token the setup page will ask for. */
+    /** Completes setup from preset settings, or else makes the token the setup page will ask for. */
     void prepare() throws Exception {
-        if (!databaseCredentialsService.isSetupRequired()) return;
-        if (!presetUsername.isEmpty() || !presetPassword.isEmpty()) {
+        if (databaseCredentialsService.isSetupRequired() && (!presetUsername.isEmpty() || !presetPassword.isEmpty())) {
             checkPreset();
             databaseCredentialsService.configure(presetUsername, presetPassword);
             log.info("First-run setup completed with the database username from kafkador.setup.username");
-            return;
         }
+        accessService.applyPreset(applicationConfig.getAccess());
+        if (!isSetupPending()) return;
         if (!tokenRequired) {
             log.warn("First-run setup is open to anyone who reaches Kafkador (kafkador.setup.require-token=false)");
             return;
@@ -82,8 +94,13 @@ public class SetupGuard implements ApplicationRunner {
         }
     }
 
+    /** The database credentials, or who may use Kafkador, haven't been chosen yet. */
+    public boolean isSetupPending() {
+        return databaseCredentialsService.isSetupRequired() || accessService.isSetupRequired();
+    }
+
     public boolean isTokenRequired() {
-        return token != null && databaseCredentialsService.isSetupRequired();
+        return token != null && isSetupPending();
     }
 
     /** @throws SetupTokenException when a token is required and this isn't it */
@@ -102,9 +119,9 @@ public class SetupGuard implements ApplicationRunner {
         return token;
     }
 
-    /** Setup is done; the token won't be accepted again. */
-    public void used() {
-        token = null;
+    /** A setup step is done; once they all are, the token won't be accepted again. */
+    public void stepDone() {
+        if (!isSetupPending()) token = null;
     }
 
     private void checkPreset() {

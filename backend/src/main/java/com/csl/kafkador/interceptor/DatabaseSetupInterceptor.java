@@ -2,6 +2,7 @@ package com.csl.kafkador.interceptor;
 
 import com.csl.kafkador.domain.GenericResponse;
 import com.csl.kafkador.service.DatabaseCredentialsService;
+import com.csl.kafkador.service.access.AccessService;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,9 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
- * Blocks the API until first-run database credentials are set — the most fundamental gate, ahead of the
- * Kafka connection session — answering 428 so the UI shows its setup page. The setup API itself is
- * excluded in WebConfig.
+ * Blocks the API until first-run setup is done (the database credentials, and who may use Kafkador), ahead of the
+ * Kafka connection session, answering 428 so the UI shows its setup page. The setup API itself is excluded in
+ * WebConfig.
  */
 @RequiredArgsConstructor
 public class DatabaseSetupInterceptor implements HandlerInterceptor {
@@ -23,6 +24,7 @@ public class DatabaseSetupInterceptor implements HandlerInterceptor {
     public static final String SETUP_REQUIRED_HEADER = "X-Kafkador-Db-Setup-Required";
 
     private final DatabaseCredentialsService databaseCredentialsService;
+    private final AccessService accessService;
 
     private final ObjectMapper mapper = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
@@ -31,7 +33,7 @@ public class DatabaseSetupInterceptor implements HandlerInterceptor {
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
-        if (!databaseCredentialsService.isSetupRequired()) {
+        if (!databaseCredentialsService.isSetupRequired() && !accessService.isSetupRequired()) {
             return true;
         }
 
@@ -40,7 +42,7 @@ public class DatabaseSetupInterceptor implements HandlerInterceptor {
         response.setContentType("application/json;charset=UTF-8");
         ResponseEntity<GenericResponse<Void>> error = new GenericResponse.Builder<Void>()
                 .code(String.valueOf(HttpStatus.PRECONDITION_REQUIRED.value()))
-                .message("Database setup is required before Kafkador can be used.")
+                .message("Setup is required before Kafkador can be used.")
                 .failed(HttpStatus.INTERNAL_SERVER_ERROR);
         response.getWriter().write(mapper.writeValueAsString(error.getBody()));
         return false;

@@ -146,6 +146,11 @@
             <ul class="dropdown-menu dropdown-menu-end header-drop-down">
               <li><a class="dropdown-item cursor-pointer" routerLink="/connection" routerLinkActive="active"><i class="bi bi-hdd-network"></i><span class="m-2">Connections</span></a></li>
               <li><a class="dropdown-item cursor-pointer" (click)="disconnect()" ><i class="bi bi-power"></i><span class="m-2">Disconnect</span></a></li>
+              <ng-container *ngIf="signedInAs">
+                <li><hr class="dropdown-divider"></li>
+                <li><span class="dropdown-item-text text-muted"><i class="bi bi-person"></i><span class="m-2">{{ signedInAs }}</span></span></li>
+                <li><a class="dropdown-item cursor-pointer" (click)="signOut()"><i class="bi bi-box-arrow-right"></i><span class="m-2">Sign Out</span></a></li>
+              </ng-container>
             </ul>
           </div>
         </div>

@@ -1,0 +1,40 @@
+<h5>Access</h5>
+<p class="text-s text-color-subtle">
+  Who may use Kafkador. Saving a change signs everyone else out; you stay signed in as the account you enter here.
+</p>
+
+<div *ngIf="flags.get('loading')" class="text-center">
+  <div class="spinner-border spinner-border-sm" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
+
+<div *ngIf="errors.get('load')" class="alert alert-danger" role="alert">
+  {{ errors.get('load')?.message }}
+</div>
+
+<div *ngIf="!flags.get('loading') && !errors.get('load')" style="max-width: 640px;">
+  <div *ngIf="settings.managedByEnvironment" class="alert alert-info" role="alert">
+    KAFKADOR_ACCESS_MODE sets this when Kafkador starts
+    ({{ settings.mode === 'NONE' ? 'no sign-in' : settings.mode === 'LDAP' ? 'LDAP sign-in' : 'sign-in with the admin account ' + settings.username }}),
+    so it can't be changed here.
+  </div>
+
+  <form *ngIf="!settings.managedByEnvironment" (ngSubmit)="save()">
+    <app-access-settings-form [settings]="settings" [savedUsername]="savedUsername" idPrefix="settingsAccess"></app-access-settings-form>
+
+    <div *ngIf="errors.get('save')" class="alert alert-danger" role="alert">
+      {{ errors.get('save')?.message }}
+    </div>
+    <div *ngIf="savedAt" class="alert alert-success" role="alert">
+      Successfully updated at {{ savedAt | date:'medium' }}.
+    </div>
+
+    <button *ngIf="!flags.get('saving')" type="submit" class="btn btn-primary">Save</button>
+    <div *ngIf="flags.get('saving')">
+      <div class="spinner-border spinner-border-sm" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div> Saving...&nbsp;
+    </div>
+  </form>
+</div>

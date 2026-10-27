@@ -1,7 +1,9 @@
 package com.csl.kafkador.component;
 
 import com.csl.kafkador.exception.SetupTokenException;
+import com.csl.kafkador.config.ApplicationConfig;
 import com.csl.kafkador.service.DatabaseCredentialsService;
+import com.csl.kafkador.service.access.AccessService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,10 +19,13 @@ import static org.mockito.Mockito.when;
 class SetupGuardTest {
 
     private final DatabaseCredentialsService credentials = mock(DatabaseCredentialsService.class);
+    private final AccessService access = mock(AccessService.class);
+    private final ApplicationConfig config = new ApplicationConfig();
 
     @BeforeEach
     void setUp() {
         when(credentials.isSetupRequired()).thenReturn(true);
+        when(access.isSetupRequired()).thenReturn(true);
     }
 
     @Test
@@ -41,7 +46,11 @@ class SetupGuardTest {
         guard.prepare();
         assertThatCode(() -> guard.verify("chosen-token")).doesNotThrowAnyException();
 
-        guard.used();
+        when(credentials.isSetupRequired()).thenReturn(false);
+        guard.stepDone();
+        assertThat(guard.isTokenRequired()).as("still needed to choose who may use Kafkador").isTrue();
+        when(access.isSetupRequired()).thenReturn(false);
+        guard.stepDone();
 
         assertThat(guard.isTokenRequired()).isFalse();
         assertThat(guard.currentToken()).isNull();
@@ -49,6 +58,9 @@ class SetupGuardTest {
 
     @Test
     void completesSetupFromPresetCredentialsWithoutAsking() throws Exception {
+        // Done once configure() has run; KAFKADOR_ACCESS_MODE chose who may use Kafkador.
+        when(credentials.isSetupRequired()).thenReturn(true, false);
+        when(access.isSetupRequired()).thenReturn(false);
         SetupGuard guard = guard("kafkador_admin", "a-long-password", "", true);
         guard.prepare();
 
@@ -75,8 +87,27 @@ class SetupGuardTest {
     }
 
     @Test
+    void asksAnInstanceSetUpBeforeSignInExistedWhoMayUseIt() throws Exception {
+        when(credentials.isSetupRequired()).thenReturn(false);
+        SetupGuard guard = guard("", "", "", true);
+        guard.prepare();
+
+        verify(credentials, never()).configure(anyString(), anyString());
+        assertThat(guard.isTokenRequired()).isTrue();
+    }
+
+    @Test
+    void appliesPresetAccessSettingsAtEveryStartup() throws Exception {
+        when(credentials.isSetupRequired()).thenReturn(false);
+        guard("", "", "", true).prepare();
+
+        verify(access).applyPreset(config.getAccess());
+    }
+
+    @Test
     void doesNothingOnceSetupIsDone() throws Exception {
         when(credentials.isSetupRequired()).thenReturn(false);
+        when(access.isSetupRequired()).thenReturn(false);
         SetupGuard guard = guard("kafkador_admin", "a-long-password", "", true);
         guard.prepare();
 
@@ -85,7 +116,7 @@ class SetupGuardTest {
     }
 
     private SetupGuard guard(String username, String password, String token, boolean requireToken) {
-        return new SetupGuard(credentials, username, password, token, requireToken);
+        return new SetupGuard(credentials, access, config, username, password, token, requireToken);
     }
 
 }

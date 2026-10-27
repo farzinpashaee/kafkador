@@ -26,6 +26,8 @@ export class ConnectComponent  {
   baseUrl = environment.baseUrl;
   readonly version$ = inject(AppInfoService).version$;
   readonly website = CODESTREAMLAB_URL;
+  /** Who is signed in to Kafkador, when sign-in is on. */
+  signedInAs?: string;
   router = inject(Router);
   errors: Map<string, Error> = new Map();
   flags: Map<string, boolean> = new Map();
@@ -52,6 +54,18 @@ export class ConnectComponent  {
     this.deletedConnection = { id:'', clusterId:'', name: '', host: '', port: '' };
     this.flags.set('getConnectionsEmpty',false);
     this.getConnections();
+    this.apiService.getAccessStatus().subscribe({
+      next: res => this.signedInAs = res.body?.data?.authenticated ? res.body.data.username : undefined,
+      error: () => this.signedInAs = undefined
+    });
+  }
+
+  /** Signs out of Kafkador. */
+  signOut() {
+    this.apiService.logout().subscribe({
+      next: () => this.router.navigate(['/login']),
+      error: () => this.router.navigate(['/login'])
+    });
   }
 
   getConnections(){

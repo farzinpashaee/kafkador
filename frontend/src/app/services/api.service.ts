@@ -7,7 +7,7 @@ import { Cluster, ClusterOverview, TopicOverview, Connection, Config, Broker, Al
   AclBinding, KafkaConnectConfig, ConnectorPlugin, Connector, ConnectorCreateRequest,
   SchemaVersion, SchemaRegisterRequest, CompatibilityCheckResult, CompatibilityConfig, SchemaLookupResult,
   AiConfig, AiChatResponse, AiChatSession, SessionConfig, DatabaseSetupStatus, DatabaseCredentials, EntityMetrics, ServiceAuth,
-  OffsetResetRequest, OffsetResetResult } from '../models';
+  OffsetResetRequest, OffsetResetResult, AccessStatus, AccessSettings, LoginRequest } from '../models';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -428,6 +428,36 @@ export class ApiService {
 
   public configureDatabase(credentials: DatabaseCredentials): Observable<HttpResponse<GenericResponse<void>>> {
     return this.http.post<GenericResponse<void>>(`${ApiService.ApiBaseUrl}/setup/database`, credentials,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public configureAccess(settings: AccessSettings): Observable<HttpResponse<GenericResponse<void>>> {
+    return this.http.post<GenericResponse<void>>(`${ApiService.ApiBaseUrl}/setup/access`, settings,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public getAccessStatus(): Observable<HttpResponse<GenericResponse<AccessStatus>>> {
+    return this.http.get<GenericResponse<AccessStatus>>(`${ApiService.ApiBaseUrl}/auth/status`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public login(request: LoginRequest): Observable<HttpResponse<GenericResponse<AccessStatus>>> {
+    return this.http.post<GenericResponse<AccessStatus>>(`${ApiService.ApiBaseUrl}/auth/login`, request,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public logout(): Observable<HttpResponse<GenericResponse<void>>> {
+    return this.http.post<GenericResponse<void>>(`${ApiService.ApiBaseUrl}/auth/logout`, {},
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public getAccessSettings(): Observable<HttpResponse<GenericResponse<AccessSettings>>> {
+    return this.http.get<GenericResponse<AccessSettings>>(`${ApiService.ApiBaseUrl}/settings/access`,
+      { withCredentials: true, observe: 'response' });
+  }
+
+  public saveAccessSettings(settings: AccessSettings): Observable<HttpResponse<GenericResponse<AccessStatus>>> {
+    return this.http.put<GenericResponse<AccessStatus>>(`${ApiService.ApiBaseUrl}/settings/access`, settings,
       { withCredentials: true, observe: 'response' });
   }
 

@@ -62,7 +62,7 @@ class SecureDefaultsTest {
     }
 
     private static Map<String, CorsConfiguration> corsMappings(ApplicationConfig config) {
-        WebConfig web = new WebConfig(config, null, null);
+        WebConfig web = new WebConfig(config, null, null, null);
         Registry registry = new Registry();
         web.corsConfigurer().addCorsMappings(registry);
         return registry.mappings();

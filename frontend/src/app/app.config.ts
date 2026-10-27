@@ -7,6 +7,7 @@ import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { routes } from './app.routes';
 import { LogInterceptor } from './interceptors/log-interceptor';
 import { SessionInterceptor } from './interceptors/session-interceptor';
+import { XsrfInterceptor } from './interceptors/xsrf-interceptor';
 import { KafkadorTitleStrategy } from './services/kafkador-title-strategy';
 
 export const appConfig: ApplicationConfig = {
@@ -17,6 +18,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
           withInterceptors([
             LogInterceptor,
+            XsrfInterceptor,
             SessionInterceptor
           ])
         ),

@@ -19,8 +19,9 @@ describe('ConnectComponent', () => {
     error: { error: { code: CREDENTIALS_REQUIRED, message } } }));
 
   beforeEach(async () => {
-    api = jasmine.createSpyObj<ApiService>('ApiService', ['getConnections', 'connect', 'addConnection']);
+    api = jasmine.createSpyObj<ApiService>('ApiService', ['getConnections', 'connect', 'addConnection', 'getAccessStatus', 'logout']);
     api.getConnections.and.returnValue(of({ body: { data: [prod] } } as any));
+    api.getAccessStatus.and.returnValue(of({ body: { data: { mode: 'DATABASE', loginRequired: true, authenticated: true, username: 'admin' } } } as any));
 
     await TestBed.configureTestingModule({
       imports: [ConnectComponent],

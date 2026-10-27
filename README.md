@@ -6,8 +6,8 @@ Kafka Connect and ksqlDB.
 
 It's a Spring Boot backend with an Angular UI, shipped as one jar or one Docker image.
 
-> **Version 1.0.0-beta.1.** Kafkador has no user login yet: anyone who can reach it can use every feature. Run it
-> only where people you trust can reach it (see [DOCKER.md](DOCKER.md)).
+> **Version 1.0.0-beta.1.** Whoever signs in to Kafkador can use every feature; there are no read-only users yet.
+> Turn sign-in on during setup, and put HTTPS in front of it (see [DOCKER.md](DOCKER.md)).
 
 ![Dashboard](docs/screenshots/dashboard.jpg)
 
@@ -33,6 +33,8 @@ It's a Spring Boot backend with an Angular UI, shipped as one jar or one Docker 
 - **Reset offsets** to the earliest or latest offset, a date and time, or a given offset, previewed first
 
 **Security and ecosystem**
+- Sign-in to Kafkador with an admin account kept in its database, or with LDAP / Active Directory accounts;
+  CSRF protection and throttled password guessing
 - ACLs: list, create, edit and delete bindings
 - Schema Registry: subjects, versions, a side-by-side diff of two versions, compatibility settings
 - Kafka Connect: connectors and plugins; create, configure, pause, resume, restart
@@ -75,9 +77,19 @@ java -jar target/kafkador.jar        # UI and API on http://localhost:8080
 
 ### First-run setup
 
-The first time Kafkador starts, it asks for a username and password for its embedded database. So that whoever reaches
-a new instance first can't claim it, the setup page also asks for a **one-time setup token**, printed in the log at
-startup:
+The first time Kafkador starts, setup takes two steps:
+
+1. A username and password for its embedded database.
+2. Who may use Kafkador:
+   - **a Kafkador account**: one admin account, kept in the database with its password hashed;
+   - **LDAP**: accounts from your directory or Active Directory, found by a DN pattern or a search (which can
+     require a group). Setup signs in with an account you give before saving, so a typo can't lock you out;
+   - **no sign-in**: anyone who can reach Kafkador can use it. Only for a machine nobody else can reach.
+
+You can change who may use Kafkador later in **Settings → Access**, which signs everyone else out.
+
+So that whoever reaches a new instance first can't claim it, the setup page also asks for a **one-time setup token**,
+printed in the log at startup:
 
 ```
 ============================================================
@@ -93,6 +105,11 @@ KAFKADOR_SETUP_USERNAME=kafkador_admin KAFKADOR_SETUP_PASSWORD='a-long-password'
 ```
 
 `KAFKADOR_SETUP_TOKEN` chooses the token instead of a random one. The `dev` profile doesn't ask for a token.
+
+`KAFKADOR_ACCESS_MODE` (`none`, `database` or `ldap`) settles the second step the same way, with
+`KAFKADOR_ACCESS_ADMINUSERNAME` / `KAFKADOR_ACCESS_ADMINPASSWORD` or the `KAFKADOR_ACCESS_LDAP_*` settings listed in
+[DOCKER.md](DOCKER.md#quick-start). It's applied at every start, so it's also how to reset a lost admin password.
+An instance set up before sign-in existed asks the second step on its next start.
 
 Connections, settings and saved credentials are kept in that embedded database, under `./data` next to where Kafkador
 runs.

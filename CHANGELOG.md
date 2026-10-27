@@ -31,6 +31,11 @@ The first public release.
 
 ### Security
 
+- **Sign-in.** First-run setup asks who may use Kafkador: an admin account kept in its database (password hashed
+  with PBKDF2), LDAP / Active Directory accounts, or nobody needs to sign in. Settings → Access changes it later and
+  signs everyone else out; `KAFKADOR_ACCESS_*` presets it. Five wrong passwords for a username from one address
+  block it for 15 minutes.
+- Requests that change something need a CSRF token (the `XSRF-TOKEN` cookie, sent back in `X-XSRF-TOKEN`).
 - First-run setup asks for a one-time token printed in the log, or takes credentials from
   `KAFKADOR_SETUP_USERNAME` / `KAFKADOR_SETUP_PASSWORD`.
 - The H2 console and cross-origin API calls are on only in the `dev` profile.

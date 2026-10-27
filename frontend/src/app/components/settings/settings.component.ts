@@ -5,12 +5,13 @@ import { ActivatedRoute } from '@angular/router';
 import { HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { AiAssistantService, ApiService, CommonService } from '../../services';
 import { SecuritySettingsComponent } from '../security-settings/security-settings.component';
+import { AccessSettingsComponent } from '../access-settings/access-settings.component';
 import { ServiceAuthFormComponent } from '../service-auth-form/service-auth-form.component';
 import { GenericResponse, KsqlDbConfig, SchemaRegistryConfig, KafkaConnectConfig, CompatibilityConfig, ConnectorPlugin, AiConfig, SessionConfig, Error, withAuth } from '../../models';
 
 @Component({
   selector: 'app-settings',
-  imports: [CommonModule, FormsModule, SecuritySettingsComponent, ServiceAuthFormComponent],
+  imports: [CommonModule, FormsModule, SecuritySettingsComponent, AccessSettingsComponent, ServiceAuthFormComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss'
 })

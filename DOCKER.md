@@ -7,15 +7,14 @@ that serves both the web UI and the API on port **8080**. Images are built for `
 You only need [Docker](https://docs.docker.com/get-docker/) with the Compose plugin (`docker compose version`).
 
 > [!WARNING]
-> **Don't expose Kafkador to the internet or an untrusted network.** It has no user login yet: anyone who can
-> reach port 8080 can browse your clusters, read and produce records, change topics, ACLs and consumer offsets,
-> and use any credentials saved in it. Until login is in place, keep it reachable only by people you trust, for
-> example:
+> **Turn sign-in on, and serve Kafkador over HTTPS.** Whoever uses Kafkador can browse your clusters, read and
+> produce records, change topics, ACLs and consumer offsets, and use any credentials saved in it. First-run setup
+> asks who may use it: a Kafkador admin account, LDAP accounts, or nobody needs to sign in. Choose "no sign-in"
+> only when nobody else can reach it, for example when it's published on this machine only
+> (`KAFKADOR_PORT=127.0.0.1:8080` in `.env`).
 >
-> - publish it on this machine only, by setting `KAFKADOR_PORT=127.0.0.1:8080` in `.env` (then use an SSH tunnel
->   or a VPN to reach it from elsewhere), or
-> - put it behind a reverse proxy that requires sign-in (e.g. an identity-aware proxy, or basic auth over HTTPS),
->   or on a private network behind a firewall.
+> Kafkador itself speaks plain HTTP, so passwords cross the network in the clear unless a reverse proxy in front of
+> it adds HTTPS. Even with sign-in on, keeping it on a private network or behind a VPN is safer than the internet.
 
 ---
 
@@ -26,9 +25,10 @@ curl -O https://raw.githubusercontent.com/farzinpashaee/kafkador/main/docker-com
 docker compose up -d
 ```
 
-Open **http://localhost:8080**. On first start Kafkador asks you to choose the embedded database
-username/password (saved to the data volume, so you're asked only once). So that nobody else can do this
-before you, the setup page also asks for a one-time **setup token**, printed in the container log:
+Open **http://localhost:8080**. On first start Kafkador asks you, in two steps, to choose the embedded database
+username/password, then who may use Kafkador (both saved to the data volume, so you're asked only once). So that
+nobody else can do this before you, the setup page also asks for a one-time **setup token**, printed in the
+container log:
 
 ```bash
 docker compose logs kafkador | grep -A1 "setup token"
@@ -36,13 +36,33 @@ docker compose logs kafkador | grep -A1 "setup token"
 
 Then add a connection to your Kafka cluster and you're done.
 
-To skip the setup page, give the credentials up front in `docker-compose.yml` (only read on first start):
+To skip the setup page, give both steps up front in `docker-compose.yml`:
 
 ```yaml
     environment:
+      # The database credentials, only read on first start.
       KAFKADOR_SETUP_USERNAME: kafkador_admin
       KAFKADOR_SETUP_PASSWORD: ${KAFKADOR_SETUP_PASSWORD}   # from .env, at least 8 characters
+      # Who may use Kafkador, applied at every start: none, database or ldap.
+      KAFKADOR_ACCESS_MODE: database
+      KAFKADOR_ACCESS_ADMINUSERNAME: admin
+      KAFKADOR_ACCESS_ADMINPASSWORD: ${KAFKADOR_ADMIN_PASSWORD}   # from .env, 8-128 characters
 ```
+
+For LDAP, set `KAFKADOR_ACCESS_MODE: ldap` and, instead of the admin account:
+
+```yaml
+      KAFKADOR_ACCESS_LDAP_URL: ldaps://ldap.example.com:636
+      KAFKADOR_ACCESS_LDAP_BASEDN: dc=example,dc=com
+      KAFKADOR_ACCESS_LDAP_USERSEARCHBASE: ou=people
+      KAFKADOR_ACCESS_LDAP_USERSEARCHFILTER: (uid={0})              # Active Directory: (sAMAccountName={0})
+      KAFKADOR_ACCESS_LDAP_MANAGERDN: cn=kafkador,ou=services,dc=example,dc=com   # if searches can't be anonymous
+      KAFKADOR_ACCESS_LDAP_MANAGERPASSWORD: ${KAFKADOR_LDAP_PASSWORD}
+      # Or, instead of the search: KAFKADOR_ACCESS_LDAP_USERDNPATTERN: uid={0},ou=people
+```
+
+While `KAFKADOR_ACCESS_MODE` is set, **Settings → Access** can't change who may use Kafkador. It's also how to get
+back in after losing the admin password: set the mode and a new admin password, and restart.
 
 <details>
 <summary>Without Compose</summary>

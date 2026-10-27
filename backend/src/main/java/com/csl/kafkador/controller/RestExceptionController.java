@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  * to a generic message so internal details (hosts, stack traces, library errors)
  * never leak into an API response.
  */
-@ControllerAdvice(assignableTypes = {ApiController.class, AiController.class, SetupController.class})
+@ControllerAdvice(assignableTypes = {ApiController.class, AiController.class, SetupController.class, AccessController.class})
 @Slf4j
 public class RestExceptionController {
 
@@ -110,7 +110,7 @@ public class RestExceptionController {
 
     @ExceptionHandler({InvalidTopicConfigException.class, InvalidRecordRequestException.class, InvalidAclBindingException.class,
             InvalidClusterSecurityException.class, KsqlStatementException.class, InvalidServiceConfigException.class,
-            InvalidOffsetResetException.class})
+            InvalidOffsetResetException.class, InvalidAccessSettingsException.class})
     public ResponseEntity<GenericResponse<Void>> handleInvalidRequest(Exception ex) {
         return new GenericResponse.Builder<Void>()
                 .code(String.valueOf(HttpStatus.BAD_REQUEST.value()))

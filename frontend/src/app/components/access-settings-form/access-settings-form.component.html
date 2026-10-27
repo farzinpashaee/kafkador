@@ -1,0 +1,111 @@
+<div class="mb-3" role="radiogroup" aria-label="Who may use Kafkador">
+  <div class="form-check mb-2" *ngFor="let option of modes">
+    <input class="form-check-input" type="radio" [name]="idPrefix + 'Mode'" [id]="idPrefix + option.mode"
+           [value]="option.mode" [(ngModel)]="settings.mode">
+    <label class="form-check-label" [for]="idPrefix + option.mode">
+      {{ option.title }}
+      <span class="d-block form-text mt-0">{{ option.text }}</span>
+    </label>
+  </div>
+</div>
+
+<ng-container *ngIf="settings.mode === 'DATABASE'">
+  <div class="mb-3">
+    <label [for]="idPrefix + 'Username'" class="form-label">Admin username:</label>
+    <input [(ngModel)]="settings.username" [name]="idPrefix + 'Username'" type="text" class="form-control" [id]="idPrefix + 'Username'"
+           placeholder="e.g. admin" autocomplete="username" maxlength="64">
+    <div class="form-text">3-64 characters, starting with a letter: letters, digits and . _ &#64; -</div>
+  </div>
+  <div class="mb-3">
+    <label [for]="idPrefix + 'Password'" class="form-label">Password:</label>
+    <input [(ngModel)]="settings.password" [name]="idPrefix + 'Password'" type="password" class="form-control" [id]="idPrefix + 'Password'"
+           minlength="8" maxlength="128" autocomplete="new-password"
+           [placeholder]="passwordOptional ? 'Leave blank to keep the current password' : ''">
+    <div class="form-text">At least 8 characters.</div>
+  </div>
+  <div class="mb-3">
+    <label [for]="idPrefix + 'ConfirmPassword'" class="form-label">Confirm password:</label>
+    <input [(ngModel)]="confirmPassword" [name]="idPrefix + 'ConfirmPassword'" type="password" class="form-control"
+           [id]="idPrefix + 'ConfirmPassword'" maxlength="128" autocomplete="new-password">
+  </div>
+</ng-container>
+
+<ng-container *ngIf="settings.mode === 'LDAP'">
+  <div class="mb-3">
+    <label [for]="idPrefix + 'LdapUrl'" class="form-label">LDAP URL:</label>
+    <input [(ngModel)]="settings.ldap.url" [name]="idPrefix + 'LdapUrl'" type="text" class="form-control" [id]="idPrefix + 'LdapUrl'"
+           placeholder="ldaps://ldap.example.com:636" spellcheck="false">
+    <div class="form-text">ldaps:// needs a certificate Java trusts.</div>
+  </div>
+  <div class="mb-3">
+    <label [for]="idPrefix + 'LdapBaseDn'" class="form-label">Base DN:</label>
+    <input [(ngModel)]="settings.ldap.baseDn" [name]="idPrefix + 'LdapBaseDn'" type="text" class="form-control" [id]="idPrefix + 'LdapBaseDn'"
+           placeholder="dc=example,dc=com" spellcheck="false">
+  </div>
+
+  <div class="mb-2">
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" [name]="idPrefix + 'LdapFind'" [id]="idPrefix + 'LdapSearch'"
+             [checked]="ldapFind === 'search'" (change)="setLdapFind('search')">
+      <label class="form-check-label" [for]="idPrefix + 'LdapSearch'">Search for the user</label>
+    </div>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" [name]="idPrefix + 'LdapFind'" [id]="idPrefix + 'LdapPattern'"
+             [checked]="ldapFind === 'pattern'" (change)="setLdapFind('pattern')">
+      <label class="form-check-label" [for]="idPrefix + 'LdapPattern'">User DN pattern</label>
+    </div>
+  </div>
+  <ng-container *ngIf="ldapFind === 'search'">
+    <div class="row g-2 mb-3">
+      <div class="col-md-6">
+        <label [for]="idPrefix + 'LdapSearchBase'" class="form-label">Search base:</label>
+        <input [(ngModel)]="settings.ldap.userSearchBase" [name]="idPrefix + 'LdapSearchBase'" type="text" class="form-control"
+               [id]="idPrefix + 'LdapSearchBase'" placeholder="ou=people" spellcheck="false">
+      </div>
+      <div class="col-md-6">
+        <label [for]="idPrefix + 'LdapSearchFilter'" class="form-label">Search filter:</label>
+        <input [(ngModel)]="settings.ldap.userSearchFilter" [name]="idPrefix + 'LdapSearchFilter'" type="text" class="form-control"
+               [id]="idPrefix + 'LdapSearchFilter'" placeholder="(uid={0})" spellcheck="false">
+      </div>
+      <div class="form-text mt-1">
+        Relative to the base DN; {{ '{0}' }} is the username. Active Directory: (sAMAccountName={{ '{0}' }}). To let in only one
+        group, add it: (&amp;(uid={{ '{0}' }})(memberOf=cn=kafkador,ou=groups,dc=example,dc=com)).
+      </div>
+    </div>
+    <div class="row g-2 mb-3">
+      <div class="col-md-6">
+        <label [for]="idPrefix + 'LdapManagerDn'" class="form-label">Manager DN <span class="text-muted">(optional)</span>:</label>
+        <input [(ngModel)]="settings.ldap.managerDn" [name]="idPrefix + 'LdapManagerDn'" type="text" class="form-control"
+               [id]="idPrefix + 'LdapManagerDn'" placeholder="cn=kafkador,ou=services,dc=example,dc=com" spellcheck="false" autocomplete="off">
+      </div>
+      <div class="col-md-6">
+        <label [for]="idPrefix + 'LdapManagerPassword'" class="form-label">Manager password:</label>
+        <input [(ngModel)]="settings.ldap.managerPassword" [name]="idPrefix + 'LdapManagerPassword'" type="password" class="form-control"
+               [id]="idPrefix + 'LdapManagerPassword'" autocomplete="new-password"
+               [placeholder]="settings.ldap.managerPasswordSaved ? 'Saved; leave blank to keep it' : ''">
+      </div>
+      <div class="form-text mt-1">The account that searches, when the directory doesn't allow anonymous searches.</div>
+    </div>
+  </ng-container>
+  <div class="mb-3" *ngIf="ldapFind === 'pattern'">
+    <label [for]="idPrefix + 'LdapPatternInput'" class="form-label">User DN pattern:</label>
+    <input [(ngModel)]="settings.ldap.userDnPattern" [name]="idPrefix + 'LdapPatternInput'" type="text" class="form-control"
+           [id]="idPrefix + 'LdapPatternInput'" placeholder="uid={0},ou=people" spellcheck="false">
+    <div class="form-text">Relative to the base DN; {{ '{0}' }} is the username.</div>
+  </div>
+
+  <div class="mb-1 fw-semibold">Check the settings by signing in</div>
+  <div class="row g-2 mb-3">
+    <div class="col-md-6">
+      <label [for]="idPrefix + 'TestUsername'" class="form-label">LDAP username:</label>
+      <input [(ngModel)]="settings.testUsername" [name]="idPrefix + 'TestUsername'" type="text" class="form-control"
+             [id]="idPrefix + 'TestUsername'" autocomplete="username">
+    </div>
+    <div class="col-md-6">
+      <label [for]="idPrefix + 'TestPassword'" class="form-label">Password:</label>
+      <input [(ngModel)]="settings.testPassword" [name]="idPrefix + 'TestPassword'" type="password" class="form-control"
+             [id]="idPrefix + 'TestPassword'" autocomplete="current-password">
+    </div>
+    <div class="form-text mt-1">Nothing is saved unless this account can sign in with these settings. You stay signed in as it.</div>
+  </div>
+</ng-container>
