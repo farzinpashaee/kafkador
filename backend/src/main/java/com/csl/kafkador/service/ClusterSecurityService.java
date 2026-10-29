@@ -162,7 +162,7 @@ public class ClusterSecurityService {
         }
         put(clusterId, KEY_TRUSTSTORE_TYPE, storeType);
         put(clusterId, KEY_TRUSTSTORE_PASSWORD, storePassword);
-        put(clusterId, KEY_TRUSTSTORE_FILE_NAME, fileName == null || fileName.isBlank() ? "truststore" : Path.of(fileName).getFileName().toString());
+        put(clusterId, KEY_TRUSTSTORE_FILE_NAME, baseName(fileName));
         return getConfig(clusterId);
     }
 
@@ -240,6 +240,16 @@ public class ClusterSecurityService {
 
     private static String trim(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    /**
+     * The uploaded file's name without any folder. Some browsers send the whole path, Windows style (C:\certs\ca.p12),
+     * which Path.getFileName() leaves whole when Kafkador runs on Linux, so both separators are cut here.
+     */
+    static String baseName(String fileName) {
+        if (fileName == null) return "truststore";
+        String name = fileName.substring(Math.max(fileName.lastIndexOf('/'), fileName.lastIndexOf('\\')) + 1).trim();
+        return name.isEmpty() ? "truststore" : name;
     }
 
 }

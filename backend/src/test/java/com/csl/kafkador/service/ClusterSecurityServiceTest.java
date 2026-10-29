@@ -11,8 +11,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -105,7 +107,7 @@ class ClusterSecurityServiceTest {
 
     @Test
     void anUploadedTruststoreIsCheckedStoredAndUsed() throws Exception {
-        byte[] cacerts = Files.readAllBytes(Path.of(System.getProperty("java.home"), "lib", "security", "cacerts"));
+        byte[] cacerts = passwordProtectedTruststore();
 
         ClusterSecurityConfigDto saved = service.saveTruststore(CLUSTER, cacerts, "C:\\certs\\cluster-ca.p12", "pkcs12", "changeit");
         service.save(CLUSTER, service.candidate(CLUSTER, change(true, AuthenticationMethod.NONE, null, null)));
@@ -125,7 +127,7 @@ class ClusterSecurityServiceTest {
 
     @Test
     void aTruststoreThatDoesNotOpenIsRejected() throws Exception {
-        byte[] cacerts = Files.readAllBytes(Path.of(System.getProperty("java.home"), "lib", "security", "cacerts"));
+        byte[] cacerts = passwordProtectedTruststore();
 
         assertThatThrownBy(() -> service.saveTruststore(CLUSTER, cacerts, "ca.p12", "PKCS12", "wrong"))
                 .isInstanceOf(InvalidClusterSecurityException.class).hasMessageContaining("couldn't be opened");
@@ -141,6 +143,30 @@ class ClusterSecurityServiceTest {
         String before = service.load(CLUSTER).fingerprint();
         service.save(CLUSTER, service.candidate(CLUSTER, change(true, AuthenticationMethod.NONE, null, null)));
         assertThat(service.load(CLUSTER).fingerprint()).isNotEqualTo(before);
+    }
+
+    @Test
+    void keepsOnlyTheUploadedFilesNameWhateverTheServersOperatingSystem() {
+        assertThat(ClusterSecurityService.baseName("C:\\certs\\cluster-ca.p12")).isEqualTo("cluster-ca.p12");
+        assertThat(ClusterSecurityService.baseName("/home/me/certs/cluster-ca.jks")).isEqualTo("cluster-ca.jks");
+        assertThat(ClusterSecurityService.baseName("cluster-ca.p12")).isEqualTo("cluster-ca.p12");
+        assertThat(ClusterSecurityService.baseName("C:\\certs\\")).isEqualTo("truststore");
+        assertThat(ClusterSecurityService.baseName(null)).isEqualTo("truststore");
+    }
+
+    /**
+     * A PKCS12 truststore holding one of the JDK's CA certificates, protected by "changeit". The JDK's own cacerts
+     * won't do: in some JDKs (e.g. Temurin) it has no password protection, so any password opens it.
+     */
+    private static byte[] passwordProtectedTruststore() throws Exception {
+        KeyStore jdk = KeyStore.getInstance(Path.of(System.getProperty("java.home"), "lib", "security", "cacerts").toFile(), "changeit".toCharArray());
+        String alias = jdk.aliases().nextElement();
+        KeyStore truststore = KeyStore.getInstance("PKCS12");
+        truststore.load(null, null);
+        truststore.setCertificateEntry(alias, jdk.getCertificate(alias));
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        truststore.store(out, "changeit".toCharArray());
+        return out.toByteArray();
     }
 
     private static ClusterSecurityConfigDto change(boolean tls, AuthenticationMethod method, String username, String password) {
