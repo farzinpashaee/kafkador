@@ -26,7 +26,7 @@ public class GenericKafkadorConfigServiceImp implements KafkadorConfigService<St
 
     @Override
     public String get(String key, String clusterId) throws ConfigNotFoundException {
-        Optional<KafkadorConfig> kafkadorConfigOptional = kafkadorConfigRepository.findByConfigKeyAndClusterId(key,clusterId);
+        Optional<KafkadorConfig> kafkadorConfigOptional = kafkadorConfigRepository.findFirstByConfigKeyAndClusterIdOrderByIdDesc(key,clusterId);
         if(kafkadorConfigOptional.isPresent()){
             return kafkadorConfigOptional.get().getConfigValue();
         } else {
@@ -34,13 +34,23 @@ public class GenericKafkadorConfigServiceImp implements KafkadorConfigService<St
         }
     }
 
+    /**
+     * Finding the row and inserting it when missing happen under one lock: several requests at once (e.g. the UI's
+     * first Schema Registry calls, each discovering its URL) otherwise each insert a row for the same key.
+     */
     @Override
     public String save(Map.Entry<String, String> entry, String clusterId) {
+        synchronized (KafkadorConfig.class) {
+            return saveLocked(entry, clusterId);
+        }
+    }
+
+    private String saveLocked(Map.Entry<String, String> entry, String clusterId) {
 
         Date now = new Date();
         KafkadorConfig kafkadorConfig;
 
-        Optional<KafkadorConfig> kafkadorConfigOptional = kafkadorConfigRepository.findByConfigKeyAndClusterId(entry.getKey(),clusterId);
+        Optional<KafkadorConfig> kafkadorConfigOptional = kafkadorConfigRepository.findFirstByConfigKeyAndClusterIdOrderByIdDesc(entry.getKey(),clusterId);
 
         if(kafkadorConfigOptional.isPresent()){
             kafkadorConfig = kafkadorConfigOptional.get();
@@ -63,7 +73,9 @@ public class GenericKafkadorConfigServiceImp implements KafkadorConfigService<St
     public Map<String, KafkadorConfig> get(String clusterId) {
         List<KafkadorConfig> kafkadorConfigList = kafkadorConfigRepository.findByClusterId(clusterId);
         return kafkadorConfigList.stream()
-                .collect(Collectors.toMap(KafkadorConfig::getConfigKey, Function.identity()));
+                // The newest row wins, should two share a key.
+                .collect(Collectors.toMap(KafkadorConfig::getConfigKey, Function.identity(),
+                        (a, b) -> a.getId() >= b.getId() ? a : b));
     }
 
 }

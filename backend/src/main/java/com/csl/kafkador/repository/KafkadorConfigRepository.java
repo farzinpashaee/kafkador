@@ -8,7 +8,8 @@ import java.util.Optional;
 
 public interface KafkadorConfigRepository extends JpaRepository<KafkadorConfig,Integer> {
 
-    Optional<KafkadorConfig> findByConfigKeyAndClusterId(String configKey, String clusterId);
+    // The newest, should two rows ever share a key (KafkadorConfigUniqueKeyMigration removes them and prevents more).
+    Optional<KafkadorConfig> findFirstByConfigKeyAndClusterIdOrderByIdDesc(String configKey, String clusterId);
 
     List<KafkadorConfig> findByClusterId(String clusterId);
 

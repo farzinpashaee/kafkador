@@ -23,7 +23,7 @@ public class ObserverKafkadorConfigServiceImp implements KafkadorConfigService<O
 
     @Override
     public ObserverConfigDto get(String key, String clusterId) throws ConfigNotFoundException {
-        Optional<KafkadorConfig> kafkadorConfigOptional = kafkadorConfigRepository.findByConfigKeyAndClusterId(key,clusterId);
+        Optional<KafkadorConfig> kafkadorConfigOptional = kafkadorConfigRepository.findFirstByConfigKeyAndClusterIdOrderByIdDesc(key,clusterId);
         if(kafkadorConfigOptional.isPresent()){
             try {
                 return objectMapper.readValue(kafkadorConfigOptional.get().getConfigValue(), ObserverConfigDto.class);
@@ -37,11 +37,18 @@ public class ObserverKafkadorConfigServiceImp implements KafkadorConfigService<O
 
     @Override
     public ObserverConfigDto save(ObserverConfigDto observerConfig, String clusterId) {
+        // The same lock as GenericKafkadorConfigServiceImp: find-or-insert must not run twice at once.
+        synchronized (KafkadorConfig.class) {
+            return saveLocked(observerConfig, clusterId);
+        }
+    }
+
+    private ObserverConfigDto saveLocked(ObserverConfigDto observerConfig, String clusterId) {
         try {
             Date now = new Date();
             KafkadorConfig kafkadorConfig;
 
-            Optional<KafkadorConfig> kafkadorConfigOptional = kafkadorConfigRepository.findByConfigKeyAndClusterId(KEY,clusterId);
+            Optional<KafkadorConfig> kafkadorConfigOptional = kafkadorConfigRepository.findFirstByConfigKeyAndClusterIdOrderByIdDesc(KEY,clusterId);
             if(kafkadorConfigOptional.isPresent()){
                 kafkadorConfig = kafkadorConfigOptional.get();
                 observerConfig = objectMapper
