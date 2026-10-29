@@ -99,13 +99,25 @@ describe('SetupComponent', () => {
     expect(page().textContent).not.toContain('Step 2 of 2');
   });
 
+  it('starts on "No sign-in", listed first', async () => {
+    await create(false, false, true);
+
+    const first = page().querySelector<HTMLInputElement>('input[type="radio"]');
+    expect(first?.id).toBe('setupAccessNONE');
+    expect(component.access.mode).toBe('NONE');
+
+    component.submitAccess();
+    expect(api.configureAccess).toHaveBeenCalledWith(jasmine.objectContaining({ mode: 'NONE' }));
+  });
+
   it('does not save until the access form is complete', async () => {
     await create(false, false, true);
+    component.access.mode = 'DATABASE';
     page();
 
     component.submitAccess();
 
-    expect(component.errors.get('access')?.message).toContain('Choose who may use Kafkador');
+    expect(component.errors.get('access')?.message).toContain('admin account');
     expect(api.configureAccess).not.toHaveBeenCalled();
   });
 

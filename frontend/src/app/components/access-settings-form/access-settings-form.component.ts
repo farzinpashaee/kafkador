@@ -25,12 +25,12 @@ export class AccessSettingsFormComponent {
   ldapFind: 'pattern' | 'search' = 'search';
 
   readonly modes: { mode: AccessMode; title: string; text: string }[] = [
+    { mode: 'NONE', title: 'No sign-in',
+      text: 'Anyone who can reach Kafkador can use all of it. Only for a machine nobody else can reach.' },
     { mode: 'DATABASE', title: 'Sign in with a Kafkador account',
       text: 'One admin account, kept in Kafkador\'s database with its password hashed.' },
     { mode: 'LDAP', title: 'Sign in with LDAP',
-      text: 'Accounts from your LDAP directory or Active Directory.' },
-    { mode: 'NONE', title: 'No sign-in',
-      text: 'Anyone who can reach Kafkador can use all of it. Only for a machine nobody else can reach.' }
+      text: 'Accounts from your LDAP directory or Active Directory.' }
   ];
 
   ngOnChanges() {

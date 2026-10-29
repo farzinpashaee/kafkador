@@ -30,7 +30,8 @@ export class SetupComponent {
   setupToken = '';
   /** The server asks for the one-time token from its log. */
   tokenRequired = false;
-  access: AccessSettings = new AccessSettings();
+  /** Starts on "No sign-in"; the page says when that's not safe. */
+  access: AccessSettings = Object.assign(new AccessSettings(), { mode: 'NONE' });
 
   @ViewChild(AccessSettingsFormComponent) accessForm?: AccessSettingsFormComponent;
 
