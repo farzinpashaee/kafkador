@@ -230,6 +230,17 @@ class AccessSecurityTest {
         new Browser().login("alice", "alice-password").andExpect(status().isOk());
     }
 
+    /**
+     * The Docker healthcheck. Spring Boot would otherwise set up an LDAP connection to localhost:389 that Kafkador never
+     * uses, and report DOWN because nothing answers there.
+     */
+    @Test
+    void healthIsUpWithoutAnyLdapServer() throws Exception {
+        new Browser().perform(get("/actuator/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"));
+    }
+
     @Test
     void theBrokerAgentStillReachesItsEndpoint() throws Exception {
         new Browser().setUp(DATABASE_ADMIN).andExpect(status().isOk());
