@@ -5,7 +5,18 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-## [1.0.0-beta.1] - 2026-10-25
+## [1.0.0-beta.2] - 2026-10-29
+
+### Fixed
+
+- The Docker image reported itself unhealthy, and logged an LDAP stack trace at every healthcheck: an LDAP
+  connection to `localhost:389` that Kafkador never uses made `/actuator/health` answer DOWN.
+
+### Documentation
+
+- DOCKER.md explains connecting to brokers by a short hostname (`dns_search` / `extra_hosts`).
+
+## [1.0.0-beta.1] - 2026-10-29
 
 The first public release.
 
@@ -51,5 +62,6 @@ The first public release.
 
 - The legacy server-rendered (Thymeleaf) UI; the Angular app replaces it.
 
-[Unreleased]: https://github.com/farzinpashaee/kafkador/compare/v1.0.0-beta.1...HEAD
+[Unreleased]: https://github.com/farzinpashaee/kafkador/compare/v1.0.0-beta.2...HEAD
+[1.0.0-beta.2]: https://github.com/farzinpashaee/kafkador/compare/v1.0.0-beta.1...v1.0.0-beta.2
 [1.0.0-beta.1]: https://github.com/farzinpashaee/kafkador/releases/tag/v1.0.0-beta.1

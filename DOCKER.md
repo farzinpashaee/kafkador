@@ -22,6 +22,7 @@ You only need [Docker](https://docs.docker.com/get-docker/) with the Compose plu
 
 ```bash
 curl -O https://raw.githubusercontent.com/farzinpashaee/kafkador/main/docker-compose.yml
+echo "KAFKADOR_VERSION=1.0.0-beta.2" > .env   # only pre-releases are published so far, no "latest" yet
 docker compose up -d
 ```
 
@@ -95,6 +96,25 @@ Kafka clients first contact the bootstrap address and then connect to whatever a
 *advertises*. If the broker advertises `localhost:9092`, Kafkador can reach the bootstrap server but then
 fails to talk to the broker. Make sure `advertised.listeners` contains an address reachable **from the
 container**, e.g. `PLAINTEXT://host.docker.internal:9092` or the server's real IP/hostname.
+
+### Short hostnames
+
+Your computer may resolve a short name such as `kafka-1` by adding your network's domain (e.g. `kafka-1.home` or
+`kafka-1.corp.example.com`); the container doesn't. If Kafkador logs `DNS resolution failed for kafka-1`, give the
+container that domain, or pin the name to an address, in `docker-compose.yml`:
+
+```yaml
+services:
+  kafkador:
+    # ...existing settings...
+    dns_search: home                      # your network's domain
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "kafka-1:192.168.1.30"            # or pin the name to the broker's address
+```
+
+Since brokers usually advertise their short name, typing the full name in Kafkador alone isn't enough. Recreate the
+container afterwards with `docker compose up -d`.
 
 ### Joining an existing Kafka Compose network
 

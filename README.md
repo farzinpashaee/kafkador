@@ -6,7 +6,7 @@ Kafka Connect and ksqlDB.
 
 It's a Spring Boot backend with an Angular UI, shipped as one jar or one Docker image.
 
-> **Version 1.0.0-beta.1.** Whoever signs in to Kafkador can use every feature; there are no read-only users yet.
+> **Version 1.0.0-beta.2.** Whoever signs in to Kafkador can use every feature; there are no read-only users yet.
 > Turn sign-in on during setup, and put HTTPS in front of it (see [DOCKER.md](DOCKER.md)).
 
 ![Dashboard](docs/screenshots/dashboard.jpg)
@@ -58,6 +58,7 @@ Works with Apache Kafka 2.1 or newer and Confluent Platform (it uses the Kafka 4
 
 ```bash
 curl -O https://raw.githubusercontent.com/farzinpashaee/kafkador/main/docker-compose.yml
+echo "KAFKADOR_VERSION=1.0.0-beta.2" > .env   # only pre-releases are published so far, no "latest" yet
 docker compose up -d
 ```
 

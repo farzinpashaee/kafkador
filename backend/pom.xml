@@ -12,7 +12,7 @@
 	<artifactId>kafkador</artifactId>
 	<!-- The one place the version is set: the build writes it into the jar, and the UI reads it from /api/v1/app-info.
 	     frontend/package.json carries the same number, which ProjectVersionTest checks. -->
-	<version>1.0.0-beta.1</version>
+	<version>1.0.0-beta.2</version>
 	<name>Kafkador</name>
 	<description>Web console for Apache Kafka and Confluent Platform: brokers, topics, records, consumer groups, ACLs, Schema Registry, Kafka Connect and ksqlDB.</description>
 	<url>https://github.com/farzinpashaee/kafkador</url>
