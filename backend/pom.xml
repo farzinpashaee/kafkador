@@ -345,6 +345,65 @@ echo "Started with PID $(cat starter.pid)"
 				</plugins>
 			</build>
 		</profile>
+		<!--
+		Builds the desktop installer for the machine it runs on, from desktop/: a Windows .exe on Windows, a Mac .dmg for
+		the Mac's CPU on a Mac, in desktop/dist. Activate with "-P with-frontend,desktop": the jar has to have the UI in
+		it. Needs a JDK with jmods (the runtime the app ships is made from it with jlink).
+		-->
+		<profile>
+			<id>desktop</id>
+			<properties>
+				<desktop.dir>${project.basedir}/../desktop</desktop.dir>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.github.eirslett</groupId>
+						<artifactId>frontend-maven-plugin</artifactId>
+						<version>1.15.1</version>
+						<executions>
+							<!-- At package, after the jar is built; directories set here so with-frontend keeps its own. -->
+							<execution>
+								<id>desktop-install-node-and-npm</id>
+								<phase>package</phase>
+								<goals>
+									<goal>install-node-and-npm</goal>
+								</goals>
+								<configuration>
+									<workingDirectory>${desktop.dir}</workingDirectory>
+									<installDirectory>${desktop.dir}</installDirectory>
+									<nodeVersion>v22.12.0</nodeVersion>
+								</configuration>
+							</execution>
+							<execution>
+								<id>desktop-npm-install</id>
+								<phase>package</phase>
+								<goals>
+									<goal>npm</goal>
+								</goals>
+								<configuration>
+									<workingDirectory>${desktop.dir}</workingDirectory>
+									<installDirectory>${desktop.dir}</installDirectory>
+									<arguments>ci --include=dev</arguments>
+								</configuration>
+							</execution>
+							<execution>
+								<id>desktop-dist</id>
+								<phase>package</phase>
+								<goals>
+									<goal>npm</goal>
+								</goals>
+								<configuration>
+									<workingDirectory>${desktop.dir}</workingDirectory>
+									<installDirectory>${desktop.dir}</installDirectory>
+									<arguments>run dist</arguments>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 	</profiles>
 
 </project>

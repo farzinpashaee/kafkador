@@ -130,6 +130,7 @@ The repository has three modules:
 | `backend/` | Spring Boot 3.5 (Java 21): the API, and the UI when bundled |
 | `frontend/` | Angular 20: the web UI |
 | `agent/` | Optional Java agent for Kafka brokers that reports metrics to Kafkador |
+| `desktop/` | Electron app: the same jar and a bundled Java runtime, in a window |
 
 Run the backend with the `dev` profile, then the Angular dev server:
 
@@ -200,6 +201,30 @@ background, writing `starter.pid` and `starter.log` next to it:
 
 The H2 database is created at `./data/kafkadordb` relative to where the jar is started, so run it from a stable
 directory (not `target/`, which `mvn clean` deletes) if you want to keep your data.
+
+---
+
+## Desktop app
+
+The `desktop` Maven profile builds an installer for the machine it runs on, needing a JDK 21 with `jmods`:
+
+```bash
+cd backend
+./mvnw clean package -P with-frontend,desktop -DskipTests
+#   -> ../desktop/dist/Kafkador-<version>-win-x64.exe, or ...-mac-arm64.dmg / ...-mac-x64.dmg on a Mac
+```
+
+The app runs Kafkador on this machine only (`127.0.0.1`), with no sign-in and no setup page. Its data and log are in
+the user's app-data folder. A Mac installer can only be built on a Mac, so the
+[Desktop workflow](.github/workflows/desktop.yml) builds all three on GitHub's runners: for a version tag it attaches
+them to a GitHub Release, and run by hand it keeps them as artifacts of the run.
+
+The installers are **unsigned** for now, so Windows SmartScreen warns about them (choose *More info → Run anyway*) and
+macOS blocks them. To open it on a Mac, drag it to Applications, then run:
+
+```bash
+xattr -cr /Applications/Kafkador.app
+```
 
 ---
 

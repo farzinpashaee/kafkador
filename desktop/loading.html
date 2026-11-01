@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
+  <title>Kafkador</title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+      font-family: system-ui, sans-serif; color: #5b6168; background: #e9ecef;
+    }
+    h1 { margin: 0; font-size: 28px; font-weight: 600; }
+    p { margin: 0; font-size: 14px; }
+    .spinner {
+      width: 24px; height: 24px; border-radius: 50%;
+      border: 3px solid #c5cbd1; border-top-color: #5b6168;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <h1>Kafkador</h1>
+  <div class="spinner" role="status" aria-label="Starting"></div>
+  <p>Starting...</p>
+</body>
+</html>

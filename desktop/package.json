@@ -1,0 +1,50 @@
+{
+  "name": "kafkador-desktop",
+  "productName": "Kafkador",
+  "version": "1.0.0-beta.2",
+  "description": "Web console for Apache Kafka and Confluent Platform, as a desktop app",
+  "license": "PolyForm-Shield-1.0.0",
+  "homepage": "https://github.com/farzinpashaee/kafkador",
+  "author": "Codestreamlab (https://codestreamlab.com)",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "prepare-stage": "node scripts/prepare-stage.js",
+    "start": "npm run prepare-stage && electron .",
+    "dist": "npm run prepare-stage && electron-builder --publish never"
+  },
+  "devDependencies": {
+    "electron": "45.2.1",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "com.codestreamlab.kafkador",
+    "productName": "Kafkador",
+    "artifactName": "Kafkador-${version}-${os}-${arch}.${ext}",
+    "directories": {
+      "buildResources": "assets",
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "loading.html"
+    ],
+    "extraResources": [
+      { "from": "stage/kafkador.jar", "to": "kafkador.jar" },
+      { "from": "stage/runtime", "to": "runtime" }
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.developer-tools",
+      "identity": "-"
+    }
+  }
+}
