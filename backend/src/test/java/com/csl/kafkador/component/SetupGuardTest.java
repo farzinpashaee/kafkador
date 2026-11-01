@@ -2,17 +2,22 @@ package com.csl.kafkador.component;
 
 import com.csl.kafkador.exception.SetupTokenException;
 import com.csl.kafkador.config.ApplicationConfig;
+import com.csl.kafkador.domain.options.AccessMode;
 import com.csl.kafkador.service.DatabaseCredentialsService;
 import com.csl.kafkador.service.access.AccessService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -115,8 +120,69 @@ class SetupGuardTest {
         assertThat(guard.isTokenRequired()).isFalse();
     }
 
+    @Test
+    void autoSetupGeneratesTheCredentialsAndTurnsSignInOff() throws Exception {
+        when(credentials.isSetupRequired()).thenReturn(true, false);
+        when(access.isSetupRequired()).thenReturn(true, false);
+        ArgumentCaptor<String> username = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> password = ArgumentCaptor.forClass(String.class);
+        SetupGuard guard = autoGuard("127.0.0.1");
+        guard.prepare();
+
+        verify(credentials).configure(username.capture(), password.capture());
+        assertThat(username.getValue()).matches(SetupGuard.USERNAME);
+        assertThat(password.getValue()).hasSize(32);
+        verify(access).save(argThat(settings -> settings.getMode() == AccessMode.NONE));
+        assertThat(guard.isTokenRequired()).isFalse();
+    }
+
+    @Test
+    void autoSetupGeneratesDifferentCredentialsEachTime() throws Exception {
+        ArgumentCaptor<String> password = ArgumentCaptor.forClass(String.class);
+        autoGuard("127.0.0.1").prepare();
+        autoGuard("127.0.0.1").prepare();
+
+        verify(credentials, times(2)).configure(anyString(), password.capture());
+        assertThat(password.getAllValues().get(0)).isNotEqualTo(password.getAllValues().get(1));
+    }
+
+    @Test
+    void autoSetupRefusesToTurnSignInOffUnlessOnlyThisMachineCanReachIt() throws Exception {
+        for (String address : new String[]{"", "0.0.0.0", "192.168.2.30"}) {
+            assertThatThrownBy(() -> autoGuard(address).prepare())
+                    .isInstanceOf(IllegalStateException.class).hasMessageContaining("server.address");
+        }
+        verify(credentials, never()).configure(anyString(), anyString());
+        verify(access, never()).save(any());
+    }
+
+    @Test
+    void autoSetupLeavesAPresetAccessModeAlone() throws Exception {
+        config.getAccess().setMode("database");
+        when(access.isSetupRequired()).thenReturn(true, false);
+        autoGuard("").prepare();
+
+        verify(credentials).configure(anyString(), anyString());
+        verify(access).applyPreset(config.getAccess());
+        verify(access, never()).save(any());
+    }
+
+    @Test
+    void autoSetupChangesNothingOnLaterStarts() throws Exception {
+        when(credentials.isSetupRequired()).thenReturn(false);
+        when(access.isSetupRequired()).thenReturn(false);
+        autoGuard("127.0.0.1").prepare();
+
+        verify(credentials, never()).configure(anyString(), anyString());
+        verify(access, never()).save(any());
+    }
+
     private SetupGuard guard(String username, String password, String token, boolean requireToken) {
-        return new SetupGuard(credentials, access, config, username, password, token, requireToken);
+        return new SetupGuard(credentials, access, config, username, password, token, requireToken, false, "");
+    }
+
+    private SetupGuard autoGuard(String serverAddress) {
+        return new SetupGuard(credentials, access, config, "", "", "", true, true, serverAddress);
     }
 
 }

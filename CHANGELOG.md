@@ -5,6 +5,11 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `KAFKADOR_SETUP_AUTO=true` skips first-run setup for a single-user app such as a desktop build: generated database
+  credentials and no sign-in. It only starts when listening on loopback, unless `KAFKADOR_ACCESS_MODE` is set too.
+
 ## [1.0.0-beta.2] - 2026-10-29
 
 ### Fixed

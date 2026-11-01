@@ -112,6 +112,10 @@ KAFKADOR_SETUP_USERNAME=kafkador_admin KAFKADOR_SETUP_PASSWORD='a-long-password'
 [DOCKER.md](DOCKER.md#quick-start). It's applied at every start, so it's also how to reset a lost admin password.
 An instance set up before sign-in existed asks the second step on its next start.
 
+For an app one person runs on their own machine, such as a desktop build, `KAFKADOR_SETUP_AUTO=true` skips setup: the
+database gets generated credentials and nobody signs in, so Kafkador must listen only on this machine
+(`server.address=127.0.0.1`), or it won't start. Set `KAFKADOR_ACCESS_MODE` as well to keep sign-in on.
+
 Connections, settings and saved credentials are kept in that embedded database, under `./data` next to where Kafkador
 runs.
 

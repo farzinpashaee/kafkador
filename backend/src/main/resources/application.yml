@@ -7,12 +7,15 @@ kafkador:
   db-credentials-file: ./data/db-credentials.properties
   # First-run setup can't be claimed by whoever reaches a new instance first (see SetupGuard): set the database
   # credentials up front (KAFKADOR_SETUP_USERNAME / KAFKADOR_SETUP_PASSWORD) to skip the setup page, or the page asks
-  # for a one-time token printed to the log at startup (KAFKADOR_SETUP_TOKEN to choose it).
+  # for a one-time token printed to the log at startup (KAFKADOR_SETUP_TOKEN to choose it). KAFKADOR_SETUP_AUTO=true
+  # skips setup for a single-user app such as a desktop build: generated database credentials and, unless access.mode
+  # is set, no sign-in, which needs server.address=127.0.0.1.
   setup:
     username: ""
     password: ""
     token: ""
     require-token: true
+    auto: false
   # Who may use Kafkador: chosen on the setup page and in Settings > Access, unless the mode is set here (e.g.
   # KAFKADOR_ACCESS_MODE), which then applies at every startup. none: no sign-in; database: the admin account below,
   # kept in the database; ldap: LDAP accounts. See AccessService.
