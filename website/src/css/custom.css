@@ -1,0 +1,28 @@
+/* The app's green (frontend $primary is #74C2B0) is too light for links on white, so light mode uses a darker shade. */
+:root {
+  --ifm-color-primary: #2b7f6d;
+  --ifm-color-primary-dark: #277262;
+  --ifm-color-primary-darker: #256c5d;
+  --ifm-color-primary-darkest: #1e594c;
+  --ifm-color-primary-light: #2f8c78;
+  --ifm-color-primary-lighter: #31927d;
+  --ifm-color-primary-lightest: #36a58e;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #74c2b0;
+  --ifm-color-primary-dark: #5eb8a3;
+  --ifm-color-primary-darker: #53b39c;
+  --ifm-color-primary-darkest: #3f9a84;
+  --ifm-color-primary-light: #8accbd;
+  --ifm-color-primary-lighter: #95d1c4;
+  --ifm-color-primary-lightest: #b5e0d6;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+.markdown img {
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 6px;
+}
