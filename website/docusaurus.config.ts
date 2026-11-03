@@ -3,11 +3,17 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const repository = 'https://github.com/farzinpashaee/kafkador';
+const baseUrl = '/docs/';
 
 const config: Config = {
   title: 'Kafkador',
   tagline: 'A web console for Apache Kafka and Confluent Platform',
+  // The .ico for older browsers; headTags add the SVG, which browsers prefer, and the touch icon.
   favicon: 'img/favicon.ico',
+  headTags: [
+    {tagName: 'link', attributes: {rel: 'icon', type: 'image/svg+xml', href: `${baseUrl}img/favicon.svg`}},
+    {tagName: 'link', attributes: {rel: 'apple-touch-icon', href: `${baseUrl}img/apple-touch-icon.png`}},
+  ],
 
   future: {
     v4: true,
@@ -15,7 +21,7 @@ const config: Config = {
 
   // Served at kafkador.codestreamlab.com/docs/, so the docs sit at the root of the site (routeBasePath below).
   url: 'https://kafkador.codestreamlab.com',
-  baseUrl: '/docs/',
+  baseUrl,
   trailingSlash: true,
 
   onBrokenLinks: 'throw',
