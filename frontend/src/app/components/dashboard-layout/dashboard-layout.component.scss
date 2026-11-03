@@ -19,6 +19,21 @@ $sidebar-collapsed-width: calc(#{$sidebar-cell * 1.1} + 2px);
   display: none;
 }
 
+// The docs link beside the search box, as quiet as the menu toggle until pointed at.
+.help-link {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.1rem;
+  line-height: 1;
+
+  &:hover,
+  &:focus-visible {
+    color: #fff;
+  }
+}
+
 // A small gray chevron in the dark header: inside the logo area's right edge while the menu is open, just past the
 // logo mark once it's collapsed. The button's width sets how far the chevron's centre sits from that edge.
 $toggle-width: 2.25rem;

@@ -8,6 +8,7 @@ import { LocalStorageService, ApiService, CommonService } from '../../services';
 import { Connection, GenericResponse, SearchResult, Config } from '../../models';
 import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
 import { AiAssistantComponent } from '../ai-assistant/ai-assistant.component';
+import { DOCS_URL } from '../../app-info';
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = 'sidebarCollapsed';
 
@@ -27,6 +28,7 @@ export class DashboardLayoutComponent {
   router = inject(Router);
   document = inject(DOCUMENT);
   isDark = false;
+  readonly docsUrl = DOCS_URL;
   documentation!: string;
   commonModalBody!: string;
 
@@ -110,6 +112,12 @@ export class DashboardLayoutComponent {
       }
     });
     },1000);
+  }
+
+  /** Opens the docs in a window of their own rather than a tab; the link's href stays for middle-click and copy. */
+  openDocs(event: MouseEvent) {
+    event.preventDefault();
+    window.open(this.docsUrl, 'kafkador-docs', 'popup,width=1200,height=850,noopener');
   }
 
   toggleSidebar() {
