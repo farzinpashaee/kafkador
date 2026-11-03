@@ -1,6 +1,6 @@
 name: Docs
 
-# Builds website/ and copies the static files to the VPS that serves codestreamlab.com/kafkador/docs/. It needs the
+# Builds website/ and copies the static files to the VPS that serves kafkador.codestreamlab.com/docs/. It needs the
 # DOCS_SSH_KEY, DOCS_SSH_HOST, DOCS_SSH_USER and DOCS_PATH repository secrets; see website/README.md.
 on:
   push:

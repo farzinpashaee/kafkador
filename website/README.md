@@ -1,6 +1,6 @@
 # Kafkador documentation
 
-The [Docusaurus](https://docusaurus.io/) site served at https://codestreamlab.com/kafkador/docs/. Pages are the Markdown
+The [Docusaurus](https://docusaurus.io/) site served at https://kafkador.codestreamlab.com/docs/. Pages are the Markdown
 files in `docs/`, and `sidebars.ts` sets the navigation.
 
 ## Work on it
@@ -12,7 +12,7 @@ npm ci
 npm start
 ```
 
-This opens http://localhost:3000/kafkador/docs/ and reloads as you edit. Search only works in a production build:
+This opens http://localhost:3000/docs/ and reloads as you edit. Search only works in a production build:
 
 ```bash
 npm run build
@@ -36,19 +36,19 @@ the VPS with `rsync --delete`. It removes anything else in the target folder, so
    | `DOCS_SSH_KEY` | The private key of the `deploy` user |
    | `DOCS_SSH_HOST` | The VPS's hostname or IP address |
    | `DOCS_SSH_USER` | `deploy` |
-   | `DOCS_PATH` | `/var/www/codestreamlab/kafkador/docs` |
+   | `DOCS_PATH` | `/var/www/kafkador/docs` |
 
-3. Add this to the Nginx `server` block for `codestreamlab.com`, then reload Nginx:
+3. Add this to the Nginx `server` block for `kafkador.codestreamlab.com`, then reload Nginx:
 
    ```nginx
-   location = /kafkador/docs {
-       return 301 /kafkador/docs/;
+   location = /docs {
+       return 301 /docs/;
    }
 
-   location ^~ /kafkador/docs/ {
-       root /var/www/codestreamlab;
+   location ^~ /docs/ {
+       root /var/www/kafkador;
        try_files $uri $uri/ =404;
-       error_page 404 /kafkador/docs/404.html;
+       error_page 404 /docs/404.html;
    }
    ```
 

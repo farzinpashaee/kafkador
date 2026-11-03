@@ -13,9 +13,9 @@ const config: Config = {
     v4: true,
   },
 
-  // Served at codestreamlab.com/kafkador/docs/, so the docs sit at the root of the site (routeBasePath below).
-  url: 'https://codestreamlab.com',
-  baseUrl: '/kafkador/docs/',
+  // Served at kafkador.codestreamlab.com/docs/, so the docs sit at the root of the site (routeBasePath below).
+  url: 'https://kafkador.codestreamlab.com',
+  baseUrl: '/docs/',
   trailingSlash: true,
 
   onBrokenLinks: 'throw',
